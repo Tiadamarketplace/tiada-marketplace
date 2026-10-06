@@ -32,6 +32,7 @@ export const POST = handle(async (req: Request) => {
   else if ((b.name && !c.name) || (b.phone && !c.phone)) c = must(await db().from('customers').update({ name: c.name || b.name, phone: c.phone || b.phone }).eq('id', c.id).select('*').single());
   await db().from('customers').update({ last_seen: new Date().toISOString() }).eq('id', c.id);
   await db().from('orders').update({ customer_id: c.id }).eq('email', b.email).is('customer_id', null);
+  await db().from('messages').update({ customer_id: c.id }).eq('email_to', b.email).is('customer_id', null); // emails sent before they had an account
   await db().from('messages').insert({ customer_id: c.id, kind: 'security', title: 'New sign-in to your account', body: 'You signed in just now. If this wasn’t you, message us on WhatsApp right away.' });
   await setSession('c', { cid: c.id });
   return ok({ user: { id: c.id, email: c.email, name: c.name, phone: c.phone, promo_ok: c.promo_ok }, isNew });

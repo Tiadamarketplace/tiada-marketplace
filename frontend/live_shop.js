@@ -121,6 +121,36 @@ async function doVerify(code){
   }catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus()}
 }
 
+/* ---------- My details: name, phone, default address, email preferences ---------- */
+function accProfile(){
+  const u=S.user,def=S.addresses[0];
+  return `<div class="panel" style="margin-bottom:14px"><h3>Personal details</h3>
+    <form id="profile-form" novalidate>
+      <div class="field" id="fp-name"><label for="pf-name">Full name</label><input id="pf-name" autocomplete="name" maxlength="60" value="${esc(u.name||'')}"><span class="err">Enter your name.</span></div>
+      <div class="field" id="fp-phone"><label for="pf-phone">Phone number</label><input id="pf-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0803 123 4567" value="${esc(fmtPhone(u.phone||''))}"><span class="err">Use an 11-digit Nigerian number.</span><span class="hint">We fill this in for you at checkout.</span></div>
+      <div class="field"><label>Email address</label><input value="${esc(u.email||'')}" disabled><span class="hint">This is how you sign in. To change it, message us on WhatsApp ${esc(STORE.whatsapp||'')}.</span></div>
+      <button class="btn" type="submit">Save changes</button>
+    </form></div>
+  <div class="panel" style="margin-bottom:14px"><h3>Delivery address</h3>
+    ${def?`<div class="addr" style="margin-bottom:10px"><span><b>${esc(def.label)}</b> <span class="mcount">Default</span><br>${esc(def.street)}<br><span class="hint">${def.landmark?esc(def.landmark)+' · ':''}${esc(zoneShort(zoneById(def.zone)))}</span></span></div>
+      <p class="hint" style="margin:0 0 10px">Checkout fills this in for you. You can still pick another address when you order.</p>`
+      :`<p class="hint" style="margin:0 0 10px">Save an address once and checkout fills it in for you every time.</p>`}
+    <button class="btn ghost" data-accv="addresses">${def?'Manage addresses':'Add an address'}</button></div>
+  <div class="panel"><h3>Notifications</h3>
+    <p class="hint" style="margin:0 0 10px">Every email we send you about orders, payments and refunds also appears in your <button class="link" data-accv="inbox">Inbox</button>.</p>
+    <div class="toggle-row"><span><b>New stock and deals by email</b><br><span class="hint">Off unless you turn it on.</span></span><label class="switch"><input type="checkbox" data-pref="promo" ${S.prefs.promo?'checked':''} aria-label="Promo emails"><span></span></label></div></div>`;
+}
+function accAddr(){
+  return `<div class="rows">${S.addresses.length?S.addresses.map((a,i)=>`<div class="addr"><span><b>${esc(a.label)}</b>${i===0?' <span class="mcount">Default</span>':''}<br>${esc(a.street)}<br><span class="hint">${a.landmark?esc(a.landmark)+' · ':''}${esc(zoneShort(zoneById(a.zone)))}</span></span>
+    <span style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">${i?`<button class="link" style="font-size:13px" data-defaddr="${a.id}">Make default</button>`:''}<button class="rev del" style="margin:0;border:0;background:none;padding:0" data-deladdr="${a.id}">Remove</button></span></div>`).join(''):'<div class="empty" style="padding:24px"><b>No saved addresses</b>Add one and checkout fills it in for you.</div>'}</div>
+  ${S.addresses.length<5?`<div class="panel" style="margin-top:14px"><h3>Add an address</h3><form id="addr-form" novalidate>
+    <div class="field"><label for="ad-label">Label</label><select id="ad-label"><option>Home</option><option>Hostel</option><option>Work</option><option>Other</option></select></div>
+    <div class="field" id="fa-street"><label for="ad-street">Street address</label><input id="ad-street" autocomplete="street-address" placeholder="House number and street" maxlength="120"><span class="err">Add a house number and street.</span></div>
+    <div class="field"><label for="ad-landmark">Landmark <span style="text-transform:none;font-weight:500">(optional)</span></label><input id="ad-landmark" maxlength="120" placeholder="e.g. Behind the mosque"></div>
+    <div class="field" id="fa-zone"><label for="ad-zone">Area or state</label>${zoneSelect('ad-zone','')}<span class="err">Choose your area or state.</span></div>
+    <button class="btn" type="submit">Save address</button></form></div>`:'<p class="hint">You can save up to 5 addresses.</p>'}`;
+}
+
 /* ---------- checkout + real payment ---------- */
 S.co.name=S.co.name||'';
 function canPay(){return (S.co.name||'').trim().length>=2&&validEmail(S.co.email)&&validPhone(S.co.phone)&&validAddr(S.co.addr)&&deliveryFee().total!=null}
@@ -255,15 +285,25 @@ function timelineHTML(o){
   return `<ol class="timeline">${steps.map((s,i)=>`<li class="${i<ix||o.status==='done'?'done':i===ix?'now':''}"><span><b>${s[0]}</b><small>${s[1]}</small></span></li>`).join('')}</ol>`+
    (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&r&&r.phone?`<div class="rider" style="margin-top:10px"><span>${o.zone&&String(o.zone).startsWith('st:')?'🚚':'🛵'} <b>${esc(r.name)}</b> · <span class="num">${fmtPhone(r.phone)}</span></span><button class="copy" data-copy="${esc(r.phone)}" data-tip="Copy driver’s number">Copy number</button></div>`:'');
 }
+/* delivery estimate in days from distance; shown on the tracker only, always as an estimate */
+function etaDays(km,inter){
+  if(!inter)return km<=25?[1,1]:[1,2];
+  if(km<=250)return [1,3];
+  if(km<=600)return [2,4];
+  if(km<=1000)return [3,5];
+  return [4,7];
+}
 function paintMaps(){
   document.querySelectorAll('.tmap').forEach(m=>{
     const id=m.dataset.map,km=+m.dataset.km,inter=m.dataset.inter==='1';
-    const o=S.orders.find(x=>x.id===id),r=o&&o.rider;
-    const p=.55; // no live GPS from delivery partners, so we show the route without guessing a time
+    const o=S.orders.find(x=>x.id===id),r=o&&o.rider,est=etaDays(km,inter),since=(o&&o.since)||Date.now();
+    // no live GPS from delivery partners: the dot moves with time against the estimate, never past 92%
+    const p=Math.min(.92,.08+(Date.now()-since)/(est[1]*86400000));
     const path=m.querySelector('.rt-done'),L=path.getTotalLength(),pt=path.getPointAtLength(L*p);
     path.style.strokeDasharray=`${L*p} ${L}`;
     m.querySelector('.rdot').style.transform=`translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
-    m.querySelector('.eta-t').innerHTML=`<b>On the way</b>${r&&r.name?' with '+esc(r.name):''}${r&&r.tracking?' · tracking '+esc(r.tracking):''}`;
+    const by=new Date(since+est[1]*86400000).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    m.querySelector('.eta-t').innerHTML=`About <b>${Math.round(km)} km</b> from our Ojota hub · estimated <b>${est[0]===est[1]?est[0]:est[0]+'–'+est[1]} day${est[1]>1?'s':''}</b> (by ${by})${r&&r.name?'<br>With '+esc(r.name):''}${r&&r.tracking?' · tracking '+esc(r.tracking):''}`;
   });
 }
 
@@ -333,7 +373,7 @@ function vHome(){
 /* ---------- intercept actions that now talk to the server ---------- */
 document.addEventListener('submit',async e=>{
   const f=e.target,id=f.id;
-  if(!['auth-email','auth-code','rev-form','addr-form','track-form'].includes(id))return;
+  if(!['auth-email','auth-code','rev-form','addr-form','track-form','profile-form'].includes(id))return;
   e.preventDefault();e.stopImmediatePropagation();
   if(id==='auth-email'){
     const up=auth.mode==='signup',v=q=>{const el=$(q);return el?el.value.trim():''};
@@ -348,6 +388,14 @@ document.addEventListener('submit',async e=>{
   if(id==='auth-code'){const code=($('#au-code').value||'').replace(/\D/g,'');if(code.length!==6){auth.err='Enter all 6 digits.';render();return}doVerify(code);return}
   if(id==='rev-form'){if(!revOk())return;const pid=draft.pid;
     try{await loading('Posting your review','',500);await api('/api/reviews',{body:{pid,stars:draft.stars,text:draft.text.trim(),anon:draft.anon}});await fetchReviews(pid,true);openProductSync(pid);toast('Thanks! Your review will appear after a quick check.')}
+    catch(err){toast(errMsg(err))}
+    return}
+  if(id==='profile-form'){
+    const name=$('#pf-name').value.trim(),phone=$('#pf-phone').value.replace(/\D/g,'');
+    const nOk=name.length>=2,pOk=!phone||/^0[789][01]\d{8}$/.test(phone);
+    $('#fp-name').classList.toggle('bad',!nOk);$('#fp-phone').classList.toggle('bad',!pOk);if(!nOk||!pOk)return;
+    try{await loading('Saving your details','',300);const r=await api('/api/me',{method:'PATCH',body:{name,...(phone?{phone}:{})}});
+      Object.assign(S.user,{name:r.user.name,phone:r.user.phone||''});S.co.name=r.user.name;if(r.user.phone)S.co.phone=r.user.phone;save();render();toast('Your details are saved')}
     catch(err){toast(errMsg(err))}
     return}
   if(id==='addr-form'){
@@ -381,6 +429,9 @@ document.addEventListener('click',e=>{
   if(d.notif){const id=d.notif;if(/^[0-9a-f-]{36}$/.test(id))api('/api/me/messages',{body:{ids:[id],read:true}}).catch(()=>{})}
   if(d.unread){api('/api/me/messages',{body:{ids:[d.unread],read:false}}).catch(()=>{})}
   if(d.delmsg&&t.dataset.armed){api('/api/me/messages',{body:{ids:[d.delmsg],remove:true}}).catch(()=>{})}
+  if(d.defaddr){stop();const a=S.addresses.find(x=>x.id===d.defaddr);if(!a)return;
+    S.addresses=[a,...S.addresses.filter(x=>x!==a)];S.co.addrId='';S.co.addr='';save();render();
+    api('/api/me/addresses',{method:'PATCH',body:{id:a.id}}).then(()=>toast(`${a.label} is now your default address`)).catch(err=>toast(errMsg(err)));return}
   if(d.deladdr&&t.dataset.armed){api('/api/me/addresses?id='+encodeURIComponent(d.deladdr),{method:'DELETE'}).catch(()=>{})}
   if(d.delrev&&t.dataset.armed){stop();api('/api/reviews?pid='+encodeURIComponent(d.delrev),{method:'DELETE'}).then(()=>fetchReviews(d.delrev,true)).then(()=>{openProductSync(d.delrev);toast('Review deleted')}).catch(err=>toast(errMsg(err)));return}
 },true);

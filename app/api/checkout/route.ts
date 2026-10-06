@@ -39,6 +39,7 @@ export const POST = handle(async (req: Request) => {
     throw new HttpError(502, 'We couldn’t create your payment account just now. Please try again in a minute.');
   }
   await db().from('orders').update({ pay_account: acct }).eq('id', order.id);
+  if (cust && (!cust.name || !cust.phone)) await db().from('customers').update({ name: cust.name || b.name, phone: cust.phone || b.phone }).eq('id', cust.id);
   if (cust && b.save_address) {
     const have = must(await db().from('addresses').select('street').eq('customer_id', cust.id)) as { street: string }[];
     if (have.length < 5 && !have.some(a => a.street.toLowerCase() === b.address.toLowerCase()))

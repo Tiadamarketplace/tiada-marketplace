@@ -108,6 +108,11 @@ with sync_playwright() as p:
     pg.click('#track-form button[type=submit]'); pg.wait_for_timeout(1800)
     pg.screenshot(path=str(OUT / 't7_track.png'), full_page=True)
     assert 'Kwik' in pg.content() and 'KW-123' in pg.content()
+    pg.wait_for_timeout(3200); print('ETA:', pg.inner_text('.eta'))
+
+    pg.evaluate("T.go('account');T.S.accView='profile';T.render()"); pg.wait_for_timeout(900)
+    pg.screenshot(path=str(OUT / 'profile.png'), full_page=True)
+    assert 'Personal details' in pg.content()
 
     # inbox shows the real message
     pg.evaluate("T.go('account');T.S.accView='inbox';T.render()"); pg.wait_for_timeout(1000)

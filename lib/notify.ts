@@ -75,7 +75,9 @@ export async function notifyOrder(o: Order, kind: Kind, d: Data = {}) {
   const m = compose(o, kind, d);
   const sent = await sendEmail(o.email, m.subject, m.html);
   try {
-    must(await db().from('messages').insert({ customer_id: o.customer_id, order_id: o.id, kind, title: m.title, body: m.inbox, data: d, email_to: o.email, email_id: sent.id, email_ok: sent.ok }));
+    let cid = o.customer_id;
+    if (!cid) cid = ((await db().from('customers').select('id').eq('email', o.email).maybeSingle()).data as { id: string } | null)?.id || null;
+    must(await db().from('messages').insert({ customer_id: cid, order_id: o.id, kind, title: m.title, body: m.inbox, data: d, email_to: o.email, email_id: sent.id, email_ok: sent.ok }));
   } catch (e) { console.error('message save failed', e); }
   return sent;
 }

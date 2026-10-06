@@ -129,7 +129,7 @@ sub("function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing t
 
 # the map shows an estimate: delivery partners don't share live GPS
 sub("<span class=\"live\">Live ${inter?'courier':'rider'} location</span>", "<span class=\"live\">Route to you</span>")
-sub("${inter?'Updated by the courier':'Updates every few seconds'}", "${inter?'Track with the courier’s number':'Your rider calls before arriving'}")
+sub("${inter?'Updated by the courier':'Updates every few seconds'}", "Estimate only · depends on traffic and the delivery partner")
 
 sub("/* new-stock check: in the live site this asks the server whether the admin changed products or prices.\n   Prototype: offers a refresh after the shopper has been browsing for about 90 seconds. */", "/* new-stock pill: shown by checkFresh() in the live layer when the admin changes products or prices */")
 
@@ -151,6 +151,12 @@ sub("const code=(n.body.match(/TD-\\d{5}/)||[])[0]", "const code=(n.body.match(/
 sub('<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>', '${rt.n?`<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>`:`<span class="pc-rt num"><i>New</i></span>`}')
 sub("<span class=\"stars\">★</span> ${rt.avg.toFixed(1)} (${rt.n})</div>", "${rt.n?`<span class=\"stars\">★</span> ${rt.avg.toFixed(1)} (${rt.n})`:'New'}</div>")
 sub("${rt.avg.toFixed(1)} / 5 from ${rt.n} reviews", "${rt.n?rt.avg.toFixed(1)+' / 5 from '+rt.n+' review'+(rt.n>1?'s':''):'No reviews yet'}")
+
+# account: "My details" page, default address, checkout fills itself from the account
+sub("addresses:accAddr,privacy:accPrivacy,help:accHelp}[S.accView]();", "addresses:accAddr,privacy:accPrivacy,help:accHelp,profile:accProfile}[S.accView]();")
+sub("addresses:'Address Book',privacy:'Privacy & Security',help:'Help & Support'};", "addresses:'Address Book',privacy:'Privacy & Security',help:'Help & Support',profile:'My details'};")
+sub("    ${row('addresses','pin','Address Book',`<span class=\"mcount\">${S.addresses.length||''}</span>`)}", "    ${row('profile','user','My details',!S.user.phone||!S.addresses.length?'<span class=\"mnew\">Complete</span>':'')}\n    ${row('addresses','pin','Address Book',`<span class=\"mcount\">${S.addresses.length||''}</span>`)}")
+sub("if(S.user&&!S.co.phone)S.co.phone=S.user.phone;", "if(S.user&&!S.co.phone)S.co.phone=S.user.phone;if(S.user&&!S.co.addr&&!S.co.addrId&&S.addresses.length){const a=S.addresses[0];S.co.addrId=a.id;S.co.addr=a.street;S.co.landmark=a.landmark||'';S.co.zone=a.zone}")
 
 # ---------- plug in the live layer ----------
 sub("render();netState();\nsetTimeout(hideLoader,900);\n})();", live.rstrip() + "\n})();")

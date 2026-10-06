@@ -17,3 +17,13 @@ export const DELETE = handle(async (req: Request) => {
   must(await db().from('addresses').delete().eq('id', id).eq('customer_id', c.id));
   return ok({ ok: true });
 });
+/** Make an address the default: the default is simply the oldest one, so move it to the front. */
+export const PATCH = handle(async (req: Request) => {
+  const c = await requireCustomer();
+  const b = z.object({ id: z.string().uuid() }).parse(await req.json());
+  const first = must(await db().from('addresses').select('created_at').eq('customer_id', c.id).order('created_at').limit(1)) as { created_at: string }[];
+  const at = new Date((first[0] ? Date.parse(first[0].created_at) : Date.now()) - 1000).toISOString();
+  const r = must(await db().from('addresses').update({ created_at: at }).eq('id', b.id).eq('customer_id', c.id).select('id')) as unknown[];
+  if (!r.length) return fail('Address not found.', 404);
+  return ok({ ok: true });
+});
