@@ -180,6 +180,10 @@ sub("@media (prefers-reduced-motion:reduce){.tabs.mini{left:12px!important;right
 # Halo loading screen (chosen by the owner)
 sub('<header class="hdr">', '<style>/* Halo loader: no card, logo floats on frosted glass with a gold arc circling it */\n.loader{background:rgba(251,249,244,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.3)!important;backdrop-filter:blur(14px) saturate(1.3)!important}\n.ld-card{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;gap:3px!important;animation:haloIn .3s ease-out}\n.ld-mark{width:104px!important;height:104px!important;margin-bottom:12px!important}\n.ld-mark img{width:52px!important;filter:drop-shadow(0 6px 14px rgba(11,58,35,.25));animation:haloBreathe 1.6s ease-in-out infinite!important}\n.ld-mark::before{border:0!important;background:conic-gradient(from 0deg,transparent 0 62%,#D49B41 92%,transparent 100%);-webkit-mask:radial-gradient(circle,transparent 48px,#000 49px);mask:radial-gradient(circle,transparent 48px,#000 49px);animation:haloSpin 1s linear infinite!important}\n.ld-card b{font-size:15.5px!important;color:#0B3A23!important;font-weight:700}\n.ld-card small{color:#4F6357!important}\n.loader.out .ld-card{transform:scale(.96)}\n@keyframes haloSpin{to{transform:rotate(360deg)}}\n@keyframes haloBreathe{50%{transform:scale(1.07)}}\n@keyframes haloIn{from{opacity:0;transform:translateY(6px) scale(.96)}}\n@media (prefers-reduced-motion:reduce){.loader *{animation-duration:.01ms!important;animation-iteration-count:1!important}}\n</style>\n<header class="hdr">', 1)
 
+# real page loads: every page has its own address, so the browser's own loading shows on each change
+sub("function goNow(r){", "function goNowBase(r){")
+sub("withLoad(v==='menu'?'menu':'list',()=>{S.accView=v;S.showData=false;render()}", "withLoad(v==='menu'?'menu':'list',()=>{S.accView=v;S.showData=false;goNow('account')}")
+
 # ---------- plug in the live layer ----------
 sub("render();netState();\nsetTimeout(hideLoader,900);\n})();", live.rstrip() + "\n})();")
 

@@ -130,7 +130,7 @@ async function doVerify(code){
   catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus();return}
   auth={step:'email',mode:'signin',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
   const next=authNext;authNext=null;
-  land(()=>{if(next){render();next()}else{S.accView='menu';S.route='home';S.cat='all';S.q='';render()}});
+  if(next){land(()=>{render();next()})}else{S.accView='menu';S.cat='all';S.q='';goNow('home')}
   toast(`Welcome${r.isNew?'':' back'}, ${S.user.name.split(' ')[0]}`);
 }
 
@@ -437,7 +437,7 @@ document.addEventListener('click',e=>{
     busy('Checking your payment','Confirming your transfer with the bank',()=>api(`/api/orders/${encodeURIComponent(p.id)}/check`,{body:{ref:p.ref}})).then(r=>{if(PAID.includes(r.status)&&r.order)onPaid(r.order);else{const m=$('#pay-msg');if(m)m.textContent=r.message||'Not received yet.';toast('Not received yet. It can take a minute or two.')}}).catch(err=>toast(errMsg(err)));return}
   if(a==='cancelpay'&&t.dataset.armed){store.set('pay',null)}
   if(a==='signout'){api('/api/auth/logout',{body:{}}).catch(()=>{});S.orders=[];S.inbox=[];S.addresses=[];S.reviews={};store.set('pay',null)}
-  if(a==='deleteacct'){stop();busy('Deleting your account','Removing your profile, addresses and reviews',()=>api('/api/me',{method:'DELETE'})).then(()=>{S.user=null;S.accView='menu';S.inbox=[];S.addresses=[];S.reviews={};S.orders=[];save();land(()=>{S.route='home';render()});toast('Your account has been deleted')}).catch(err=>toast(errMsg(err)));return}
+  if(a==='deleteacct'){stop();busy('Deleting your account','Removing your profile, addresses and reviews',()=>api('/api/me',{method:'DELETE'})).then(()=>{S.user=null;S.accView='menu';S.inbox=[];S.addresses=[];S.reviews={};S.orders=[];save();goNow('home');toast('Your account has been deleted')}).catch(err=>toast(errMsg(err)));return}
   if(a==='readall'){api('/api/me/messages',{body:{all:true,read:true}}).catch(()=>{})}
   if(d.notif){const id=d.notif;if(/^[0-9a-f-]{36}$/.test(id))api('/api/me/messages',{body:{ids:[id],read:true}}).catch(()=>{})}
   if(d.unread){api('/api/me/messages',{body:{ids:[d.unread],read:false}}).catch(()=>{})}
@@ -460,13 +460,53 @@ document.addEventListener('input',e=>{
 let catalogStamp='';
 async function checkFresh(){try{const d=await api('/api/catalog');const stamp=JSON.stringify(d.products.map(p=>[p.id,p.sizes,p.status,p.stock,p.hidden]))+JSON.stringify(d.promos);if(catalogStamp&&stamp!==catalogStamp&&S.route==='home')$('#fresh').classList.add('show');catalogStamp=stamp}catch(_){}}
 
+/* ---------- real page loads: each page has its own address ----------
+   Moving to another page does a real browser navigation, so the browser's own loading
+   (tab spinner, phone progress bar) always shows, and the back button works. */
+const PAGE_PATH={home:'/',catalog:'/catalog',wishlist:'/wishlist',cart:'/basket',account:'/account',track:'/track',guide:'/guide',privacy:'/privacy',checkout:'/checkout',pay:'/pay',success:'/success',search:'/search',land:'/aisle',seeall:'/aisle'};
+const PATH_PAGE={'/':'home','/catalog':'catalog','/wishlist':'wishlist','/basket':'cart','/account':'account','/track':'track','/guide':'guide','/privacy':'privacy','/checkout':'checkout','/pay':'pay','/success':'success','/search':'search','/aisle':'land','/shop.html':'home'};
+function urlFor(r){
+  const base=PAGE_PATH[r];if(base==null)return null;const q=new URLSearchParams();
+  if(r==='account'&&S.accView&&!['menu','msg'].includes(S.accView))q.set('v',S.accView);
+  if(r==='track'&&S.track&&S.track.code)q.set('code',S.track.code);
+  if(r==='search'&&S.search)q.set('q',S.search);
+  if((r==='land'||r==='seeall')&&S.land){q.set('id',S.land);if(r==='seeall')q.set('all',String(S.seeIx||0))}
+  if(/[?&]test=1\b/.test(location.search))q.set('test','1');
+  const qs=q.toString();return base+(qs?'?'+qs:'');
+}
+let NAV_AWAY=false,hideT=null;
+function hideLoader(){const L=$('#loader');if(L.hidden||NAV_AWAY)return;L.classList.add('out');clearTimeout(hideT);hideT=setTimeout(()=>{if(NAV_AWAY)return;L.hidden=true;L.classList.remove('out')},200)}
+function goNow(r){
+  const url=urlFor(r);
+  if(url&&url!==location.pathname+location.search){
+    NAV_AWAY=true;clearTimeout(hideT);save();
+    const L=$('#loader');L.classList.remove('out');if(L.hidden){ldText(ROUTE_L[r]||'Loading','')}L.hidden=false;
+    location.assign(url);return;
+  }
+  goNowBase(r);
+}
+window.addEventListener('pageshow',e=>{if(e.persisted&&NAV_AWAY){NAV_AWAY=false;hideLoader()}});
+function routeFromUrl(){
+  const page=PATH_PAGE[location.pathname.replace(/\/+$/,'')||'/'];if(!page)return;
+  const q=new URLSearchParams(location.search);
+  if(page==='account'){S.accView=q.get('v')||'menu'}
+  if(page==='track'&&q.get('code'))S.track={code:q.get('code'),last4:'',res:null,err:''};
+  if(page==='search'){S.search=q.get('q')||'';S.ssort='best'}
+  if(page==='land'){S.land=q.get('id')||'';if(q.get('all')!=null){S.seeIx=+q.get('all')||0;S.route='seeall';return}}
+  if(page==='pay'&&!S.pay){S.route='cart';return}
+  if(page==='success'&&!S.orders.length){S.route='home';return}
+  S.route=page;
+}
+
 /* ---------- start up ---------- */
 async function boot(){
   const L=$('#loader');$('#ld-msg').textContent='Loading fresh stock';$('#ld-sub').textContent='Getting today’s prices';L.hidden=false;
   try{
     await Promise.all([loadCatalog(),loadAccount().catch(()=>{})]);
     catalogStamp='';checkFresh();setInterval(checkFresh,120000);
-    const pend=store.get('pay',null);if(pend&&pend.expires>Date.now()){S.pay=pend;S.route='pay'}
+    const pend=store.get('pay',null);if(pend&&pend.expires>Date.now()){S.pay=pend}
+    routeFromUrl();
+    if((S.route==='land'||S.route==='seeall')&&!landFor(S.land))S.route='home';
     const h=location.hash||'';
     if(h.startsWith('#track-')){S.track={code:h.slice(7),last4:'',res:null,err:''};S.route='track'}
     else if(h==='#account'||h==='#reviews'){S.route='account';if(h==='#reviews'&&S.user)S.accView='reviews'}

@@ -10,6 +10,11 @@ OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp')
 
 class H(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
+    def translate_path(self, path):
+        import re as _re
+        p = path.split('?')[0]
+        if p == '/' or _re.fullmatch(r'/(catalog|wishlist|basket|account|track|guide|privacy|checkout|pay|success|search|aisle)/?', p): path = '/shop.html'
+        return super().translate_path(path)
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 8765), functools.partial(H, directory=str(PUB)))
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 
@@ -69,6 +74,9 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errors.append(str(e)))
     pg.on('console', lambda m: m.type == 'error' and 'ERR_TUNNEL' not in m.text and errors.append(m.text))
     pg.route('**/api/**', handle)
+    def ready():
+        pg.wait_for_timeout(300); pg.wait_for_load_state('load')
+        pg.wait_for_function('window.T && document.querySelector("#loader").hidden', timeout=15000); pg.wait_for_timeout(300)
     pg.goto('http://127.0.0.1:8765/shop.html?test=1')
     pg.wait_for_selector('article.pc', timeout=10000)
     pg.wait_for_timeout(1200)
@@ -76,46 +84,47 @@ with sync_playwright() as p:
     assert 'Milo' in pg.content(), 'catalogue did not load'
 
     # sign in with an email code
-    pg.evaluate("T.go('account')"); pg.wait_for_timeout(1200)
+    pg.evaluate("T.go('account')"); ready()
     pg.screenshot(path=str(OUT / 't2_account.png'))
     pg.fill('#au-name', 'Ada Obi'); pg.fill('#au-email', 'ada@example.com'); pg.check('#au-agree')
     pg.click('#auth-email button[type=submit]'); pg.wait_for_selector('#au-code', timeout=5000)
     pg.fill('#au-code', '000000'); pg.wait_for_timeout(1500)
     assert 'That code is wrong' in pg.content(), 'wrong code not reported'
-    pg.fill('#au-code', '111111'); pg.wait_for_timeout(2500)
+    pg.fill('#au-code', '111111'); pg.wait_for_timeout(1500); ready()
     pg.screenshot(path=str(OUT / 't3_signed_in.png'))
     assert pg.evaluate('!!T.S.user'), 'not signed in'
 
     # basket + checkout
-    pg.evaluate("T.S.cart=[{pid:'milo',size:'500g',qty:1},{pid:'cornflakes',size:'500g',qty:1}];T.save();T.go('checkout')"); pg.wait_for_timeout(1200)
+    pg.evaluate("T.S.cart=[{pid:'milo',size:'500g',qty:1},{pid:'cornflakes',size:'500g',qty:1}];T.save();T.go('checkout')"); ready()
     pg.fill('#co-phone', '08031234567'); pg.fill('#co-addr', '14 Admiralty Way, Lekki')
     pg.select_option('#co-zone', 'z5'); pg.wait_for_timeout(500)
     assert pg.input_value('#co-name') == 'Ada Obi', 'name not prefilled'
     pg.screenshot(path=str(OUT / 't4_checkout.png'), full_page=True)
-    pg.click('[data-act=pay]'); pg.wait_for_selector('[data-act=paid-check]', timeout=6000)
+    pg.click('[data-act=pay]'); pg.wait_for_timeout(800); ready(); pg.wait_for_selector('[data-act=paid-check]', timeout=6000)
     pg.wait_for_timeout(1200)
     pg.screenshot(path=str(OUT / 't5_pay.png'))
     assert '9912345678' in pg.content() and 'PAYSTACK-TIADA' in pg.content()
     pg.click('[data-act=paid-check]'); pg.wait_for_timeout(1500)
     assert 'Not received yet' in pg.content() or 'haven’t received' in pg.content()
     st['paid'] = True
-    pg.wait_for_selector('.ok .code', timeout=8000); pg.wait_for_timeout(800)
+    pg.wait_for_timeout(6000); ready(); pg.wait_for_selector('.ok .code', timeout=8000)
     pg.screenshot(path=str(OUT / 't6_success.png'))
     assert pg.evaluate('T.S.cart.length') == 0
 
     # track
-    pg.evaluate("T.S.track={code:'TD-84950',last4:'4567',res:null,err:''};T.go('track')"); pg.wait_for_timeout(1000)
+    pg.evaluate("T.S.track={code:'TD-84950',last4:'4567',res:null,err:''};T.go('track')"); ready()
+    assert pg.input_value('#tr-code') == 'TD-84950'; pg.fill('#tr-last4', '4567')
     pg.click('#track-form button[type=submit]'); pg.wait_for_timeout(1800)
     pg.screenshot(path=str(OUT / 't7_track.png'), full_page=True)
     assert 'Kwik' in pg.content() and 'KW-123' in pg.content()
     pg.wait_for_timeout(3200); print('ETA:', pg.inner_text('.eta'))
 
-    pg.evaluate("T.go('account');T.S.accView='profile';T.render()"); pg.wait_for_timeout(900)
+    pg.evaluate("T.go('account')"); ready(); pg.evaluate("T.S.accView='profile';T.render()"); pg.wait_for_timeout(600)
     pg.screenshot(path=str(OUT / 'profile.png'), full_page=True)
     assert 'Personal details' in pg.content()
 
     # inbox shows the real message
-    pg.evaluate("T.go('account');T.S.accView='inbox';T.render()"); pg.wait_for_timeout(1000)
+    pg.evaluate("T.S.accView='inbox';T.render()"); pg.wait_for_timeout(800)
     assert 'Order confirmed' in pg.content()
 
     # chat hand-over

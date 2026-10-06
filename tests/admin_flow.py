@@ -8,6 +8,11 @@ PUB = pathlib.Path(__file__).parent.parent / 'public'
 OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp')
 class H(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
+    def translate_path(self, path):
+        import re as _re
+        p = path.split('?')[0]
+        if p == '/' or _re.fullmatch(r'/(catalog|wishlist|basket|account|track|guide|privacy|checkout|pay|success|search|aisle)/?', p): path = '/shop.html'
+        return super().translate_path(path)
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 8766), functools.partial(H, directory=str(PUB)))
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 
