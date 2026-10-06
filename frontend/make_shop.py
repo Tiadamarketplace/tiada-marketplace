@@ -158,6 +158,25 @@ sub("addresses:'Address Book',privacy:'Privacy & Security',help:'Help & Support'
 sub("    ${row('addresses','pin','Address Book',`<span class=\"mcount\">${S.addresses.length||''}</span>`)}", "    ${row('profile','user','My details',!S.user.phone||!S.addresses.length?'<span class=\"mnew\">Complete</span>':'')}\n    ${row('addresses','pin','Address Book',`<span class=\"mcount\">${S.addresses.length||''}</span>`)}")
 sub("if(S.user&&!S.co.phone)S.co.phone=S.user.phone;", "if(S.user&&!S.co.phone)S.co.phone=S.user.phone;if(S.user&&!S.co.addr&&!S.co.addrId&&S.addresses.length){const a=S.addresses[0];S.co.addrId=a.id;S.co.addr=a.street;S.co.landmark=a.landmark||'';S.co.zone=a.zone}")
 
+# bottom tab bar docked to the bottom edge again (no longer floating)
+sub("@media (prefers-reduced-motion:reduce){.tabs.mini{left:12px!important;right:12px;height:64px!important}.tabs.mini button{font-size:10.5px}}",
+"""@media (prefers-reduced-motion:reduce){.tabs.mini{left:12px!important;right:12px;height:64px!important}.tabs.mini button{font-size:10.5px}}
+/* docked tab bar: sits on the bottom edge, full width; still glass, still shrinks a little while scrolling */
+@media (max-width:760px){
+  .tabs,.tabs.mini{left:0!important;right:0!important;width:100%!important;bottom:0!important;border-radius:20px 20px 0 0!important;
+    border:0!important;border-top:1px solid rgba(255,255,255,.85)!important;
+    height:calc(64px + env(safe-area-inset-bottom,0px))!important;padding-bottom:env(safe-area-inset-bottom,0px)!important;
+    background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(251,249,244,.78))!important;
+    box-shadow:0 -6px 22px rgba(11,58,35,.10),inset 0 1px 0 rgba(255,255,255,.9)!important}
+  .tabs.mini{height:calc(52px + env(safe-area-inset-bottom,0px))!important}
+  .tabs.mini button{font-size:0;gap:0}
+  .tabs{transition:height .3s cubic-bezier(.3,.8,.3,1)!important}
+  main{padding-block:14px 92px}
+  footer{padding-bottom:76px}
+  .toast{bottom:84px}
+  .consent{bottom:80px}
+}""")
+
 # ---------- plug in the live layer ----------
 sub("render();netState();\nsetTimeout(hideLoader,900);\n})();", live.rstrip() + "\n})();")
 
