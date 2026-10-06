@@ -49,7 +49,7 @@ function applyData(d){
   Object.keys(LAYOUT_META).forEach(k=>{if(!S.layout.some(x=>x[0]===k)){const m=LAYOUT_META[k].slice();m[3]=true;S.layout.push(m)}});
   S.tiles=TILE_META.map(t=>[t[0],t[1],(st.tiles||{})[t[0]]!==false]);
   S.aisles=AISLE_META.map(t=>[t[0],t[1],(st.aisles||{})[t[0]]!==false]);
-  S.staff=d.staff||[];S.customers=d.customers||[];
+  S.staff=d.staff||[];S.customers=d.customers||[];S.testMode=!!d.testMode;S.testPending=d.testPending||[];
   AUD.all[1]=S.customers.length;AUD.promo[1]=S.customers.filter(c=>c.promo_ok).length;
   applyChats(d.chats);
   computeSales();
@@ -76,6 +76,16 @@ function topSellers(){
   return Object.entries(n).sort((a,b)=>b[1]-a[1]).slice(0,5);
 }
 async function refresh(){applyData(await api('/api/admin/data'))}
+
+/* ---------- test mode: Paystack test accounts can't receive transfers, so the owner can mark a test order paid ---------- */
+function vDash(){
+  if(!S.testMode)return vDashBase();
+  return `<div class="note" style="margin-bottom:14px;flex-wrap:wrap">${ic('alert',16)}<span style="flex:1;min-width:220px"><b>Paystack is in test mode.</b> Test bank transfers can’t really be paid, so you can mark a waiting test order as paid here to try the rest (emails, packing, delivery). This box disappears when you switch to your live Paystack key.</span></div>
+  ${S.testPending.length?`<div class="card pad" style="margin-bottom:14px"><h3>Test orders waiting for payment</h3><div class="list">${S.testPending.map(o=>`<div class="li"><span class="t"><b class="num">${esc(o.id)} · ${esc(o.name)}</b><small>${ago(Date.parse(o.created_at))}</small></span><span class="num" style="font-weight:800">${naira(o.total)}</span><button class="btn sm" data-testpay="${esc(o.id)}">Mark as paid (test)</button></div>`).join('')}</div></div>`:''}
+  ${vDashBase()}`;
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-testpay]');if(!t)return;e.preventDefault();e.stopImmediatePropagation();const id=t.dataset.testpay;
+  run('Marking test order as paid',()=>api('/api/admin/testpay',{body:{id}}),`${id} is paid. Check the email and the Orders page.`)},true);
 
 /* ---------- order emails: what really went out ---------- */
 function mailRows(o){

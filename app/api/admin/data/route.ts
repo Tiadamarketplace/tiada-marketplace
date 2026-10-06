@@ -2,6 +2,7 @@ import { handle, ok } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { requireStaff, staffList, ROLE_LABEL } from '@/lib/staff';
 import { DEFAULT_FEES } from '@/lib/catalog';
+import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,9 @@ export const GET = handle(async (req: Request) => {
     chats: chatList, messages: seesOrders ? must(messages) : [],
     settings: { layout: set.layout || [], tiles: set.tiles || {}, aisles: set.aisles || {}, fees: set.fees || DEFAULT_FEES, store: set.store || {}, vouchers: set.vouchers || { TIADACARE: 500 } },
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
+    testMode: env.paystackKey.startsWith('sk_test_'),
+    testPending: me.role === 'owner' && env.paystackKey.startsWith('sk_test_')
+      ? must(await db().from('orders').select('id,name,total,created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(10)) : [],
     now: Date.now(),
   });
 });

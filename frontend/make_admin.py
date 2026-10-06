@@ -80,6 +80,8 @@ resub(r"setInterval\(\(\)=>\{if\(S\.auth&&Date\.now\(\)-lastAct>15\*60000\)\{[^\
       "setInterval(()=>{if(S.auth&&Date.now()-lastAct>15*60000){api('/api/admin/logout?idle=1',{body:{}}).catch(()=>{});S.auth=null;login={step:'pw',email:'',err:'',ticket:''};closeModal();render();toast('Locked after 15 minutes of inactivity')}},30000);")
 sub("const QUICK=['Hi! I’m Ruka from Tiada. How can I help?',", "const QUICK=['Hi! I’m from Tiada. How can I help?',")
 
+sub('function vDash(){', 'function vDashBase(){')
+
 # plug in the live layer
 sub("\nrender();\n})();\n</script>", "\n" + live.rstrip() + "\n})();\n</script>")
 
