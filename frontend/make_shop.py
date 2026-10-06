@@ -34,6 +34,7 @@ HEAD = '''<!doctype html>
 <link rel="icon" type="image/png" href="/icon-sm.png">
 <link rel="apple-touch-icon" href="/icon-sm.png">
 <style>body:has(.scrim) .consent{display:none}
+.pc,.wrow{cursor:pointer}.pc:active{transform:scale(.985)}
 .au2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);max-width:940px;margin:8px auto 24px;background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 2px 6px rgba(11,58,35,.06),0 24px 60px rgba(11,58,35,.10)}
 .au2-side{position:relative;overflow:hidden;background:linear-gradient(150deg,#0B3A23 0%,#14532F 70%,#1d6a3e 100%);color:#fff;padding:36px 32px;display:flex;flex-direction:column;gap:14px}
 .au2-side::after{content:"";position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;border-radius:50%;border:2px solid rgba(212,155,65,.35)}

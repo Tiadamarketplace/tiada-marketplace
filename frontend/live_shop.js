@@ -460,6 +460,14 @@ document.addEventListener('input',e=>{
 let catalogStamp='';
 async function checkFresh(){try{const d=await api('/api/catalog');const stamp=JSON.stringify(d.products.map(p=>[p.id,p.sizes,p.status,p.stock,p.hidden]))+JSON.stringify(d.promos);if(catalogStamp&&stamp!==catalogStamp&&S.route==='home')$('#fresh').classList.add('show');catalogStamp=stamp}catch(_){}}
 
+/* ---------- whole product card opens the product, not just the picture ---------- */
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.pc,.wrow');if(!c)return;
+  if(e.target.closest('button,a,input,select,label,textarea,[data-wish],[data-add]'))return;
+  const o=c.querySelector('[data-open]');if(!o)return;
+  e.preventDefault();o.click();
+});
+
 /* ---------- real page loads: each page has its own address ----------
    Moving to another page does a real browser navigation, so the browser's own loading
    (tab spinner, phone progress bar) always shows, and the back button works. */
