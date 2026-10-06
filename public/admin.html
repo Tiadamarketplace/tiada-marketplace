@@ -647,7 +647,7 @@ function emailBody(o,kind){
   const rows=o.items.map(it=>{const p=byId(it[0]);return `<tr><td style="padding:5px 0;border-bottom:1px solid #EEE9DE">${esc(p.name)}${it[1]!=='Package'?' '+it[1]:''} × ${it[2]}${(it[3]||[]).length?`<br><small style="color:#8A5F1C">${it[3].map(w=>esc(w[0])+' → '+esc(w[1])).join(', ')}</small>`:''}</td><td style="text-align:right;font-weight:600;border-bottom:1px solid #EEE9DE">${naira(itemTotal(it))}</td></tr>`}).join('');
   const first=esc(o.name.split(' ')[0]);
   if(kind==='placed')return `<h2>Thank you for your order!</h2>Hello ${first},\n\nWe’ve received your payment and your order is now being packed at our Ojota hub.\n\n<b>Tracking code: ${o.id}</b><table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:13px">${rows}<tr><td><b>Total paid</b></td><td style="text-align:right"><b>${naira(o.total)}</b></td></tr></table><b>Delivery:</b> ${esc(o.speed)}\n<b>Address:</b> ${esc(o.addr)}`;
-  if(kind==='route'){const r=o.rider||{};return `<h2>Your order is on the way 🚚</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been packed, quality checked and handed to our delivery partner.\n\n<b>Delivery partner:</b> ${esc(r.partner||r.name||'')}${r.tracking?`\n<b>Tracking number:</b> ${esc(r.tracking)}`:''}${r.driver?`\n<b>Driver:</b> ${esc(r.driver)}`:''}${r.phone?`\n<b>Phone:</b> ${fmtPhone(r.phone)}`:''}\n<b>Speed:</b> ${esc(o.speed)}\n\nPlease keep your phone line open so the driver can reach you.`}
+  if(kind==='route'){const r=o.rider||{};return `<h2>Your order is on the way</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been packed, quality checked and handed to our delivery partner.\n\n<b>Delivery partner:</b> ${esc(r.partner||r.name||'')}${r.tracking?`\n<b>Tracking number:</b> ${esc(r.tracking)}`:''}${r.driver?`\n<b>Driver:</b> ${esc(r.driver)}`:''}${r.phone?`\n<b>Phone:</b> ${fmtPhone(r.phone)}`:''}\n<b>Speed:</b> ${esc(o.speed)}\n\nPlease keep your phone line open so the driver can reach you.`}
   const D=arguments[2]||{};
   if(kind==='issue')return `<h2>An update on your order</h2>Hello ${first},
 
@@ -684,7 +684,7 @@ ${esc(D.note||'')}
 Order: <b>${o.id}</b>
 
 Questions? Reply to this email or WhatsApp us on 08075110000.`;
-  return `<h2>Delivered! Enjoy your food 💚</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been delivered to ${esc(o.addr)}.\n\nSomething missing or damaged? WhatsApp us within 24 hours with your TD code and a photo.\n\nWe’d love to hear how it went. Rate your items in the app.`;
+  return `<h2>Delivered! Enjoy your food</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been delivered to ${esc(o.addr)}.\n\nSomething missing or damaged? WhatsApp us within 24 hours with your TD code and a photo.\n\nWe’d love to hear how it went. Rate your items in the app.`;
 }
 function mailFrame(subj,to,body,cta){return `<div class="hint" style="margin:10px 0 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px"><span>To</span><b style="color:var(--ink)">${esc(to)}</b><span>Subject</span><b style="color:var(--ink)">${esc(subj)}</b></div>
   <div class="mail"><div class="mh"><img src="${ICONSRC}" alt="">TIADA MARKETPLACE</div><div class="rib">Foodstuffs and cereals</div><div class="mb">${body}<span class="cta">${cta||'Open App &amp; Shop Now'}</span></div><div class="mf">Tiada Marketplace Hub · Ojota Logistics Center, Ikorodu Road, Lagos, Nigeria<br>WhatsApp 08075110000 · care@tiadamarketplace.com<br><u>Unsubscribe</u></div></div>`}
@@ -837,7 +837,7 @@ function vLayout(){
      </span>
      <label class="switch"><input type="checkbox" data-sec="${i}" ${x[3]?'checked':''} aria-label="Show ${esc(x[1])}"><span></span></label></div>`).join('')}</div>
    <div class="card pad" style="margin-top:16px"><div class="row"><h3>Hidden products</h3><span class="sp"></span><button class="btn sm ghost" data-view="inventory">Go to inventory</button></div>
-    <p class="hint" style="margin:2px 0 10px">Hide a product with the ${'👁'} button in Inventory. Hidden products don’t show anywhere in the shop, including search.</p>
+    <p class="hint" style="margin:2px 0 10px">Hide a product with the eye button in Inventory. Hidden products don’t show anywhere in the shop, including search.</p>
     ${hidP.length?`<div class="list">${hidP.map(p=>`<div class="li"><span class="thumb">${thumb(p)}</span><span class="t"><b>${esc(p.name)}</b><small>${esc(p.cat)}</small></span><button class="btn sm" data-hide="${p.id}">${ic('eye',14)} Show again</button></div>`).join('')}</div>`:'<p class="hint" style="margin:0">No hidden products.</p>'}</div>
    <div class="row" style="margin-top:12px"><button class="btn ghost sm" data-act="lay-reset">Reset to default layout</button></div>
   </div>
@@ -1056,7 +1056,7 @@ document.addEventListener('submit',e=>{
     if(!bc.confirm){bc.confirm=true;const btn=f.querySelector('button:not([type])');btn.innerHTML=`Tap again to send to ${AUD[bc.aud][1].toLocaleString()} people`;btn.classList.add('gold');setTimeout(()=>{bc.confirm=false;if(btn.isConnected){btn.innerHTML=ic('send',16)+' Broadcast email';btn.classList.remove('gold')}},4000);return}
     bc.confirm=false;loading(`Sending to ${AUD[bc.aud][1].toLocaleString()} customers`,1400).then(()=>{logAct(`Broadcast “${bc.subj}” to ${AUD[bc.aud][0].toLowerCase()} (${AUD[bc.aud][1].toLocaleString()})`);bc={subj:'',body:'',aud:'all',confirm:false};save();render();toast('Broadcast queued. Emails go out within minutes.')});return}
   if(f.id==='f-chat'){const v=$('#c-text').value.trim();if(!v)return;const c=S.chats.find(x=>x.id===S.chatSel);c.msgs.push(['agent',v,Date.now()]);c.at=Date.now();save();render();
-    setTimeout(()=>{if(c.status!=='open')return;c.msgs.push(['me',/anything else/i.test(v)?'No, that’s all. Thank you!':'Okay, thank you 🙏',Date.now()]);save();if(S.view==='chat'&&S.chatSel===c.id){render();const i=$('#c-text');i&&i.focus()}},2200);return}
+    setTimeout(()=>{if(c.status!=='open')return;c.msgs.push(['me',/anything else/i.test(v)?'No, that’s all. Thank you!':'Okay, thank you',Date.now()]);save();if(S.view==='chat'&&S.chatSel===c.id){render();const i=$('#c-text');i&&i.focus()}},2200);return}
   if(f.id==='f-reply'){const r=S.reviews.find(x=>x.id===f.dataset.id);r.reply=$('#r-text').value.trim()||undefined;logAct(`Replied to a review of ${byId(r.pid).name}`);save();closeModal();render();toast('Reply posted');return}
   if(f.id==='f-fees'){const F=S.fees;f.querySelectorAll('[data-area]').forEach(i=>F.areas[+i.dataset.area][1]=+i.value||0);f.querySelectorAll('[data-region]').forEach(i=>F.regions[+i.dataset.region][1]=+i.value||0);
     F.same=+$('#fe-same').value||0;F.lagosKg=+$('#fe-lkg').value||0;F.van=+$('#fe-van').value||0;F.interKg=+$('#fe-ikg').value||0;F.express=+$('#fe-exp').value||0;F.min=+$('#fe-min').value||0;

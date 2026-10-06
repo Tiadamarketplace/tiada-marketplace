@@ -1367,6 +1367,9 @@ function drawArt(p){
   return `<svg viewBox="0 0 140 140" aria-hidden="true">${shadow}<rect x="40" y="30" width="22" height="46" rx="3" fill="#C8462C"/><rect x="58" y="22" width="24" height="52" rx="3" fill="#24356B"/><rect x="78" y="34" width="22" height="42" rx="4" fill="#2F7D3A"/><rect x="44" y="40" width="14" height="10" fill="#fff"/><rect x="62" y="34" width="16" height="10" fill="#fff"/><rect x="82" y="46" width="14" height="10" fill="#fff"/><path d="M28 72h84l-10 46a6 6 0 0 1-6 5H44a6 6 0 0 1-6-5z" fill="#0B3A23"/><path d="M36 86h68M38 100h64" stroke="#D49B41" stroke-width="2"/><text x="70" y="96" text-anchor="middle" font-family="Montserrat,sans-serif" font-weight="800" font-size="12" fill="#D49B41">COMBO ${esc(p.n)}</text></svg>`;
 }
 const ICON={
+ bike:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17h5l3-6h3l1 6"/><path d="M14 11l-2-4H9"/>',
+ scale:'<path d="M12 4v16M5 20h14"/><path d="M5 8h14"/><path d="m5 8-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/>',
+ wave:'<path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M10 10V5a1.5 1.5 0 0 1 3 0v5"/><path d="M13 10V6a1.5 1.5 0 0 1 3 0v6"/><path d="M16 11a1.5 1.5 0 0 1 3 0v3a7 7 0 0 1-7 7h-1a6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L7 14"/>',
  swap:'<path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/>',
  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 7h6"/>',
  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
@@ -1406,6 +1409,7 @@ const ICON={
  basket:'<path d="M3 10h18l-2 10H5z"/><path d="M8 10l3-6M16 10l-3-6"/>',
  sack:'<path d="M8 6c-3 4-4 9-3 14h14c1-5 0-10-3-14z"/><path d="M8 6h8M10 3h4"/>',
 };
+const ici=(n,s)=>ic(n,s||16).replace('<svg','<svg style="vertical-align:-3px;margin-right:6px;flex:none"');
 const ic=(n,s,fill)=>`<svg width="${s||22}" height="${s||22}" viewBox="0 0 24 24" fill="${fill?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
 /* ---------- nav ---------- */
@@ -1727,7 +1731,7 @@ function summaryLines(withFee){
   const sub=subtotal(), disc=S.promo?500:0;
   const saved=S.cart.reduce((a,c)=>{const pr=priceOf(byId(c.pid),c.size);return a+(pr.was?(pr.was-pr.now)*c.qty:0)},0);
   let html=`<div class="line"><span>Basket subtotal</span><span class="num">${naira(sub)}</span></div>`;
-  if(saved)html+=`<div class="line savings"><span>🏷 You’re saving on promos</span><span class="num">${naira(saved)}</span></div>`;
+  if(saved)html+=`<div class="line savings"><span>${ici('tag')}You’re saving on promos</span><span class="num">${naira(saved)}</span></div>`;
   if(disc)html+=`<div class="line"><span>Coupon ${S.promo}</span><span class="num" style="color:var(--green)">−${naira(disc)}</span></div>`;
   let fee=null;
   if(withFee){fee=deliveryFee();html+=fee.err?'':`<div class="line"><span>Delivery fee <span class="hint">(${fee.desc})</span></span><span class="num">${fee.total==null?'—':naira(fee.total)}</span></div>`;}
@@ -1743,12 +1747,12 @@ function vCart(){
     <div class="rows">${S.cart.map((c,i)=>{const p=byId(c.pid),pr=priceOf(p,c.size);return `<div class="row">
       <button class="thumb" style="border:0;padding:0" data-open="${p.id}" data-tip="View product">${art(p)}</button>
       <div style="min-width:0"><h4>${esc(p.name)}</h4><div class="meta num">${c.size} · ${naira(pr.now)}${pr.was?` <s>${naira(pr.was)}</s> <span class="poff sm">-${offPct(pr)}%</span>`:''} × ${c.qty}</div>${p.items?`<div class="cswaps">${(c.swaps||[]).map(w=>`<span>${esc(w.from)} → ${esc(w.to)}</span>`).join('')}<button class="link" style="font-size:11.5px" data-open="${p.id}">${(c.swaps||[]).length?'Change swaps':'Swap items'}</button></div>`:''}</div>
-      <div class="right"><b class="num">${naira(pr.now*c.qty)}</b><div class="qty"><button data-qty="${i}|-1" aria-label="Decrease" data-tip="${c.qty>1?'Remove one':'Remove item'}">${c.qty>1?'−':'🗑'}</button><span class="num">${c.qty}</span><button class="plus" data-qty="${i}|1" aria-label="Increase" data-tip="Add one more">+</button></div></div>
+      <div class="right"><b class="num">${naira(pr.now*c.qty)}</b><div class="qty"><button data-qty="${i}|-1" aria-label="Decrease" data-tip="${c.qty>1?'Remove one':'Remove item'}">${c.qty>1?'−':ic('trash',16)}</button><span class="num">${c.qty}</span><button class="plus" data-qty="${i}|1" aria-label="Increase" data-tip="Add one more">+</button></div></div>
     </div>`}).join('')}</div>
     <div class="panel"><h3>Order summary</h3>${summaryLines(false).html}
       <div class="promo"><input id="promo" placeholder="Coupon code" value="${S.promo||''}" aria-label="Coupon code"><button data-act="promo" data-tip="Try TIADACARE">Apply</button></div>
       ${below?`<div class="alert">Minimum order value for delivery is ${naira(MIN)}. Please add ${naira(MIN-sub)} more.</div>`:''}
-      <button class="btn" data-go="checkout" ${below?`disabled data-tip="Add ${naira(MIN-sub)} more to unlock delivery"`:''}>🔒 Proceed to checkout</button>
+      <button class="btn" data-go="checkout" ${below?`disabled data-tip="Add ${naira(MIN-sub)} more to unlock delivery"`:''}>${ici('lock')}Proceed to checkout</button>
       <p class="hint" style="margin:8px 0 0">Delivery is calculated from distance and basket weight on the next step.</p>
     </div>
   </div>`;
@@ -1808,7 +1812,7 @@ function vCheckout(){
       <div style="height:6px"></div>
       ${summaryLines(true).html}
       ${f.total!=null?`<div class="kgbox"><div class="line"><span>Basket weight</span><b class="num">${cartKg().toFixed(1)} kg</b></div><div class="line"><span>${f.inter?`Courier to ${esc(f.z.state)} (first 5 kg)`:`Delivery base (${f.z.km} km)`}</span><span class="num">${naira(f.base)}</span></div>${f.weight?`<div class="line"><span>Extra weight (${f.inter?'₦400':'₦50'} per kg above 5 kg)</span><span class="num">${naira(f.weight)}</span></div>`:''}${f.van?`<div class="line"><span>Van for 20 kg+</span><span class="num">${naira(f.van)}</span></div>`:''}${f.rush?`<div class="line"><span>${f.inter?'Express courier':'Priority delivery'}</span><span class="num">${naira(f.rush)}</span></div>`:''}</div>`:''}
-      <button class="btn" data-act="pay" ${ok?'':'disabled'}>🔒 Pay by bank transfer</button>
+      <button class="btn" data-act="pay" ${ok?'':'disabled'}>${ici('lock')}Pay by bank transfer</button>
       ${ok?'':'<p class="hint" style="margin:8px 0 0">Add your name, email, phone, address and area to continue.</p>'}
       <div class="note-row safe" style="margin-top:12px">${ic('shield',16)}<span>Payments run through a licensed provider. Tiada never sees or stores your bank login, card details or PIN.</span></div>
     </div>
@@ -1851,7 +1855,7 @@ function vSuccess(){
     <button class="btn ghost" data-go="home">Keep shopping</button>
   </div>`;
 }
-function greeting(){const n=esc(S.user?S.user.name.split(' ')[0]:'there');const h=new Date().getHours();if(h>=5&&h<12)return `Good Morning, ${n}! ☀️`;if(h>=12&&h<17)return `Good Afternoon, ${n}! 🌤️`;return `Good Evening, ${n}! 🌙`}
+function greeting(){const n=esc(S.user?S.user.name.split(' ')[0]:'there');const h=new Date().getHours();if(h>=5&&h<12)return `Good morning, ${n}!`;if(h>=12&&h<17)return `Good afternoon, ${n}!`;return `Good evening, ${n}!`}
 const maskPhone=p=>{p=(p||'').replace(/\D/g,'');return p.length>=8?p.slice(0,4)+' ••• '+p.slice(-4):p};
 const maskEmail=e=>{if(!e||!e.includes('@'))return e||'';const [u,d]=e.split('@');return u.slice(0,2)+'•••@'+d};
 const fmtPhone=p=>{p=(p||'').replace(/\D/g,'');return p.length===11?p.slice(0,4)+' '+p.slice(4,7)+' '+p.slice(7):p};
@@ -1877,7 +1881,7 @@ function mapHTML(o){
     <text x="44" y="224" text-anchor="middle" font-family="Montserrat,sans-serif" font-size="10" font-weight="700" fill="#0B3A23">Ojota hub</text>
     <g transform="translate(360 36)"><path d="M0 4c-6-7-10-11-10-16a10 10 0 0 1 20 0c0 5-4 9-10 16z" fill="#B8402B"/><circle cy="-12" r="3.5" fill="#fff"/></g>
     <text x="352" y="62" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10" font-weight="700" fill="#0B3A23">${esc(dest)}</text>
-    <g class="rdot"><circle r="15" fill="#D49B41" opacity=".25"/><circle r="10" fill="#0B3A23" stroke="#fff" stroke-width="2.5"/><text y="3.5" text-anchor="middle" font-size="10">${inter?'🚚':'🛵'}</text></g>
+    <g class="rdot"><circle r="15" fill="#D49B41" opacity=".25"/><circle r="10" fill="#0B3A23" stroke="#fff" stroke-width="2.5"/><g transform="translate(-6 -6) scale(.5)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICON[inter?'truck':'bike']}</g></g>
    </svg>
    <div class="eta"><span class="eta-t">Locating…</span><span class="hint">Estimate only · depends on traffic and the delivery partner</span></div>
   </div>`;
@@ -1901,7 +1905,7 @@ function timelineHTML(o){
   const order=['paid','packed','route','done'],ix=order.indexOf(o.status);
   const steps=[['Payment confirmed','Verified automatically by the bank'],['Packed at Ojota hub','Quality checked and sealed'],['On the way',o.rider?`With ${esc(o.rider.name)}`:'A rider is assigned once packed'],['Delivered','Enjoy your foodstuffs']];
   return `<ol class="timeline">${steps.map((s,i)=>`<li class="${i<ix||o.status==='done'?'done':i===ix?'now':''}"><span><b>${s[0]}</b><small>${s[1]}</small></span></li>`).join('')}</ol>`+
-   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&o.rider?`<div class="rider" style="margin-top:10px"><span>🛵 <b>${esc(o.rider.name)}</b> · <span class="num">${fmtPhone(o.rider.phone)}</span></span><button class="copy" data-copy="${o.rider.phone}" data-tip="Copy rider’s number">Copy number</button></div>`:'');
+   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&o.rider?`<div class="rider" style="margin-top:10px"><span>${ici('bike')}<b>${esc(o.rider.name)}</b> · <span class="num">${fmtPhone(o.rider.phone)}</span></span><button class="copy" data-copy="${o.rider.phone}" data-tip="Copy rider’s number">Copy number</button></div>`:'');
 }
 /* ---- auth ---- */
 let auth={step:'phone',name:'',phone:'',agree:false,tries:0,lockUntil:0,resendAt:0,err:''};
@@ -2146,10 +2150,10 @@ function openProductSync(id){
         ${p.sizes.length>1?`<div class="sizes">${p.sizes.map(s=>`<button data-size="${p.id}|${s.label}" data-reopen="${p.id}" class="${s.label===size?'on':''}" ${s.na?'disabled':''} data-tip="${s.na?'Not sold in this size':sizeTip(p,s)}">${s.label==='1 paint'?'1 paint bucket':s.label}${p.sale&&p.sale[s.label]?` <span class="szoff">-${Math.round((1-p.sale[s.label]/s.price)*100)}%</span>`:''}</button>`).join('')}</div>`:''}
         <div class="price num"><b>${naira(pr.now)}</b>${pr.was?`<s>${naira(pr.was)}</s><span class="poff">-${offPct(pr)}%</span>`:''}</div>
         ${pr.was?`<span class="save num">You save ${naira(pr.was-pr.now)} on this size</span>`:''}
-        <span class="hint num">⚖ ${size==='Package'?'Package weight':'Weight'}: about ${pr.kg} kg · used to work out delivery</span>
+        <span class="hint num">${ici('scale',14)}${size==='Package'?'Package weight':'Weight'}: about ${pr.kg} kg · used to work out delivery</span>
         ${p.stock<5&&!out?`<span class="urgent">Only ${p.stock} left!</span>`:''}
         <div style="display:flex;gap:8px"><button class="btn" style="margin:0;flex:1" data-add="${p.id}" ${out?'disabled':''}>${out?'Not available':'Add to basket'}</button><button class="btn ghost" style="margin:0;width:52px" data-wish="${p.id}" data-reopen="${p.id}" aria-label="Wishlist" data-tip="${wished?'Remove from wishlist':'Save to wishlist'}">${ic('heart',20,wished)}</button></div>
-        <button class="report" data-report="${p.id}" data-tip="Wrong photo, weight or price? Get ₦500 off">⚠️ Report incorrect product info</button>
+        <button class="report" data-report="${p.id}" data-tip="Wrong photo, weight or price? Get ₦500 off">${ici('alert',15)}Report incorrect product info</button>
       </div>
     </div>
     ${rel.length?`<div class="sec-h"><h2>Customers also viewed</h2></div><div class="rail">${rel.map(r=>`<div class="mini"><button data-open="${r.id}" style="border:0;background:none;padding:0;width:100%;text-align:left"><div class="im">${art(r)}</div><b>${esc(r.name)}</b><span class="num">${naira(priceOf(r,sizeOf(r)).now)}</span></button>${r.status!=='out'?`<button class="plus" data-add="${r.id}" aria-label="Add ${esc(r.name)}" data-tip="Quick add">+</button>`:''}</div>`).join('')}</div>`:''}
@@ -2196,7 +2200,7 @@ const firstName=()=>S.user?esc(S.user.name.split(' ')[0]):'';
 function renderChatFab(){const b=$('#chat-badge');if(!b)return;b.hidden=!CH.unread;b.textContent=CH.unread}
 function cpush(who,t,extra){S.chat.push(Object.assign({who,t,at:chatTime()},extra||{}));if(!$('#chat')&&who!=='me'&&who!=='sys'){CH.unread++;renderChatFab()}chatPaint()}
 function chatStart(){clearTimeout(CH.idleT);clearTimeout(CH.warnT);S.chat=[];CH.mode='bot';CH.typing=false;CH.ticket=null;
-  cpush('bot',`Hi${firstName()?' '+firstName():''}! 👋 I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
+  cpush('bot',`Hi${firstName()?' '+firstName():''}! I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
 function openChat(){
   if(!S.chat.length||!S.chat[0].at)chatStart();
   CH.unread=0;renderChatFab();
@@ -2239,7 +2243,7 @@ const priceLine=p=>p.sizes.filter(s=>!s.na).map(s=>{const sale=p.sale&&p.sale[s.
 function botAnswer(raw){
   const q=raw.toLowerCase().replace(/[’']/g,"'"),has=re=>re.test(q);
   if(has(/\b(human|agent|person|people|someone|somebody|representative|rep|staff|admin|customer (care|service)|real person|support team|talk to (you|a|an|someone)|call me)\b/))return 'HUMAN';
-  if(has(/\b(pin|otp|password|bvn|cvv)\b/))return {t:'🔒 Please never share your PIN, OTP, password, BVN or card details with anyone, including us. Tiada will never ask for them.'};
+  if(has(/\b(pin|otp|password|bvn|cvv)\b/))return {t:'Please never share your PIN, OTP, password, BVN or card details with anyone, including us. Tiada will never ask for them.'};
   if(has(/\b(refund|refunds|missing|damaged|broken|wrong item|expired|spoilt|spoiled|bad|complain|complaint|return)\b/))return {t:'Sorry about that. Send us your TD code and a photo within 24 hours of delivery, and we’ll replace the item or refund it to your bank.',btn:'<button data-chatq="Talk to a person">Talk to a person now</button>'};
   if(has(/\b(cancel|cancellation|change my order|edit my order)\b/))return {t:'Orders can usually be changed or cancelled before they’re packed. A team member needs to do that for you.',btn:'<button data-chatq="Talk to a person">Talk to a person</button>'};
   const code=(raw.toUpperCase().match(/TD-?\s?\d{5}/)||[])[0];
@@ -2256,7 +2260,7 @@ function botAnswer(raw){
     return {t:ps.map(p=>`<b>${p.name}</b>${p.status==='out'?' · <span style="color:var(--red)">sold out right now</span>':p.stock<5?` · only ${p.stock} left`:''}<br>${priceLine(p)}`).join('<br><br>')+'<br><br>Delivery is added at checkout.',btn:ps.filter(p=>p.status!=='out').slice(0,2).map(p=>`<button data-open="${p.id}">View ${p.name}</button>`).join('')}}
   if(wantsCombo||has(/\b(student pack|starter pack)\b/)){
     const food=has(/\b(food|foodstuffs?|rice|garri|beans|spaghetti|noodles|students?|semo|oil|emergency)\b/),cer=has(/\b(cereal|cereals|breakfast|milo|cornflakes|coco|golden morn)\b/);
-    const line=c=>`${c.n==='E'?'':'#'+c.n+' '}${c.name}: <b>${naira(priceOf(c,'Package').now)}</b>${c.sale?' 🏷':''}`;
+    const line=c=>`${c.n==='E'?'':'#'+c.n+' '}${c.name}: <b>${naira(priceOf(c,'Package').now)}</b>${c.sale?' <span class="hint">(on sale)</span>':''}`;
     let t='';if(!food||cer)t+=`<b>Cereal combos</b><br>${CEREAL_COMBOS.map(line).join('<br>')}`;
     if(!cer||food)t+=`${t?'<br><br>':''}<b>Foodstuff combos</b><br>${FOOD_COMBOS.map(line).join('<br>')}`;
     return {t:t+'<br><br>Quantities differ by package, delivery is extra, and you can swap any item for something worth the same.',btn:`${!food||cer?'<button data-cat="ccombo">Cereal combos</button>':''}${!cer||food?'<button data-cat="fcombo">Foodstuff combos</button>':''}`}}
@@ -2277,7 +2281,7 @@ function botAnswer(raw){
   if(has(/\b(student|students|hostel|campus|school|unilag|lasu|yabatech)\b/))return {t:'We love students! Our <b>Student Combo</b> is ₦10,000 and the <b>Emergency Combo</b> is ₦5,000. Add your hostel and room in the landmark box at checkout so the rider finds you.',btn:'<button data-cat="fcombo">Student combos</button>'};
   if(has(/\b(price|prices|cost|costs|how much|price list|pricelist)\b/))return {t:`Here are some starting prices (250g or smallest size):<br>${P.filter(p=>p.status!=='out').slice(0,8).map(p=>{const s=p.sizes.find(x=>!x.na);return `${p.name}: from <b>${naira(s.price)}</b>`}).join('<br>')}<br><br>Tell me a product name for every size.`};
   if(has(/^(hi|hello|hey|hiya|good (morning|afternoon|evening)|howdy|yo|sup)\b/))return {t:`Hello${firstName()?' '+firstName():''}! What can I help you with today?`};
-  if(has(/\b(bye|goodbye|that's all|nothing else|no thanks)\b/))return {t:'Thanks for chatting with Tiada. Have a lovely day! 💚'};
+  if(has(/\b(bye|goodbye|that's all|nothing else|no thanks)\b/))return {t:'Thanks for chatting with Tiada. Have a lovely day!'};
   if(has(/\b(thank|thanks|thank you|ok|okay|alright|great|nice|cool)\b/))return {t:'You’re welcome! Anything else I can help with?'};
   return {t:'I’m not completely sure about that one. I can connect you to someone from our team who can help.',btn:'<button data-chatq="Talk to a person">Talk to a person</button>'};
 }
@@ -2480,10 +2484,10 @@ function emailHTML(m){
     <div class="box"><b>Tracking code: ${o.id}</b><br><small>Use it any time with “Track an order”.</small></div>
     <table>${rows}<tr><td><b>Total paid</b></td><td><b>${naira(o.total)}</b></td></tr></table>
     <p><b>Delivery:</b> ${esc(o.speed||'')}<br><b>Address:</b> ${esc(o.addr||'')}</p><p>We’ll email you again as soon as your order is on the way.</p>`;
-  if(m.kind==='route')body=`<h2>Your order is on the way 🚚</h2><p>Your foodstuffs for <b>${o.id}</b> have been packed, quality checked and handed to our delivery partner.</p>
+  if(m.kind==='route')body=`<h2>Your order is on the way</h2><p>Your foodstuffs for <b>${o.id}</b> have been packed, quality checked and handed to our delivery partner.</p>
     <div class="box"><b>Delivery details</b><br>${o.rider?`${o.rider.courier?'Courier':'Rider'}: ${esc(o.rider.name)}<br>Phone: ${fmtPhone(o.rider.phone)}<br>`:''}Speed: ${esc(o.speed||'')}<br>Tracking code: ${o.id}</div>
     <p>Please keep your phone line open so we can reach you when we’re close. You can follow the live map in your account.</p>`;
-  if(m.kind==='done')body=`<h2>Delivered! Enjoy your food 💚</h2><p>Your order <b>${o.id}</b> has been delivered to ${esc(o.addr||'your address')}.</p>
+  if(m.kind==='done')body=`<h2>Delivered! Enjoy your food</h2><p>Your order <b>${o.id}</b> has been delivered to ${esc(o.addr||'your address')}.</p>
     <table>${rows}<tr><td><b>Total paid</b></td><td><b>${naira(o.total)}</b></td></tr></table>
     <p>Something missing or damaged? Reply to this email or WhatsApp us within 24 hours with your TD code and a photo.</p><p>We’d love to hear how it went: rate your items in the app.</p>`;
   return `<div class="mail-wrap"><div class="mail-meta"><span>From</span><b>Tiada Marketplace &lt;orders@tiadamarketplace.com&gt;</b><span>To</span><b>${esc(m.to)}</b><span>Subject</span><b>${esc(m.subj)}</b><span>Sent</span><b>${esc(m.at)}</b></div>
@@ -2911,7 +2915,7 @@ let chatPoll=null,lastMsgId=0;
 const chatSess=()=>{try{return JSON.parse(localStorage.getItem(CHAT_KEY)||'null')}catch(_){return null}};
 const setChatSess=v=>{try{localStorage.setItem(CHAT_KEY,JSON.stringify(v))}catch(_){}};
 function chatStart(){clearTimeout(CH.idleT);clearTimeout(CH.warnT);S.chat=[];CH.mode='bot';CH.typing=false;CH.agent=null;lastMsgId=0;setChatSess(null);
-  cpush('bot',`Hi${firstName()?' '+firstName():''}! 👋 I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
+  cpush('bot',`Hi${firstName()?' '+firstName():''}! I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
 async function ensureChat(){let s=chatSess();if(s)return s;const r=await api('/api/chat',{body:{action:'start'}});s={id:r.id,token:r.token};setChatSess(s);return s}
 const plain=h=>String(h).replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').slice(0,1500);
 async function logChat(who,text){try{const s=await ensureChat();const r=await api('/api/chat',{body:{action:'send',id:s.id,token:s.token,who,text:plain(text)}});if(r&&r.id)lastMsgId=Math.max(lastMsgId,r.id)}catch(_){}}
@@ -2965,7 +2969,7 @@ function timelineHTML(o){
   const r=o.rider;
   const steps=[['Payment confirmed','Verified automatically by the bank'],['Packed at Ojota hub','Quality checked and sealed'],['On the way',r?`With ${esc(r.name)}${r.tracking?' · tracking '+esc(r.tracking):''}`:'Handed to a delivery partner once packed'],['Delivered','Enjoy your foodstuffs']];
   return `<ol class="timeline">${steps.map((s,i)=>`<li class="${i<ix||o.status==='done'?'done':i===ix?'now':''}"><span><b>${s[0]}</b><small>${s[1]}</small></span></li>`).join('')}</ol>`+
-   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&r&&r.phone?`<div class="rider" style="margin-top:10px"><span>${o.zone&&String(o.zone).startsWith('st:')?'🚚':'🛵'} <b>${esc(r.name)}</b> · <span class="num">${fmtPhone(r.phone)}</span></span><button class="copy" data-copy="${esc(r.phone)}" data-tip="Copy driver’s number">Copy number</button></div>`:'');
+   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&r&&r.phone?`<div class="rider" style="margin-top:10px"><span>${ici(o.zone&&String(o.zone).startsWith('st:')?'truck':'bike')}<b>${esc(r.name)}</b> · <span class="num">${fmtPhone(r.phone)}</span></span><button class="copy" data-copy="${esc(r.phone)}" data-tip="Copy driver’s number">Copy number</button></div>`:'');
 }
 /* delivery estimate in days from distance; shown on the tracker only, always as an estimate */
 function etaDays(km,inter){

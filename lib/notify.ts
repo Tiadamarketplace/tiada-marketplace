@@ -33,14 +33,14 @@ export function compose(o: Order, kind: Kind, d: Data = {}) {
     case 'route': return {
       subject: `Your order ${o.id} is on the way!`, title: 'Your order is on the way',
       inbox: `${o.id} is on the way with ${r.partner || 'our delivery partner'}${r.tracking ? ' (' + r.tracking + ')' : ''}. Keep your phone line open.`,
-      html: layout({ heading: 'Your order is on the way 🚚', cta: { label: 'Track my order', url: track }, bodyHtml:
+      html: layout({ heading: 'Your order is on the way', cta: { label: 'Track my order', url: track }, bodyHtml:
         p(`Hello ${first},`) + p(`Your order <b>${o.id}</b> has been packed, quality checked and handed to our delivery partner.`) +
         box(`<b>Delivery partner:</b> ${esc(r.partner || '')}${r.tracking ? `<br><b>Tracking number:</b> ${esc(r.tracking)}` : ''}${r.driver ? `<br><b>Driver:</b> ${esc(r.driver)}` : ''}${r.phone ? `<br><b>Phone:</b> ${fmtPhone(r.phone)}` : ''}<br><b>Speed:</b> ${esc(o.speed_label || o.speed)}`) +
         p('Please keep your phone line open so the driver can reach you.') }) };
     case 'done': return {
       subject: `Delivered: enjoy your order ${o.id}`, title: `Delivered: ${o.id}`,
       inbox: 'Enjoy your foodstuffs! Rate what you bought to help other buyers.',
-      html: layout({ heading: 'Delivered! Enjoy your food 💚', cta: { label: 'Rate your order', url: `${env.siteUrl}/#reviews` }, bodyHtml:
+      html: layout({ heading: 'Delivered! Enjoy your food', cta: { label: 'Rate your order', url: `${env.siteUrl}/#reviews` }, bodyHtml:
         p(`Hello ${first},`) + p(`Your order <b>${o.id}</b> has been delivered to ${esc(o.address)}.`) + itemsTable(o.items, o.total, extras) +
         p('Something missing or damaged? Reply to this email or WhatsApp us on 08075110000 within 24 hours with your TD code and a photo.') }) };
     case 'issue': return {

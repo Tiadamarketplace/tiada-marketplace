@@ -242,7 +242,7 @@ let chatPoll=null,lastMsgId=0;
 const chatSess=()=>{try{return JSON.parse(localStorage.getItem(CHAT_KEY)||'null')}catch(_){return null}};
 const setChatSess=v=>{try{localStorage.setItem(CHAT_KEY,JSON.stringify(v))}catch(_){}};
 function chatStart(){clearTimeout(CH.idleT);clearTimeout(CH.warnT);S.chat=[];CH.mode='bot';CH.typing=false;CH.agent=null;lastMsgId=0;setChatSess(null);
-  cpush('bot',`Hi${firstName()?' '+firstName():''}! 👋 I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
+  cpush('bot',`Hi${firstName()?' '+firstName():''}! I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
 async function ensureChat(){let s=chatSess();if(s)return s;const r=await api('/api/chat',{body:{action:'start'}});s={id:r.id,token:r.token};setChatSess(s);return s}
 const plain=h=>String(h).replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').slice(0,1500);
 async function logChat(who,text){try{const s=await ensureChat();const r=await api('/api/chat',{body:{action:'send',id:s.id,token:s.token,who,text:plain(text)}});if(r&&r.id)lastMsgId=Math.max(lastMsgId,r.id)}catch(_){}}
@@ -296,7 +296,7 @@ function timelineHTML(o){
   const r=o.rider;
   const steps=[['Payment confirmed','Verified automatically by the bank'],['Packed at Ojota hub','Quality checked and sealed'],['On the way',r?`With ${esc(r.name)}${r.tracking?' · tracking '+esc(r.tracking):''}`:'Handed to a delivery partner once packed'],['Delivered','Enjoy your foodstuffs']];
   return `<ol class="timeline">${steps.map((s,i)=>`<li class="${i<ix||o.status==='done'?'done':i===ix?'now':''}"><span><b>${s[0]}</b><small>${s[1]}</small></span></li>`).join('')}</ol>`+
-   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&r&&r.phone?`<div class="rider" style="margin-top:10px"><span>${o.zone&&String(o.zone).startsWith('st:')?'🚚':'🛵'} <b>${esc(r.name)}</b> · <span class="num">${fmtPhone(r.phone)}</span></span><button class="copy" data-copy="${esc(r.phone)}" data-tip="Copy driver’s number">Copy number</button></div>`:'');
+   (o.status==='route'?mapHTML(o):'')+(o.status==='route'&&r&&r.phone?`<div class="rider" style="margin-top:10px"><span>${ici(o.zone&&String(o.zone).startsWith('st:')?'truck':'bike')}<b>${esc(r.name)}</b> · <span class="num">${fmtPhone(r.phone)}</span></span><button class="copy" data-copy="${esc(r.phone)}" data-tip="Copy driver’s number">Copy number</button></div>`:'');
 }
 /* delivery estimate in days from distance; shown on the tracker only, always as an estimate */
 function etaDays(km,inter){
