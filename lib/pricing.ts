@@ -46,12 +46,12 @@ export async function priceCart(items: CartItemT[], opts: { zoneId: string; spee
     const extra = kg > 5 ? Math.ceil(kg - 5) * fees.interKg : 0;
     const rush = opts.speed === 'same' ? fees.express : 0;
     fee = zone.fee + extra + rush;
-    speedLabel = opts.speed === 'same' ? 'Express courier (1–2 days)' : `Standard courier (${zone.days || '2–4 days'})`;
+    speedLabel = opts.speed === 'same' ? 'Express courier' : 'Standard courier';
   } else {
     const weight = kg > 5 ? Math.round((kg - 5) * fees.lagosKg) : 0;
     const van = kg > 20 ? fees.van : 0;
-    if (opts.speed === 'eco') { fee = fees.eco + weight + van; speedLabel = `Economy weekly batch (${zone.day || 'weekly'})`; }
-    else { fee = zone.fee + weight + van + (opts.speed === 'same' ? fees.same : 0); speedLabel = opts.speed === 'same' ? 'Same-day priority' : 'Next-day standard'; }
+    if (opts.speed === 'eco') { fee = fees.eco + weight + van; speedLabel = 'Economy delivery (grouped)'; }
+    else { fee = zone.fee + weight + van + (opts.speed === 'same' ? fees.same : 0); speedLabel = opts.speed === 'same' ? 'Priority delivery' : 'Standard delivery'; }
   }
   const total = subtotal - discount + fee;
   return { lines, subtotal, discount, voucher: discount ? code : null, fee, total, kg, zone, speedLabel };

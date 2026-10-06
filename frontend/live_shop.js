@@ -68,28 +68,42 @@ async function loadAccount(){
 }
 Object.assign(STATUS,{paid:['Paid · packing','paid'],issue:['Problem · we’ll update you','paid'],refunded:['Refunded','done'],cancelled:['Cancelled','done']});
 
-/* email sign-in replaces the phone code */
-auth={step:'email',name:'',email:'',agree:false,err:'',resendAt:0,busy:false};
+/* ---------- sign up / sign in (6-digit email code, no password) ---------- */
+auth={step:'email',mode:'signup',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
+const AUTH_PERKS=[['truck','Track every order','See packing, dispatch and delivery in one place'],['pin','Saved addresses','Check out in seconds next time'],['star','Rate what you buy','Help other shoppers pick well'],['shield','No password to forget','We email you a one-time code']];
+function authShell(inner){
+  return `<div class="au2">
+   <aside class="au2-side"><img src="/icon-sm.png" alt="" class="au2-logo"><h2>Welcome to <br>Tiada Marketplace</h2><p>Foodstuffs and cereals, delivered anywhere in Nigeria.</p>
+    <ul>${AUTH_PERKS.map(x=>`<li><span>${ic(x[0],18)}</span><div><b>${x[1]}</b><small>${x[2]}</small></div></li>`).join('')}</ul></aside>
+   <section class="au2-main">${inner}</section></div>`;
+}
 function vAuth(){
-  if(auth.step==='code')return `<div class="auth"><h1 class="page">Check your email</h1><p class="sub">We sent a 6-digit code to <b>${esc(auth.email)}</b>. <button class="link" data-act="authback">Use another email</button></p>
-    <div class="panel"><form id="auth-code" novalidate autocomplete="off">
-      <div class="field"><label for="au-code">6-digit code</label><input id="au-code" class="num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="height:56px;font-size:26px;font-weight:800;letter-spacing:.5em;text-align:center"></div>
+  if(auth.step==='code')return authShell(`<button class="au2-back" data-act="authback">${ic('back',16)} Use another email</button>
+    <h1 class="au2-h">Check your email</h1><p class="au2-sub">We sent a 6-digit code to <b>${esc(auth.email)}</b>. It expires in 10 minutes.</p>
+    <form id="auth-code" novalidate autocomplete="off">
+      <div class="field"><label for="au-code">6-digit code</label><input id="au-code" class="num au2-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>
       <div id="otp-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
-      <button class="btn" type="submit">Verify and sign in</button>
-      <p class="hint" style="margin:10px 0 0;text-align:center"><span id="resend"></span></p>
-      <p class="hint" style="margin:6px 0 0;text-align:center">Can’t see it? Check your spam or promotions folder.</p>
-    </form></div>
-    <div class="note-row warn" style="margin-top:12px">${ic('alert',16)}<span>Never share this code. Tiada staff will never ask for it.</span></div></div>`;
-  return `<div class="auth"><h1 class="page">Sign in or create an account</h1><p class="sub">We’ll email you a 6-digit code. No password to remember.</p>
-  <div class="panel"><form id="auth-email" novalidate>
-    <div class="field" id="f-name"><label for="au-name">Your name <span style="text-transform:none;font-weight:500">(new customers)</span></label><input id="au-name" autocomplete="name" placeholder="e.g. Adeola Oladipo" maxlength="60" value="${esc(auth.name)}"></div>
-    <div class="field" id="f-email"><label for="au-email">Email address</label><input id="au-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(auth.email)}"><span class="err">Enter a valid email address.</span></div>
-    <label class="check-row" id="f-agree"><input type="checkbox" id="au-agree" ${auth.agree?'checked':''}><span>I agree to the <button type="button" class="link" style="font-size:13px;padding:0" data-go="privacy">privacy policy</button> and terms of sale.</span></label>
-    <div id="agree-err" class="alert" hidden>Please accept the privacy policy to continue.</div>
-    <div id="auth-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
-    <button class="btn" type="submit">Email me a code</button>
-  </form></div>
-  <div class="note-row safe" style="margin-top:12px">${ic('lock',16)}<span>Your email is only used to sign you in and send order updates. We never sell it or share it with advertisers.</span></div></div>`;
+      <button class="btn" type="submit">${auth.mode==='signup'?'Verify and create my account':'Verify and sign in'}</button>
+      <p class="hint au2-c"><span id="resend"></span></p>
+      <p class="hint au2-c">Can’t see it? Check your spam or promotions folder.</p>
+    </form>
+    <div class="note-row warn" style="margin-top:14px">${ic('alert',16)}<span>Never share this code. Tiada staff will never ask for it.</span></div>`);
+  const up=auth.mode==='signup';
+  return authShell(`<div class="au2-tabs" role="tablist"><button role="tab" aria-selected="${up}" class="${up?'on':''}" data-authmode="signup">Create account</button><button role="tab" aria-selected="${!up}" class="${up?'':'on'}" data-authmode="signin">Sign in</button></div>
+    <h1 class="au2-h">${up?'Create your account':'Welcome back'}</h1>
+    <p class="au2-sub">${up?'It takes less than a minute. We’ll email you a code to confirm it’s you.':'Enter your email and we’ll send you a 6-digit code.'}</p>
+    <form id="auth-email" novalidate>
+      ${up?`<div class="field" id="f-name"><label for="au-name">Full name</label><input id="au-name" autocomplete="name" placeholder="e.g. Adeola Oladipo" maxlength="60" value="${esc(auth.name)}"><span class="err">Enter your name.</span></div>`:''}
+      <div class="field" id="f-email"><label for="au-email">Email address</label><input id="au-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(auth.email)}"><span class="err">Enter a valid email address.</span></div>
+      ${up?`<div class="field" id="f-phone"><label for="au-phone">Phone number <span style="text-transform:none;font-weight:500">(optional)</span></label><input id="au-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0803 123 4567" value="${esc(auth.phone)}"><span class="err">Use an 11-digit Nigerian number.</span><span class="hint">Only used for delivery calls.</span></div>
+      <label class="check-row" id="f-agree"><input type="checkbox" id="au-agree" ${auth.agree?'checked':''}><span>I agree to the <button type="button" class="link" style="font-size:13px;padding:0" data-go="privacy">privacy policy</button> and terms of sale.</span></label>
+      <div id="agree-err" class="alert" hidden>Please accept the privacy policy to continue.</div>
+      <label class="check-row"><input type="checkbox" id="au-promo" ${auth.promo?'checked':''}><span>Email me new stock and deals (you can turn this off any time).</span></label>`:''}
+      <div id="auth-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
+      <button class="btn" type="submit">${up?'Create account':'Email me a code'}</button>
+    </form>
+    <p class="au2-switch">${up?'Already have an account? <button class="link" data-authmode="signin">Sign in</button>':'New to Tiada? <button class="link" data-authmode="signup">Create an account</button>'}</p>
+    <div class="note-row safe" style="margin-top:12px">${ic('lock',16)}<span>Your details are only used for your orders. We never sell them or share them with advertisers.</span></div>`);
 }
 function tickResend(){const el=$('#resend');if(!el)return;const s=Math.ceil((auth.resendAt-Date.now())/1000);el.innerHTML=s>0?`Didn’t get it? Resend in <b class="num">${s}s</b>`:`<button type="button" class="link" data-act="resend">Resend code</button>`}
 async function sendCode(){
@@ -99,9 +113,9 @@ async function sendCode(){
 async function doVerify(code){
   if(auth.busy)return;auth.busy=true;
   try{await loading('Checking your code','Signing you in securely',500);
-    const r=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.name||undefined}});
+    const r=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.mode==='signup'&&auth.name||undefined,phone:auth.mode==='signup'&&auth.phone?auth.phone.replace(/\D/g,''):undefined,promo_ok:auth.mode==='signup'?auth.promo:undefined}});
     await loading('Loading your account','',300);await loadAccount();
-    auth={step:'email',name:'',email:'',agree:false,err:'',resendAt:0,busy:false};
+    auth={step:'email',mode:'signin',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
     toast(`Welcome${r.isNew?'':' back'}, ${S.user.name.split(' ')[0]}`);
     if(authNext){const f=authNext;authNext=null;render();f()}else render();
   }catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus()}
@@ -244,14 +258,12 @@ function timelineHTML(o){
 function paintMaps(){
   document.querySelectorAll('.tmap').forEach(m=>{
     const id=m.dataset.map,km=+m.dataset.km,inter=m.dataset.inter==='1';
-    const o=S.orders.find(x=>x.id===id),since=(o&&o.since)||Date.now();
-    const dur=inter?2.5*86400000:(o&&/same/i.test(o.speed||'')?90:150)*60000;
-    const p=Math.min(.92,.06+(Date.now()-since)/dur);
+    const o=S.orders.find(x=>x.id===id),r=o&&o.rider;
+    const p=.55; // no live GPS from delivery partners, so we show the route without guessing a time
     const path=m.querySelector('.rt-done'),L=path.getTotalLength(),pt=path.getPointAtLength(L*p);
     path.style.strokeDasharray=`${L*p} ${L}`;
     m.querySelector('.rdot').style.transform=`translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
-    const left=Math.max(.5,km*(1-p));
-    m.querySelector('.eta-t').innerHTML=inter?`About <b>${Math.max(1,Math.ceil((1-p)*2.5))} day${Math.ceil((1-p)*2.5)>1?'s':''}</b> to go`:`Usually arrives in about <b>${Math.max(10,Math.round((1-p)*dur/60000/5)*5)} min</b>`;
+    m.querySelector('.eta-t').innerHTML=`<b>On the way</b>${r&&r.name?' with '+esc(r.name):''}${r&&r.tracking?' · tracking '+esc(r.tracking):''}`;
   });
 }
 
@@ -324,9 +336,12 @@ document.addEventListener('submit',async e=>{
   if(!['auth-email','auth-code','rev-form','addr-form','track-form'].includes(id))return;
   e.preventDefault();e.stopImmediatePropagation();
   if(id==='auth-email'){
-    auth.name=$('#au-name').value.trim();auth.email=$('#au-email').value.trim().toLowerCase();auth.agree=$('#au-agree').checked;auth.err='';
-    const eOk=validEmail(auth.email);$('#f-email').classList.toggle('bad',!eOk);$('#agree-err').hidden=auth.agree;
-    if(!eOk||!auth.agree){f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
+    const up=auth.mode==='signup',v=q=>{const el=$(q);return el?el.value.trim():''};
+    if(up){auth.name=v('#au-name');auth.phone=v('#au-phone');auth.agree=$('#au-agree').checked;auth.promo=$('#au-promo').checked}
+    auth.email=v('#au-email').toLowerCase();auth.err='';
+    const eOk=validEmail(auth.email),nOk=!up||auth.name.length>=2,pOk=!up||!auth.phone||validPhone(auth.phone),aOk=!up||auth.agree;
+    $('#f-email').classList.toggle('bad',!eOk);if(up){$('#f-name').classList.toggle('bad',!nOk);$('#f-phone').classList.toggle('bad',!pOk);$('#agree-err').hidden=aOk}
+    if(!eOk||!nOk||!pOk||!aOk){f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
     try{await loading('Sending your code',`To ${auth.email}`,400);await sendCode();auth.step='code';render();const i=$('#au-code');i&&i.focus()}
     catch(err){auth.err=errMsg(err);render()}
     return}
@@ -354,6 +369,7 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('button,a,[data-act]');if(!t)return;const d=t.dataset,a=d.act;
   const stop=()=>{e.preventDefault();e.stopImmediatePropagation()};
   if(a==='authback'){stop();auth.step='email';auth.err='';render();return}
+  if(d.authmode){stop();auth.mode=d.authmode;auth.err='';render();return}
   if(a==='resend'){stop();sendCode().then(()=>{tickResend();toast('New code sent')}).catch(err=>toast(errMsg(err)));return}
   if(a==='pay'){stop();loading('Creating your secure transfer account','A one-time account just for this order',300).then(createPay);return}
   if(a==='paid-check'){stop();const p=S.pay;if(!p)return;

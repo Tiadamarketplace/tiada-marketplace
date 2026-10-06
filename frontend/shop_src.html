@@ -1600,7 +1600,7 @@ const GUIDE=[
  ['delivery','truck','Checkout and delivery','Where, when and how much',[
    'Add your <b>email</b> (for updates), <b>phone</b> (for the rider) and <b>address</b> with a landmark. Signed in? Pick a saved address in one tap.',
    'Choose your <b>area or state</b>. The fee depends on distance from our Ojota hub and your <b>basket weight</b>, which checkout shows in kg with a full breakdown.',
-   'Pick a speed: <b>Same-day priority</b> (+₦2,500), <b>Next-day standard</b>, or <b>Economy</b> (₦1,000 on your area’s weekly delivery day).',
+   'Pick a delivery option: <b>Priority</b> (+₦2,500, packed and sent out first), <b>Standard</b>, or <b>Economy</b> (₦1,000, grouped with other orders in your area). We confirm timing with you once your order is on its way.',
    'Outside Lagos? We deliver to <b>all 36 states and Abuja</b> by courier. Pick your state; the fee covers the first 5 kg, then ₦400 per extra kg.'],
    [['Go to checkout','go:cart']]],
  ['pay','card','Paying safely','One-time bank transfer, no receipts',[
@@ -1714,7 +1714,7 @@ function deliveryFee(){
   const van=kg>20?3000:0;
   let base=z.fee, rush=0, desc=`${z.km} km`;
   if(S.co.speed==='same'){rush=2500}
-  if(S.co.speed==='eco'){base=1000;desc+=`, ${z.day} batch`}
+  if(S.co.speed==='eco'){base=1000;desc+=', grouped delivery'}
   return{total:base+rush+weight+van,base,rush,weight,van,z,desc:desc+(kg>5?`, ${kg.toFixed(1)} kg`:'')};
 }
 const touched={};
@@ -1729,8 +1729,8 @@ function vCheckout(){
   if(S.user&&!S.co.phone)S.co.phone=S.user.phone;
   if(S.user&&!S.co.email&&S.user.email)S.co.email=S.user.email;
   const f=deliveryFee(), z=f.z, hasCombo=S.cart.some(c=>byId(c.pid).cat.includes('combo'));
-  const sp=z&&z.state?[['same','Express courier','Arrives in about 1–2 days','+₦3,500','Fastest option'],['next','Standard courier',`Arrives in about ${z.days}`,'Base fee','Most popular']]
-    :[['same','Same-day priority','Rider leaves the hub immediately','+₦2,500','Fastest option'],['next','Next-day standard','Batched by neighbourhood to save fuel','Base fee','Most popular'],['eco','Economy weekly batch',z?`Your area delivers on ${z.day}s`:'One fixed day per area','₦1,000 flat','Cheapest option']];
+  const sp=z&&z.state?[['same','Express courier','Faster courier service to your state','+₦3,500','Fastest option'],['next','Standard courier','Regular courier service','Base fee','Most popular']]
+    :[['same','Priority delivery','Packed and sent out first','+₦2,500','Fastest option'],['next','Standard delivery','Our regular Lagos delivery','Base fee','Most popular'],['eco','Economy delivery','Grouped with other orders in your area','₦1,000 flat','Cheapest option']];
   const ok=canPay();
   return `<h1 class="page">Checkout</h1><p class="sub">We deliver to all 36 states and Abuja from our Ojota hub in Lagos.${S.user?'':' <button class="link" data-go="account">Sign in</button> to save addresses and track orders.'}</p>
   <div class="layout2">
@@ -1754,7 +1754,7 @@ function vCheckout(){
       ${S.cart.map(c=>{const p=byId(c.pid);return `<div class="line" style="font-size:12.5px;color:var(--muted)"><span>${esc(p.name)} ${c.size!=='Package'?c.size:''} × ${c.qty}</span><span class="num">${naira(priceOf(p,c.size).now*c.qty)}</span></div>`}).join('')}
       <div style="height:6px"></div>
       ${summaryLines(true).html}
-      ${f.total!=null?`<div class="kgbox"><div class="line"><span>Basket weight</span><b class="num">${cartKg().toFixed(1)} kg</b></div><div class="line"><span>${f.inter?`Courier to ${esc(f.z.state)} (first 5 kg)`:`Delivery base (${f.z.km} km)`}</span><span class="num">${naira(f.base)}</span></div>${f.weight?`<div class="line"><span>Extra weight (${f.inter?'₦400':'₦50'} per kg above 5 kg)</span><span class="num">${naira(f.weight)}</span></div>`:''}${f.van?`<div class="line"><span>Van for 20 kg+</span><span class="num">${naira(f.van)}</span></div>`:''}${f.rush?`<div class="line"><span>${f.inter?'Express courier':'Same-day priority'}</span><span class="num">${naira(f.rush)}</span></div>`:''}</div>`:''}
+      ${f.total!=null?`<div class="kgbox"><div class="line"><span>Basket weight</span><b class="num">${cartKg().toFixed(1)} kg</b></div><div class="line"><span>${f.inter?`Courier to ${esc(f.z.state)} (first 5 kg)`:`Delivery base (${f.z.km} km)`}</span><span class="num">${naira(f.base)}</span></div>${f.weight?`<div class="line"><span>Extra weight (${f.inter?'₦400':'₦50'} per kg above 5 kg)</span><span class="num">${naira(f.weight)}</span></div>`:''}${f.van?`<div class="line"><span>Van for 20 kg+</span><span class="num">${naira(f.van)}</span></div>`:''}${f.rush?`<div class="line"><span>${f.inter?'Express courier':'Priority delivery'}</span><span class="num">${naira(f.rush)}</span></div>`:''}</div>`:''}
       <button class="btn" data-act="pay" ${ok?'':'disabled'}>🔒 Pay by bank transfer</button>
       ${ok?'':'<p class="hint" style="margin:8px 0 0">Add your email, phone, address and area to continue.</p>'}
       <div class="note-row safe" style="margin-top:12px">${ic('shield',16)}<span>Payments run through a licensed provider. Tiada never sees or stores your bank login, card details or PIN.</span></div>
@@ -2025,7 +2025,7 @@ function accPrivacy(){
     <button class="btn red" data-act="deleteacct" id="del-btn" disabled>Delete my account</button></div>`;
 }
 const FAQ=[
- ['When will my order arrive?','Same-day priority orders leave the hub straight away. Next-day standard orders arrive the following day. Economy orders go out on your area’s weekly delivery day, shown at checkout.'],
+ ['When will my order arrive?','Delivery times depend on traffic, distance and our delivery partners, so we don’t promise a fixed day. Priority orders are packed and sent out first. You’ll get an email with the delivery partner and tracking number as soon as your order is on the way, and the rider calls before arriving.'],
  ['Can I swap items in a combo?','Yes. Open the combo, tap Swap next to any item and pick a replacement worth the same. Your swaps show in your basket and at checkout, and the price doesn’t change.'],
  ['What if something is missing or damaged?','Message us on WhatsApp within 24 hours of delivery with your TD code and a photo. We’ll replace the item or refund it to your bank.'],
  ['Is paying by transfer safe?','Each order gets its own one-time account from a licensed payment provider, and it expires after 20 minutes. Always check the account name reads “Tiada Marketplace / Order …” before you send.'],
@@ -2211,9 +2211,9 @@ function botAnswer(raw){
     return {t:t+'<br><br>Quantities differ by package, delivery is extra, and you can swap any item for something worth the same.',btn:`${!food||cer?'<button data-cat="ccombo">Cereal combos</button>':''}${!cer||food?'<button data-cat="fcombo">Foodstuff combos</button>':''}`}}
   const z=zoneFor(q);
   if(z||has(/\b(deliver|delivery|deliveries|shipping|ship|dispatch|rider|logistics|transport|fee|fees|charge)\b/)){
-    if(z&&z.state)return {t:`Yes, we deliver to <b>${esc(z.state)}</b> by courier from our Lagos hub.<br>Standard (${z.days}): <b>${naira(z.fee)}</b><br>Express (1–2 days): <b>${naira(z.fee+3500)}</b><br><br>That covers the first 5 kg. Each extra kg adds ₦400.`};
-    if(z)return {t:`Delivery to <b>${esc(z.label.split(',')[0])}</b> and nearby (about ${z.km} km from Ojota):<br>Next-day: <b>${naira(z.fee)}</b><br>Same-day: <b>${naira(z.fee+2500)}</b><br>Economy (${z.day}s): <b>₦1,000</b><br><br>Baskets over 5 kg add ₦50 per extra kg, and 20 kg+ goes by van (+₦3,000).`};
-    return {t:`We deliver <b>anywhere in Nigeria</b>. Outside Lagos it goes by courier: South-West from ₦4,500, South-South & South-East ₦6,500, North-Central & Abuja ₦7,000, the North ₦8,500 (first 5 kg).<br><br>In Lagos, by our riders:<br>${ZONES.filter(x=>!x.state).map(x=>`${esc(x.label.split(',').slice(0,2).join(', '))}: from <b>${naira(x.fee)}</b>`).join('<br>')}<br><br>Same-day adds ₦2,500. Economy weekly delivery is ₦1,000. Which area are you in?`}}
+    if(z&&z.state)return {t:`Yes, we deliver to <b>${esc(z.state)}</b> by courier from our Lagos hub.<br>Standard courier: <b>${naira(z.fee)}</b><br>Express courier: <b>${naira(z.fee+3500)}</b><br><br>That covers the first 5 kg. Each extra kg adds ₦400.`};
+    if(z)return {t:`Delivery to <b>${esc(z.label.split(',')[0])}</b> and nearby (about ${z.km} km from Ojota):<br>Standard: <b>${naira(z.fee)}</b><br>Priority: <b>${naira(z.fee+2500)}</b><br>Economy (grouped delivery): <b>₦1,000</b><br><br>Baskets over 5 kg add ₦50 per extra kg, and 20 kg+ goes by van (+₦3,000).`};
+    return {t:`We deliver <b>anywhere in Nigeria</b>. Outside Lagos it goes by courier: South-West from ₦4,500, South-South & South-East ₦6,500, North-Central & Abuja ₦7,000, the North ₦8,500 (first 5 kg).<br><br>In Lagos, by our riders:<br>${ZONES.filter(x=>!x.state).map(x=>`${esc(x.label.split(',').slice(0,2).join(', '))}: from <b>${naira(x.fee)}</b>`).join('<br>')}<br><br>Priority delivery adds ₦2,500. Economy (grouped) delivery is ₦1,000. Which area are you in?`}}
   if(has(/\b(minimum|min order|least|smallest)\b/))return {t:`The minimum order for delivery is <b>${naira(MIN)}</b>. Combos are an easy way to reach it.`,btn:'<button data-chatq="Combo prices">See combos</button>'};
   if(has(/\b(pay|paying|payment|transfer|bank|card|ussd|account number|virtual account)\b/))return {t:'At checkout we create a <b>one-time bank account just for your order</b>. Transfer the exact amount from any bank app and your payment confirms automatically. No receipt to upload.<br><br>Check that the account name reads <b>Tiada Marketplace / Order …</b> before you send. The account expires after 20 minutes.'};
   if(has(/\b(swap|change item|replace|substitute|remove item)\b/))return {t:'Yes, you can swap any item in a combo for something worth the same amount. Add a note in the <b>Combo swaps</b> box at checkout.'};

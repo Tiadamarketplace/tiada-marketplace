@@ -10,7 +10,34 @@
 <meta property="og:image" content="/logo-sm.png">
 <link rel="icon" type="image/png" href="/icon-sm.png">
 <link rel="apple-touch-icon" href="/icon-sm.png">
-<style>body:has(.scrim) .consent{display:none}</style>
+<style>body:has(.scrim) .consent{display:none}
+.au2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);max-width:940px;margin:8px auto 24px;background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 2px 6px rgba(11,58,35,.06),0 24px 60px rgba(11,58,35,.10)}
+.au2-side{position:relative;overflow:hidden;background:linear-gradient(150deg,#0B3A23 0%,#14532F 70%,#1d6a3e 100%);color:#fff;padding:36px 32px;display:flex;flex-direction:column;gap:14px}
+.au2-side::after{content:"";position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;border-radius:50%;border:2px solid rgba(212,155,65,.35)}
+.au2-side::before{content:"";position:absolute;right:-60px;bottom:-60px;width:200px;height:200px;border-radius:50%;border:2px solid rgba(212,155,65,.2)}
+.au2-logo{width:52px;height:auto;background:#FBF9F4;border-radius:14px;padding:6px}
+.au2-side h2{margin:6px 0 0;font-size:28px;line-height:1.12;letter-spacing:-.01em}
+.au2-side p{margin:0;color:#CFE0D5;font-size:14px}
+.au2-side ul{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.au2-side li{display:flex;gap:12px;align-items:flex-start}
+.au2-side li>span{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:#F3C77E}
+.au2-side li b{display:block;font-size:14px}.au2-side li small{color:#B9D0C1;font-size:12.5px}
+.au2-main{padding:32px 34px;display:flex;flex-direction:column}
+.au2-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
+.au2-tabs button{height:40px;border:0;border-radius:999px;background:transparent;font:inherit;font-weight:700;color:var(--muted);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.au2-tabs button.on{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(11,58,35,.25)}
+.au2-h{margin:0;font-size:26px;color:var(--green);letter-spacing:-.01em}
+.au2-sub{margin:6px 0 18px;color:var(--muted);font-size:14px}
+.au2-main .btn{width:100%;height:50px;font-size:15px;margin-top:4px}
+.au2-code{height:60px!important;font-size:28px!important;font-weight:800!important;letter-spacing:.55em!important;text-align:center}
+.au2-c{text-align:center;margin:10px 0 0}
+.au2-switch{text-align:center;margin:16px 0 0;font-size:14px;color:var(--muted)}
+.au2-back{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--green);font:inherit;font-weight:700;font-size:13px;padding:0 0 12px;cursor:pointer}
+@media (max-width:760px){.au2{grid-template-columns:minmax(0,1fr);border-radius:20px;margin-top:0}
+ .au2-side{padding:22px 20px;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px}
+ .au2-side h2{font-size:20px;margin:0}.au2-side h2 br{display:none}.au2-side p{flex-basis:100%}.au2-side ul{display:none}
+ .au2-main{padding:22px 18px}}
+</style>
 <title>Tiada Marketplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap">
@@ -1596,7 +1623,7 @@ const GUIDE=[
  ['delivery','truck','Checkout and delivery','Where, when and how much',[
    'Add your <b>email</b> (for updates), <b>phone</b> (for the rider) and <b>address</b> with a landmark. Signed in? Pick a saved address in one tap.',
    'Choose your <b>area or state</b>. The fee depends on distance from our Ojota hub and your <b>basket weight</b>, which checkout shows in kg with a full breakdown.',
-   'Pick a speed: <b>Same-day priority</b> (+₦2,500), <b>Next-day standard</b>, or <b>Economy</b> (₦1,000 on your area’s weekly delivery day).',
+   'Pick a delivery option: <b>Priority</b> (+₦2,500, packed and sent out first), <b>Standard</b>, or <b>Economy</b> (₦1,000, grouped with other orders in your area). We confirm timing with you once your order is on its way.',
    'Outside Lagos? We deliver to <b>all 36 states and Abuja</b> by courier. Pick your state; the fee covers the first 5 kg, then ₦400 per extra kg.'],
    [['Go to checkout','go:cart']]],
  ['pay','card','Paying safely','One-time bank transfer, no receipts',[
@@ -1710,7 +1737,7 @@ function deliveryFee(){
   const van=kg>20?3000:0;
   let base=z.fee, rush=0, desc=`${z.km} km`;
   if(S.co.speed==='same'){rush=2500}
-  if(S.co.speed==='eco'){base=1000;desc+=`, ${z.day} batch`}
+  if(S.co.speed==='eco'){base=1000;desc+=', grouped delivery'}
   return{total:base+rush+weight+van,base,rush,weight,van,z,desc:desc+(kg>5?`, ${kg.toFixed(1)} kg`:'')};
 }
 const touched={};
@@ -1725,8 +1752,8 @@ function vCheckout(){
   if(S.user&&!S.co.phone)S.co.phone=S.user.phone;if(S.user&&!S.co.name)S.co.name=S.user.name;
   if(S.user&&!S.co.email&&S.user.email)S.co.email=S.user.email;
   const f=deliveryFee(), z=f.z, hasCombo=S.cart.some(c=>byId(c.pid).cat.includes('combo'));
-  const sp=z&&z.state?[['same','Express courier','Arrives in about 1–2 days','+₦3,500','Fastest option'],['next','Standard courier',`Arrives in about ${z.days}`,'Base fee','Most popular']]
-    :[['same','Same-day priority','Rider leaves the hub immediately','+₦2,500','Fastest option'],['next','Next-day standard','Batched by neighbourhood to save fuel','Base fee','Most popular'],['eco','Economy weekly batch',z?`Your area delivers on ${z.day}s`:'One fixed day per area','₦1,000 flat','Cheapest option']];
+  const sp=z&&z.state?[['same','Express courier','Faster courier service to your state','+₦3,500','Fastest option'],['next','Standard courier','Regular courier service','Base fee','Most popular']]
+    :[['same','Priority delivery','Packed and sent out first','+₦2,500','Fastest option'],['next','Standard delivery','Our regular Lagos delivery','Base fee','Most popular'],['eco','Economy delivery','Grouped with other orders in your area','₦1,000 flat','Cheapest option']];
   const ok=canPay();
   return `<h1 class="page">Checkout</h1><p class="sub">We deliver to all 36 states and Abuja from our Ojota hub in Lagos.${S.user?'':' <button class="link" data-go="account">Sign in</button> to save addresses and track orders.'}</p>
   <div class="layout2">
@@ -1751,7 +1778,7 @@ function vCheckout(){
       ${S.cart.map(c=>{const p=byId(c.pid);return `<div class="line" style="font-size:12.5px;color:var(--muted)"><span>${esc(p.name)} ${c.size!=='Package'?c.size:''} × ${c.qty}</span><span class="num">${naira(priceOf(p,c.size).now*c.qty)}</span></div>`}).join('')}
       <div style="height:6px"></div>
       ${summaryLines(true).html}
-      ${f.total!=null?`<div class="kgbox"><div class="line"><span>Basket weight</span><b class="num">${cartKg().toFixed(1)} kg</b></div><div class="line"><span>${f.inter?`Courier to ${esc(f.z.state)} (first 5 kg)`:`Delivery base (${f.z.km} km)`}</span><span class="num">${naira(f.base)}</span></div>${f.weight?`<div class="line"><span>Extra weight (${f.inter?'₦400':'₦50'} per kg above 5 kg)</span><span class="num">${naira(f.weight)}</span></div>`:''}${f.van?`<div class="line"><span>Van for 20 kg+</span><span class="num">${naira(f.van)}</span></div>`:''}${f.rush?`<div class="line"><span>${f.inter?'Express courier':'Same-day priority'}</span><span class="num">${naira(f.rush)}</span></div>`:''}</div>`:''}
+      ${f.total!=null?`<div class="kgbox"><div class="line"><span>Basket weight</span><b class="num">${cartKg().toFixed(1)} kg</b></div><div class="line"><span>${f.inter?`Courier to ${esc(f.z.state)} (first 5 kg)`:`Delivery base (${f.z.km} km)`}</span><span class="num">${naira(f.base)}</span></div>${f.weight?`<div class="line"><span>Extra weight (${f.inter?'₦400':'₦50'} per kg above 5 kg)</span><span class="num">${naira(f.weight)}</span></div>`:''}${f.van?`<div class="line"><span>Van for 20 kg+</span><span class="num">${naira(f.van)}</span></div>`:''}${f.rush?`<div class="line"><span>${f.inter?'Express courier':'Priority delivery'}</span><span class="num">${naira(f.rush)}</span></div>`:''}</div>`:''}
       <button class="btn" data-act="pay" ${ok?'':'disabled'}>🔒 Pay by bank transfer</button>
       ${ok?'':'<p class="hint" style="margin:8px 0 0">Add your name, email, phone, address and area to continue.</p>'}
       <div class="note-row safe" style="margin-top:12px">${ic('shield',16)}<span>Payments run through a licensed provider. Tiada never sees or stores your bank login, card details or PIN.</span></div>
@@ -1805,7 +1832,7 @@ function mapHTML(o){
   const z=zoneById(o.zone)||ZONES[4],inter=!!z.state;
   const dest=inter?z.city:zoneShort(z);
   return `<div class="tmap" data-map="${o.id}" data-km="${z.km}" data-inter="${inter?1:0}">
-   <span class="live">Estimated ${inter?'courier':'rider'} position</span>
+   <span class="live">Route to you</span>
    <svg viewBox="0 0 400 230" role="img" aria-label="Map from our Ojota hub to ${esc(dest)}">
     <rect width="400" height="230" fill="#EEF0E6"/>
     ${inter?`<path d="M0 150 Q 120 130 200 160 T 400 140 L400 230 L0 230 Z" fill="#E4E9DA"/><path d="M250 0 Q 230 80 280 120 T 330 230" fill="none" stroke="#B9D4E6" stroke-width="10" stroke-linecap="round"/>`
@@ -1823,7 +1850,7 @@ function mapHTML(o){
     <text x="352" y="62" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10" font-weight="700" fill="#0B3A23">${esc(dest)}</text>
     <g class="rdot"><circle r="15" fill="#D49B41" opacity=".25"/><circle r="10" fill="#0B3A23" stroke="#fff" stroke-width="2.5"/><text y="3.5" text-anchor="middle" font-size="10">${inter?'🚚':'🛵'}</text></g>
    </svg>
-   <div class="eta"><span class="eta-t">Locating…</span><span class="hint">${inter?'Estimate from courier times':'Estimate · your rider calls before arriving'}</span></div>
+   <div class="eta"><span class="eta-t">Locating…</span><span class="hint">${inter?'Track with the courier’s number':'Your rider calls before arriving'}</span></div>
   </div>`;
 }
 const DISPATCHED={};
@@ -2021,7 +2048,7 @@ function accPrivacy(){
     <button class="btn red" data-act="deleteacct" id="del-btn" disabled>Delete my account</button></div>`;
 }
 const FAQ=[
- ['When will my order arrive?','Same-day priority orders leave the hub straight away. Next-day standard orders arrive the following day. Economy orders go out on your area’s weekly delivery day, shown at checkout.'],
+ ['When will my order arrive?','Delivery times depend on traffic, distance and our delivery partners, so we don’t promise a fixed day. Priority orders are packed and sent out first. You’ll get an email with the delivery partner and tracking number as soon as your order is on the way, and the rider calls before arriving.'],
  ['Can I swap items in a combo?','Yes. Open the combo, tap Swap next to any item and pick a replacement worth the same. Your swaps show in your basket and at checkout, and the price doesn’t change.'],
  ['What if something is missing or damaged?','Message us on WhatsApp within 24 hours of delivery with your TD code and a photo. We’ll replace the item or refund it to your bank.'],
  ['Is paying by transfer safe?','Each order gets its own one-time account from a licensed payment provider, and it expires after 30 minutes. Always check the account name in your bank app matches the payment page before you send.'],
@@ -2205,9 +2232,9 @@ function botAnswer(raw){
     return {t:t+'<br><br>Quantities differ by package, delivery is extra, and you can swap any item for something worth the same.',btn:`${!food||cer?'<button data-cat="ccombo">Cereal combos</button>':''}${!cer||food?'<button data-cat="fcombo">Foodstuff combos</button>':''}`}}
   const z=zoneFor(q);
   if(z||has(/\b(deliver|delivery|deliveries|shipping|ship|dispatch|rider|logistics|transport|fee|fees|charge)\b/)){
-    if(z&&z.state)return {t:`Yes, we deliver to <b>${esc(z.state)}</b> by courier from our Lagos hub.<br>Standard (${z.days}): <b>${naira(z.fee)}</b><br>Express (1–2 days): <b>${naira(z.fee+3500)}</b><br><br>That covers the first 5 kg. Each extra kg adds ₦400.`};
-    if(z)return {t:`Delivery to <b>${esc(z.label.split(',')[0])}</b> and nearby (about ${z.km} km from Ojota):<br>Next-day: <b>${naira(z.fee)}</b><br>Same-day: <b>${naira(z.fee+2500)}</b><br>Economy (${z.day}s): <b>₦1,000</b><br><br>Baskets over 5 kg add ₦50 per extra kg, and 20 kg+ goes by van (+₦3,000).`};
-    return {t:`We deliver <b>anywhere in Nigeria</b>. Outside Lagos it goes by courier: South-West from ₦4,500, South-South & South-East ₦6,500, North-Central & Abuja ₦7,000, the North ₦8,500 (first 5 kg).<br><br>In Lagos, by our riders:<br>${ZONES.filter(x=>!x.state).map(x=>`${esc(x.label.split(',').slice(0,2).join(', '))}: from <b>${naira(x.fee)}</b>`).join('<br>')}<br><br>Same-day adds ₦2,500. Economy weekly delivery is ₦1,000. Which area are you in?`}}
+    if(z&&z.state)return {t:`Yes, we deliver to <b>${esc(z.state)}</b> by courier from our Lagos hub.<br>Standard courier: <b>${naira(z.fee)}</b><br>Express courier: <b>${naira(z.fee+3500)}</b><br><br>That covers the first 5 kg. Each extra kg adds ₦400.`};
+    if(z)return {t:`Delivery to <b>${esc(z.label.split(',')[0])}</b> and nearby (about ${z.km} km from Ojota):<br>Standard: <b>${naira(z.fee)}</b><br>Priority: <b>${naira(z.fee+2500)}</b><br>Economy (grouped delivery): <b>₦1,000</b><br><br>Baskets over 5 kg add ₦50 per extra kg, and 20 kg+ goes by van (+₦3,000).`};
+    return {t:`We deliver <b>anywhere in Nigeria</b>. Outside Lagos it goes by courier: South-West from ₦4,500, South-South & South-East ₦6,500, North-Central & Abuja ₦7,000, the North ₦8,500 (first 5 kg).<br><br>In Lagos, by our riders:<br>${ZONES.filter(x=>!x.state).map(x=>`${esc(x.label.split(',').slice(0,2).join(', '))}: from <b>${naira(x.fee)}</b>`).join('<br>')}<br><br>Priority delivery adds ₦2,500. Economy (grouped) delivery is ₦1,000. Which area are you in?`}}
   if(has(/\b(minimum|min order|least|smallest)\b/))return {t:`The minimum order for delivery is <b>${naira(MIN)}</b>. Combos are an easy way to reach it.`,btn:'<button data-chatq="Combo prices">See combos</button>'};
   if(has(/\b(pay|paying|payment|transfer|bank|card|ussd|account number|virtual account)\b/))return {t:'At checkout we create a <b>one-time bank account just for your order</b>. Transfer the exact amount from any bank app and your payment confirms automatically. No receipt to upload.<br><br>Check that the account name in your bank app matches the payment page before you send. The account expires after 30 minutes.'};
   if(has(/\b(swap|change item|replace|substitute|remove item)\b/))return {t:'Yes, you can swap any item in a combo for something worth the same amount. Add a note in the <b>Combo swaps</b> box at checkout.'};
@@ -2680,28 +2707,42 @@ async function loadAccount(){
 }
 Object.assign(STATUS,{paid:['Paid · packing','paid'],issue:['Problem · we’ll update you','paid'],refunded:['Refunded','done'],cancelled:['Cancelled','done']});
 
-/* email sign-in replaces the phone code */
-auth={step:'email',name:'',email:'',agree:false,err:'',resendAt:0,busy:false};
+/* ---------- sign up / sign in (6-digit email code, no password) ---------- */
+auth={step:'email',mode:'signup',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
+const AUTH_PERKS=[['truck','Track every order','See packing, dispatch and delivery in one place'],['pin','Saved addresses','Check out in seconds next time'],['star','Rate what you buy','Help other shoppers pick well'],['shield','No password to forget','We email you a one-time code']];
+function authShell(inner){
+  return `<div class="au2">
+   <aside class="au2-side"><img src="/icon-sm.png" alt="" class="au2-logo"><h2>Welcome to <br>Tiada Marketplace</h2><p>Foodstuffs and cereals, delivered anywhere in Nigeria.</p>
+    <ul>${AUTH_PERKS.map(x=>`<li><span>${ic(x[0],18)}</span><div><b>${x[1]}</b><small>${x[2]}</small></div></li>`).join('')}</ul></aside>
+   <section class="au2-main">${inner}</section></div>`;
+}
 function vAuth(){
-  if(auth.step==='code')return `<div class="auth"><h1 class="page">Check your email</h1><p class="sub">We sent a 6-digit code to <b>${esc(auth.email)}</b>. <button class="link" data-act="authback">Use another email</button></p>
-    <div class="panel"><form id="auth-code" novalidate autocomplete="off">
-      <div class="field"><label for="au-code">6-digit code</label><input id="au-code" class="num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" style="height:56px;font-size:26px;font-weight:800;letter-spacing:.5em;text-align:center"></div>
+  if(auth.step==='code')return authShell(`<button class="au2-back" data-act="authback">${ic('back',16)} Use another email</button>
+    <h1 class="au2-h">Check your email</h1><p class="au2-sub">We sent a 6-digit code to <b>${esc(auth.email)}</b>. It expires in 10 minutes.</p>
+    <form id="auth-code" novalidate autocomplete="off">
+      <div class="field"><label for="au-code">6-digit code</label><input id="au-code" class="num au2-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>
       <div id="otp-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
-      <button class="btn" type="submit">Verify and sign in</button>
-      <p class="hint" style="margin:10px 0 0;text-align:center"><span id="resend"></span></p>
-      <p class="hint" style="margin:6px 0 0;text-align:center">Can’t see it? Check your spam or promotions folder.</p>
-    </form></div>
-    <div class="note-row warn" style="margin-top:12px">${ic('alert',16)}<span>Never share this code. Tiada staff will never ask for it.</span></div></div>`;
-  return `<div class="auth"><h1 class="page">Sign in or create an account</h1><p class="sub">We’ll email you a 6-digit code. No password to remember.</p>
-  <div class="panel"><form id="auth-email" novalidate>
-    <div class="field" id="f-name"><label for="au-name">Your name <span style="text-transform:none;font-weight:500">(new customers)</span></label><input id="au-name" autocomplete="name" placeholder="e.g. Adeola Oladipo" maxlength="60" value="${esc(auth.name)}"></div>
-    <div class="field" id="f-email"><label for="au-email">Email address</label><input id="au-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(auth.email)}"><span class="err">Enter a valid email address.</span></div>
-    <label class="check-row" id="f-agree"><input type="checkbox" id="au-agree" ${auth.agree?'checked':''}><span>I agree to the <button type="button" class="link" style="font-size:13px;padding:0" data-go="privacy">privacy policy</button> and terms of sale.</span></label>
-    <div id="agree-err" class="alert" hidden>Please accept the privacy policy to continue.</div>
-    <div id="auth-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
-    <button class="btn" type="submit">Email me a code</button>
-  </form></div>
-  <div class="note-row safe" style="margin-top:12px">${ic('lock',16)}<span>Your email is only used to sign you in and send order updates. We never sell it or share it with advertisers.</span></div></div>`;
+      <button class="btn" type="submit">${auth.mode==='signup'?'Verify and create my account':'Verify and sign in'}</button>
+      <p class="hint au2-c"><span id="resend"></span></p>
+      <p class="hint au2-c">Can’t see it? Check your spam or promotions folder.</p>
+    </form>
+    <div class="note-row warn" style="margin-top:14px">${ic('alert',16)}<span>Never share this code. Tiada staff will never ask for it.</span></div>`);
+  const up=auth.mode==='signup';
+  return authShell(`<div class="au2-tabs" role="tablist"><button role="tab" aria-selected="${up}" class="${up?'on':''}" data-authmode="signup">Create account</button><button role="tab" aria-selected="${!up}" class="${up?'':'on'}" data-authmode="signin">Sign in</button></div>
+    <h1 class="au2-h">${up?'Create your account':'Welcome back'}</h1>
+    <p class="au2-sub">${up?'It takes less than a minute. We’ll email you a code to confirm it’s you.':'Enter your email and we’ll send you a 6-digit code.'}</p>
+    <form id="auth-email" novalidate>
+      ${up?`<div class="field" id="f-name"><label for="au-name">Full name</label><input id="au-name" autocomplete="name" placeholder="e.g. Adeola Oladipo" maxlength="60" value="${esc(auth.name)}"><span class="err">Enter your name.</span></div>`:''}
+      <div class="field" id="f-email"><label for="au-email">Email address</label><input id="au-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(auth.email)}"><span class="err">Enter a valid email address.</span></div>
+      ${up?`<div class="field" id="f-phone"><label for="au-phone">Phone number <span style="text-transform:none;font-weight:500">(optional)</span></label><input id="au-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0803 123 4567" value="${esc(auth.phone)}"><span class="err">Use an 11-digit Nigerian number.</span><span class="hint">Only used for delivery calls.</span></div>
+      <label class="check-row" id="f-agree"><input type="checkbox" id="au-agree" ${auth.agree?'checked':''}><span>I agree to the <button type="button" class="link" style="font-size:13px;padding:0" data-go="privacy">privacy policy</button> and terms of sale.</span></label>
+      <div id="agree-err" class="alert" hidden>Please accept the privacy policy to continue.</div>
+      <label class="check-row"><input type="checkbox" id="au-promo" ${auth.promo?'checked':''}><span>Email me new stock and deals (you can turn this off any time).</span></label>`:''}
+      <div id="auth-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
+      <button class="btn" type="submit">${up?'Create account':'Email me a code'}</button>
+    </form>
+    <p class="au2-switch">${up?'Already have an account? <button class="link" data-authmode="signin">Sign in</button>':'New to Tiada? <button class="link" data-authmode="signup">Create an account</button>'}</p>
+    <div class="note-row safe" style="margin-top:12px">${ic('lock',16)}<span>Your details are only used for your orders. We never sell them or share them with advertisers.</span></div>`);
 }
 function tickResend(){const el=$('#resend');if(!el)return;const s=Math.ceil((auth.resendAt-Date.now())/1000);el.innerHTML=s>0?`Didn’t get it? Resend in <b class="num">${s}s</b>`:`<button type="button" class="link" data-act="resend">Resend code</button>`}
 async function sendCode(){
@@ -2711,9 +2752,9 @@ async function sendCode(){
 async function doVerify(code){
   if(auth.busy)return;auth.busy=true;
   try{await loading('Checking your code','Signing you in securely',500);
-    const r=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.name||undefined}});
+    const r=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.mode==='signup'&&auth.name||undefined,phone:auth.mode==='signup'&&auth.phone?auth.phone.replace(/\D/g,''):undefined,promo_ok:auth.mode==='signup'?auth.promo:undefined}});
     await loading('Loading your account','',300);await loadAccount();
-    auth={step:'email',name:'',email:'',agree:false,err:'',resendAt:0,busy:false};
+    auth={step:'email',mode:'signin',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
     toast(`Welcome${r.isNew?'':' back'}, ${S.user.name.split(' ')[0]}`);
     if(authNext){const f=authNext;authNext=null;render();f()}else render();
   }catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus()}
@@ -2856,14 +2897,12 @@ function timelineHTML(o){
 function paintMaps(){
   document.querySelectorAll('.tmap').forEach(m=>{
     const id=m.dataset.map,km=+m.dataset.km,inter=m.dataset.inter==='1';
-    const o=S.orders.find(x=>x.id===id),since=(o&&o.since)||Date.now();
-    const dur=inter?2.5*86400000:(o&&/same/i.test(o.speed||'')?90:150)*60000;
-    const p=Math.min(.92,.06+(Date.now()-since)/dur);
+    const o=S.orders.find(x=>x.id===id),r=o&&o.rider;
+    const p=.55; // no live GPS from delivery partners, so we show the route without guessing a time
     const path=m.querySelector('.rt-done'),L=path.getTotalLength(),pt=path.getPointAtLength(L*p);
     path.style.strokeDasharray=`${L*p} ${L}`;
     m.querySelector('.rdot').style.transform=`translate(${pt.x.toFixed(1)}px,${pt.y.toFixed(1)}px)`;
-    const left=Math.max(.5,km*(1-p));
-    m.querySelector('.eta-t').innerHTML=inter?`About <b>${Math.max(1,Math.ceil((1-p)*2.5))} day${Math.ceil((1-p)*2.5)>1?'s':''}</b> to go`:`Usually arrives in about <b>${Math.max(10,Math.round((1-p)*dur/60000/5)*5)} min</b>`;
+    m.querySelector('.eta-t').innerHTML=`<b>On the way</b>${r&&r.name?' with '+esc(r.name):''}${r&&r.tracking?' · tracking '+esc(r.tracking):''}`;
   });
 }
 
@@ -2936,9 +2975,12 @@ document.addEventListener('submit',async e=>{
   if(!['auth-email','auth-code','rev-form','addr-form','track-form'].includes(id))return;
   e.preventDefault();e.stopImmediatePropagation();
   if(id==='auth-email'){
-    auth.name=$('#au-name').value.trim();auth.email=$('#au-email').value.trim().toLowerCase();auth.agree=$('#au-agree').checked;auth.err='';
-    const eOk=validEmail(auth.email);$('#f-email').classList.toggle('bad',!eOk);$('#agree-err').hidden=auth.agree;
-    if(!eOk||!auth.agree){f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
+    const up=auth.mode==='signup',v=q=>{const el=$(q);return el?el.value.trim():''};
+    if(up){auth.name=v('#au-name');auth.phone=v('#au-phone');auth.agree=$('#au-agree').checked;auth.promo=$('#au-promo').checked}
+    auth.email=v('#au-email').toLowerCase();auth.err='';
+    const eOk=validEmail(auth.email),nOk=!up||auth.name.length>=2,pOk=!up||!auth.phone||validPhone(auth.phone),aOk=!up||auth.agree;
+    $('#f-email').classList.toggle('bad',!eOk);if(up){$('#f-name').classList.toggle('bad',!nOk);$('#f-phone').classList.toggle('bad',!pOk);$('#agree-err').hidden=aOk}
+    if(!eOk||!nOk||!pOk||!aOk){f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
     try{await loading('Sending your code',`To ${auth.email}`,400);await sendCode();auth.step='code';render();const i=$('#au-code');i&&i.focus()}
     catch(err){auth.err=errMsg(err);render()}
     return}
@@ -2966,6 +3008,7 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('button,a,[data-act]');if(!t)return;const d=t.dataset,a=d.act;
   const stop=()=>{e.preventDefault();e.stopImmediatePropagation()};
   if(a==='authback'){stop();auth.step='email';auth.err='';render();return}
+  if(d.authmode){stop();auth.mode=d.authmode;auth.err='';render();return}
   if(a==='resend'){stop();sendCode().then(()=>{tickResend();toast('New code sent')}).catch(err=>toast(errMsg(err)));return}
   if(a==='pay'){stop();loading('Creating your secure transfer account','A one-time account just for this order',300).then(createPay);return}
   if(a==='paid-check'){stop();const p=S.pay;if(!p)return;
@@ -3007,6 +3050,31 @@ async function boot(){
 }
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},go,render,save,openChat};
 boot();
+
+/* ---------- native browser loading: whenever our loading overlay shows, the browser's own
+   loading indicator (tab spinner / progress bar) runs too, and stops when the overlay hides.
+   Uses the Navigation API (Chrome, Edge, Samsung Internet, Opera, newer Safari); other browsers just show our overlay. */
+(function(){
+  const L=document.getElementById('loader');
+  if(!L||!window.navigation||typeof navigation.navigate!=='function')return;
+  let finish=null,running=false;
+  const shown=()=>!L.hidden;
+  navigation.addEventListener('navigate',e=>{
+    if(e.info!=='tiada-loading'||!e.canIntercept)return;
+    e.intercept({scroll:'manual',focusReset:'manual',handler:()=>new Promise(res=>{
+      finish=res;if(!shown())res();
+      setTimeout(res,20000); // never spin forever
+    })});
+  });
+  function start(){
+    if(running)return;running=true;
+    try{const r=navigation.navigate(location.href,{history:'replace',info:'tiada-loading'});
+      Promise.resolve(r&&r.finished).catch(()=>{}).then(()=>{running=false;finish=null;if(shown())start()})}
+    catch(_){running=false}
+  }
+  new MutationObserver(()=>{if(shown())start();else if(finish){finish();}}).observe(L,{attributes:true,attributeFilter:['hidden']});
+  if(shown())start();
+})();
 })();
 </script>
 </html>

@@ -9,6 +9,7 @@ const Body = z.object({
   code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code.'),
   name: z.string().trim().max(60).optional(),
   phone: z.string().trim().max(20).optional(),
+  promo_ok: z.boolean().optional(),
 });
 export const POST = handle(async (req: Request) => {
   const b = Body.parse(await req.json());
@@ -27,7 +28,7 @@ export const POST = handle(async (req: Request) => {
   if (!used.length) return fail('That code was already used. Ask for a new one.', 400);
   let c = (await db().from('customers').select('*').eq('email', b.email).maybeSingle()).data;
   const isNew = !c;
-  if (!c) c = must(await db().from('customers').insert({ email: b.email, name: b.name || null, phone: b.phone || null }).select('*').single());
+  if (!c) c = must(await db().from('customers').insert({ email: b.email, name: b.name || null, phone: b.phone || null, promo_ok: !!b.promo_ok }).select('*').single());
   else if ((b.name && !c.name) || (b.phone && !c.phone)) c = must(await db().from('customers').update({ name: c.name || b.name, phone: c.phone || b.phone }).eq('id', c.id).select('*').single());
   await db().from('customers').update({ last_seen: new Date().toISOString() }).eq('id', c.id);
   await db().from('orders').update({ customer_id: c.id }).eq('email', b.email).is('customer_id', null);

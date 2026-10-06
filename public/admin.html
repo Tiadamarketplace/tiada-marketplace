@@ -909,10 +909,10 @@ function vDelivery(){
   return `<form id="f-fees" novalidate><div class="dash" style="margin-top:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
    <div class="card pad"><h3>Lagos · our riders</h3><p class="hint" style="margin:0 0 12px">Base fee by area from the Ojota hub.</p>
     ${f.areas.map((a,i)=>`<div class="row" style="margin-bottom:8px"><span style="flex:1;min-width:0;font-size:13px">${esc(a[0])}</span><input class="num" style="width:110px;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 10px" inputmode="numeric" data-area="${i}" value="${a[1]}" aria-label="Fee for ${esc(a[0])}"></div>`).join('')}
-    <div class="grid2" style="margin-top:10px"><div class="field"><label for="fe-same">Same-day extra ₦</label><input id="fe-same" class="num" value="${f.same}"></div><div class="field"><label for="fe-lkg">Per kg above 5 kg ₦</label><input id="fe-lkg" class="num" value="${f.lagosKg}"></div></div>
+    <div class="grid2" style="margin-top:10px"><div class="field"><label for="fe-same">Priority delivery extra ₦</label><input id="fe-same" class="num" value="${f.same}"></div><div class="field"><label for="fe-lkg">Per kg above 5 kg ₦</label><input id="fe-lkg" class="num" value="${f.lagosKg}"></div></div>
     <div class="field"><label for="fe-van">Van fee for 20 kg+ ₦</label><input id="fe-van" class="num" value="${f.van}"></div></div>
    <div class="card pad"><h3>Other states · courier</h3><p class="hint" style="margin:0 0 12px">Covers the first 5 kg. All 36 states and Abuja.</p>
-    ${f.regions.map((r,i)=>`<div class="row" style="margin-bottom:8px"><span style="flex:1;min-width:0;font-size:13px"><b>${esc(r[0])}</b><br><span class="hint">${esc(r[2])}</span></span><input class="num" style="width:110px;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 10px" inputmode="numeric" data-region="${i}" value="${r[1]}" aria-label="Fee for ${esc(r[0])}"></div>`).join('')}
+    ${f.regions.map((r,i)=>`<div class="row" style="margin-bottom:8px"><span style="flex:1;min-width:0;font-size:13px"><b>${esc(r[0])}</b></span><input class="num" style="width:110px;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 10px" inputmode="numeric" data-region="${i}" value="${r[1]}" aria-label="Fee for ${esc(r[0])}"></div>`).join('')}
     <div class="grid2" style="margin-top:10px"><div class="field"><label for="fe-ikg">Per kg above 5 kg ₦</label><input id="fe-ikg" class="num" value="${f.interKg}"></div><div class="field"><label for="fe-exp">Express extra ₦</label><input id="fe-exp" class="num" value="${f.express}"></div></div>
     <div class="field"><label for="fe-min">Minimum order for delivery ₦</label><input id="fe-min" class="num" value="${f.min}"></div></div>
   </div><div class="row" style="margin-top:14px"><span class="hint" style="flex:1">New fees apply to checkouts from the moment you save.</span><button class="btn" style="height:44px">Save delivery fees</button></div></form>`;
@@ -966,7 +966,7 @@ document.addEventListener('click',e=>{
   if(a==='logout'){loading('Signing out',500).then(()=>{logAct('Signed out');S.auth=null;save();login={step:'pw',email:'',err:'',tries:0,lock:0};render()});return}
   if(a==='lback'){login.step='pw';login.err='';render();return}
   if(a==='cancel-edit'){closeModal();return}
-  if(a==='bc-sample'){bc.subj='Fresh cereals just arrived at our Ojota hub';bc.body='Good news! A fresh shipment of Golden Morn, Cornflakes, Coco Pops and Milo has just arrived.\n\nOur Student Combo is back in stock at ₦10,000, and you can still swap any item for something worth the same.\n\nOrder today for same-day delivery in Lagos, or 1–5 days anywhere in Nigeria.';render();return}
+  if(a==='bc-sample'){bc.subj='Fresh cereals just arrived at our Ojota hub';bc.body='Good news! A fresh shipment of Golden Morn, Cornflakes, Coco Pops and Milo has just arrived.\n\nOur Student Combo is back in stock at ₦10,000, and you can still swap any item for something worth the same.\n\nWe deliver across Lagos and to every state in Nigeria.';render();return}
   if(a==='cjoin'){const c=S.chats.find(x=>x.id===S.chatSel);loading('Joining chat',500).then(()=>{c.status='open';c.msgs.push(['sys',`${S.auth.name.split(' ')[0]} has joined the chat`,Date.now()]);c.at=Date.now();logAct(`Joined live chat ${c.id} with ${c.name}`);save();render();setTimeout(()=>{const i=$('#c-text');i&&i.focus()},50)});return}
   if(a==='cend'){const c=S.chats.find(x=>x.id===S.chatSel);c.status='closed';c.msgs.push(['sys','Chat ended',Date.now()]);logAct(`Ended live chat ${c.id}`);save();render();toast('Chat ended. The customer was emailed a copy.');return}
 });
@@ -1384,6 +1384,31 @@ async function bootAdmin(){
 }
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},render,refresh};
 bootAdmin();
+
+/* ---------- native browser loading: whenever our loading overlay shows, the browser's own
+   loading indicator (tab spinner / progress bar) runs too, and stops when the overlay hides.
+   Uses the Navigation API (Chrome, Edge, Samsung Internet, Opera, newer Safari); other browsers just show our overlay. */
+(function(){
+  const L=document.getElementById('loader');
+  if(!L||!window.navigation||typeof navigation.navigate!=='function')return;
+  let finish=null,running=false;
+  const shown=()=>!L.hidden;
+  navigation.addEventListener('navigate',e=>{
+    if(e.info!=='tiada-loading'||!e.canIntercept)return;
+    e.intercept({scroll:'manual',focusReset:'manual',handler:()=>new Promise(res=>{
+      finish=res;if(!shown())res();
+      setTimeout(res,20000); // never spin forever
+    })});
+  });
+  function start(){
+    if(running)return;running=true;
+    try{const r=navigation.navigate(location.href,{history:'replace',info:'tiada-loading'});
+      Promise.resolve(r&&r.finished).catch(()=>{}).then(()=>{running=false;finish=null;if(shown())start()})}
+    catch(_){running=false}
+  }
+  new MutationObserver(()=>{if(shown())start();else if(finish){finish();}}).observe(L,{attributes:true,attributeFilter:['hidden']});
+  if(shown())start();
+})();
 })();
 </script>
 </html>

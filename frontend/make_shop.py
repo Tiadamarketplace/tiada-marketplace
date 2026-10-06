@@ -6,6 +6,7 @@ import pathlib, re, sys
 here = pathlib.Path(__file__).parent
 s = (here / 'shop_src.html').read_text()
 live = (here / 'live_shop.js').read_text()
+live = live + '\n' + (here / 'native_loading.js').read_text()
 
 def sub(old, new, count=1):
     global s
@@ -32,7 +33,34 @@ HEAD = '''<!doctype html>
 <meta property="og:image" content="/logo-sm.png">
 <link rel="icon" type="image/png" href="/icon-sm.png">
 <link rel="apple-touch-icon" href="/icon-sm.png">
-<style>body:has(.scrim) .consent{display:none}</style>
+<style>body:has(.scrim) .consent{display:none}
+.au2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);max-width:940px;margin:8px auto 24px;background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 2px 6px rgba(11,58,35,.06),0 24px 60px rgba(11,58,35,.10)}
+.au2-side{position:relative;overflow:hidden;background:linear-gradient(150deg,#0B3A23 0%,#14532F 70%,#1d6a3e 100%);color:#fff;padding:36px 32px;display:flex;flex-direction:column;gap:14px}
+.au2-side::after{content:"";position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;border-radius:50%;border:2px solid rgba(212,155,65,.35)}
+.au2-side::before{content:"";position:absolute;right:-60px;bottom:-60px;width:200px;height:200px;border-radius:50%;border:2px solid rgba(212,155,65,.2)}
+.au2-logo{width:52px;height:auto;background:#FBF9F4;border-radius:14px;padding:6px}
+.au2-side h2{margin:6px 0 0;font-size:28px;line-height:1.12;letter-spacing:-.01em}
+.au2-side p{margin:0;color:#CFE0D5;font-size:14px}
+.au2-side ul{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.au2-side li{display:flex;gap:12px;align-items:flex-start}
+.au2-side li>span{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:#F3C77E}
+.au2-side li b{display:block;font-size:14px}.au2-side li small{color:#B9D0C1;font-size:12.5px}
+.au2-main{padding:32px 34px;display:flex;flex-direction:column}
+.au2-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:22px}
+.au2-tabs button{height:40px;border:0;border-radius:999px;background:transparent;font:inherit;font-weight:700;color:var(--muted);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.au2-tabs button.on{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(11,58,35,.25)}
+.au2-h{margin:0;font-size:26px;color:var(--green);letter-spacing:-.01em}
+.au2-sub{margin:6px 0 18px;color:var(--muted);font-size:14px}
+.au2-main .btn{width:100%;height:50px;font-size:15px;margin-top:4px}
+.au2-code{height:60px!important;font-size:28px!important;font-weight:800!important;letter-spacing:.55em!important;text-align:center}
+.au2-c{text-align:center;margin:10px 0 0}
+.au2-switch{text-align:center;margin:16px 0 0;font-size:14px;color:var(--muted)}
+.au2-back{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--green);font:inherit;font-weight:700;font-size:13px;padding:0 0 12px;cursor:pointer}
+@media (max-width:760px){.au2{grid-template-columns:minmax(0,1fr);border-radius:20px;margin-top:0}
+ .au2-side{padding:22px 20px;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px}
+ .au2-side h2{font-size:20px;margin:0}.au2-side h2 br{display:none}.au2-side p{flex-basis:100%}.au2-side ul{display:none}
+ .au2-main{padding:22px 18px}}
+</style>
 '''
 sub('<meta charset="utf-8">\n', HEAD)
 
@@ -100,8 +128,8 @@ sub("function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing t
     "function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing the store','Getting the latest stock and prices',300).then(()=>loadCatalog().catch(()=>{})).then(()=>{")
 
 # the map shows an estimate: delivery partners don't share live GPS
-sub("<span class=\"live\">Live ${inter?'courier':'rider'} location</span>", "<span class=\"live\">Estimated ${inter?'courier':'rider'} position</span>")
-sub("${inter?'Updated by the courier':'Updates every few seconds'}", "${inter?'Estimate from courier times':'Estimate · your rider calls before arriving'}")
+sub("<span class=\"live\">Live ${inter?'courier':'rider'} location</span>", "<span class=\"live\">Route to you</span>")
+sub("${inter?'Updated by the courier':'Updates every few seconds'}", "${inter?'Track with the courier’s number':'Your rider calls before arriving'}")
 
 sub("/* new-stock check: in the live site this asks the server whether the admin changed products or prices.\n   Prototype: offers a refresh after the shopper has been browsing for about 90 seconds. */", "/* new-stock pill: shown by checkFresh() in the live layer when the admin changes products or prices */")
 

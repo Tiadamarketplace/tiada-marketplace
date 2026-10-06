@@ -5,6 +5,7 @@ import pathlib, re, sys
 here = pathlib.Path(__file__).parent
 s = (here / 'admin_src.html').read_text()
 live = (here / 'live_admin.js').read_text()
+live = live + '\n' + (here / 'native_loading.js').read_text()
 
 def sub(old, new, count=1):
     global s
