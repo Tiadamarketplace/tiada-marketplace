@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0B3A23">
+<link rel="icon" type="image/png" href="/icon-sm.png">
+<title>Tiada Admin Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap">
+<style>
+/* Layout: desktop console. Fixed green sidebar (nav), content column; orders use a queue + detail split. Collapses to top bar + drawer on phones. */
+:root{
+  --green:#0B3A23;--green-2:#14532F;--green-soft:#E6EEE8;--gold:#D49B41;--gold-soft:#F7ECD9;--gold-ink:#8A5F1C;
+  --cream:#FBF9F4;--card:#fff;--ink:#18241D;--muted:#6B7A70;--line:#E9E4D8;--red:#B8402B;--red-soft:#F8E4DF;--blue:#25507E;--blue-soft:#E3ECF7;
+  --f-ui:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;--f-tag:'Playfair Display',Georgia,serif;
+  --sh1:0 1px 2px rgba(11,58,35,.05),0 4px 14px rgba(11,58,35,.05);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--cream);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;margin:0}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.hint{color:var(--muted);font-size:12px}
+.tag{font-family:var(--f-tag);font-style:italic;font-weight:700}
+
+/* shell */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{background:linear-gradient(180deg,#0B3A23,#0E4429);color:#D6E3DA;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:18px 12px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 16px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:12px}
+.brand img{height:40px;background:#FBF9F4;border-radius:10px;padding:3px}
+.brand b{display:block;color:#fff;font-weight:800;letter-spacing:.06em;font-size:15px;line-height:1.1}
+.brand small{display:block;color:var(--gold);font-size:10px;letter-spacing:.2em;font-weight:700}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav h6{margin:14px 10px 6px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(214,227,218,.5)}
+.nav button{display:flex;align-items:center;gap:10px;border:0;background:none;color:#D6E3DA;padding:9px 10px;border-radius:10px;font-size:13.5px;font-weight:600;text-align:left;position:relative}
+.nav button svg{flex:none;opacity:.85}
+.nav button.on{background:rgba(255,255,255,.1);color:#fff}
+.nav button.on::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+.nav .cnt{margin-left:auto;background:var(--gold);color:var(--green);font-size:11px;font-weight:800;border-radius:999px;padding:1px 7px;min-width:20px;text-align:center}
+.nav .cnt.red{background:#E2725B;color:#fff}
+.nav .cnt.blink{animation:ledN 1s ease-in-out infinite}
+@media (hover:hover){.nav button:not(.on):hover{background:rgba(255,255,255,.06);color:#fff}}
+.side .me{margin-top:auto;border-top:1px solid rgba(255,255,255,.1);padding:12px 8px 0;display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--green);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.side .me b{display:block;color:#fff;font-size:13px}
+.side .me small{color:rgba(214,227,218,.7);font-size:11px}
+.side .me button{margin-left:auto;border:1px solid rgba(255,255,255,.2);background:none;color:#fff;border-radius:8px;padding:6px 8px;font-size:11.5px;font-weight:700}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:12px 24px;background:rgba(251,249,244,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-size:19px;font-weight:800;color:var(--green);letter-spacing:-.01em}
+.top .sub{color:var(--muted);font-size:12.5px}
+.top .grow{flex:1}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--green);background:var(--green-soft);border-radius:999px;padding:5px 10px}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:#2DB36A;animation:lp 1.6s infinite}
+@keyframes lp{70%{box-shadow:0 0 0 7px rgba(45,179,106,0)}0%{box-shadow:0 0 0 0 rgba(45,179,106,.6)}}
+.ibtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;position:relative;flex:none}
+.ibtn .dot{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:999px;background:var(--red);color:#fff;font-size:10.5px;font-weight:800;display:grid;place-items:center;padding:0 4px;border:2px solid var(--cream)}
+.burger{display:none}
+.content{padding:22px 24px 60px;max-width:1320px;width:100%}
+
+/* common */
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh1)}
+.card.pad{padding:16px 18px}
+.card h3{margin:0 0 4px;font-size:15px;font-weight:800;color:var(--green)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.btn{border:0;background:linear-gradient(180deg,#145232,#0B3A23);color:#fff;font-weight:700;border-radius:10px;padding:10px 16px;font-size:13.5px;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.btn.gold{background:var(--gold);color:var(--green)}
+.btn.ghost{background:#fff;color:var(--green);border:1.5px solid var(--green);box-shadow:none}
+.btn.soft{background:var(--green-soft);color:var(--green);box-shadow:none}
+.btn.red{background:var(--red)}
+.btn.sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+@media (hover:hover){.btn:not(:disabled):hover{filter:brightness(1.08)}.btn.ghost:hover{background:var(--green-soft)}}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.p-new{background:#FDE9C8;color:#8A5F1C}.p-packed{background:var(--green-soft);color:var(--green)}.p-route{background:var(--blue-soft);color:var(--blue)}.p-done{background:#EEF0EC;color:#4D5C53}.p-red{background:var(--red-soft);color:var(--red)}.p-gold{background:var(--gold-soft);color:var(--gold-ink)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
+.field label{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.field input,.field select,.field textarea{height:42px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;background:#fff;width:100%}
+.field textarea{height:auto;min-height:140px;padding:10px 12px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);outline:none}
+.field.bad input{border-color:var(--red)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.search{position:relative;flex:1;min-width:180px;max-width:360px}
+.search input{width:100%;height:40px;border:1.5px solid var(--line);border-radius:999px;padding:0 14px 0 38px;background:#fff}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gold)}
+.seg{display:inline-flex;gap:3px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px;overflow-x:auto;max-width:100%}
+.seg button{border:0;background:none;border-radius:9px;padding:7px 12px;font-weight:700;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--green);color:#fff}
+.seg button .c{opacity:.7;margin-left:4px}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty b{display:block;color:var(--green);font-size:15px;margin-bottom:4px}
+.thumb{width:44px;height:44px;border-radius:10px;background:#F4F0E6;display:grid;place-items:center;overflow:hidden;flex:none}
+.thumb svg,.thumb img{width:100%;height:100%;object-fit:contain}
+.note{background:var(--gold-soft);color:var(--gold-ink);border-radius:12px;padding:10px 12px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start}
+.safe{background:var(--green-soft);color:var(--green);border-radius:12px;padding:10px 12px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start;font-weight:600}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{padding:16px 18px}
+.kpi small{color:var(--muted);font-weight:700;font-size:12px}
+.kpi b{display:block;font-size:26px;font-weight:800;color:var(--ink);margin-top:2px;letter-spacing:-.01em}
+.kpi .d{font-size:12px;font-weight:700;color:var(--green)}
+.kpi .d.warn{color:var(--red)}
+.dash{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.ctip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:6px 9px;font-size:12px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .12s}
+.ctip.on{opacity:1}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .t{min-width:0;flex:1}
+.li .t b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t small{color:var(--muted);font-size:12px}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:3px}
+
+/* orders */
+.osplit{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:14px;align-items:start}
+.queue{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 210px);overflow-y:auto;padding:2px}
+.ocard{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--sh1)}
+.ocard.on{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.ocard.fresh{animation:flash 1.6s ease-out 2}
+@keyframes flash{0%,100%{background:#fff}40%{background:#FFF4DE}}
+.ocard .r1{display:flex;align-items:center;gap:8px}
+.ocard .id{font-weight:800;color:var(--green);font-variant-numeric:tabular-nums}
+.ocard .nm{font-size:13px;font-weight:600}
+.ocard .meta{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+@media (hover:hover){.ocard:not(.on):hover{border-color:#CFC6B2}}
+.detail{position:sticky;top:76px}
+.dhead{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line)}
+.dhead h2{margin:0;font-size:20px;color:var(--green);font-weight:800}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.st{display:flex;flex-direction:column;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.st i{height:5px;border-radius:3px;background:var(--line)}
+.st.done i{background:var(--green)}.st.done{color:var(--green)}
+.st.now i{background:var(--gold)}.st.now{color:var(--gold-ink)}
+.dbody{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;padding:16px 18px}
+.items .it{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.items .it:last-child{border-bottom:0}
+.items .it .t{flex:1;min-width:0}
+.items .it .t b{font-size:13.5px}
+.items .it .t small{display:block;color:var(--muted);font-size:12px}
+.swaps{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.swaps span{font-size:11px;font-weight:700;background:#FFF8EC;color:var(--gold-ink);border:1px solid #F0DDBA;border-radius:999px;padding:1px 7px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:13px}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv b{font-weight:700;overflow-wrap:anywhere}
+.box{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.box h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line);background:#FDFCF8;border-radius:0 0 16px 16px}
+.mails{display:flex;flex-direction:column;gap:6px}
+.mrow{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.mrow b{font-weight:700}
+.log{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+
+/* table */
+.tbl-wrap{overflow-x:auto;border-radius:16px}
+table.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:820px}
+.tbl th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:10px 12px;background:#FDFCF8;border-bottom:1px solid var(--line);position:sticky;top:0}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.low td{background:#FFF3F0}
+.tbl tr.low td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+.tbl .pn{display:flex;align-items:center;gap:10px;min-width:200px}
+.tbl .pn b{display:block}
+.tbl select{height:34px;border:1.5px solid var(--line);border-radius:8px;padding:0 8px;background:#fff;font-size:12.5px}
+.stock{display:inline-flex;align-items:center;gap:4px}
+.stock button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:800}
+.stock b{min-width:30px;text-align:center}
+@media (hover:hover){.tbl tbody tr:hover td{background:#FBFAF5}.tbl tr.low:hover td{background:#FFEDE8}}
+
+/* drawer / modal */
+.scrim{position:fixed;inset:0;z-index:100;background:rgba(11,30,20,.38);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;justify-content:flex-end;animation:fi .2s}
+@keyframes fi{from{opacity:0}}
+.drawer{width:min(560px,100%);height:100%;background:var(--cream);overflow-y:auto;padding:20px 22px 40px;animation:si .3s cubic-bezier(.2,.9,.3,1);position:relative}
+@keyframes si{from{transform:translateX(100%)}}
+.scrim.closing{animation:fo .25s forwards}.scrim.closing .drawer{animation:so .25s forwards}.scrim.closing .modal{animation:mo .25s forwards}
+@keyframes fo{to{opacity:0}}@keyframes so{to{transform:translateX(100%)}}@keyframes mo{to{transform:translateY(20px);opacity:0}}
+.scrim.center{justify-content:center;align-items:center;padding:16px}
+.modal{width:min(440px,100%);background:#fff;border-radius:18px;padding:20px;box-shadow:0 30px 60px rgba(0,0,0,.2);animation:mi .25s cubic-bezier(.2,.9,.3,1);position:relative;max-height:90vh;overflow-y:auto}
+@keyframes mi{from{transform:translateY(20px);opacity:0}}
+.x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px;line-height:1;display:grid;place-items:center}
+.drawer h2,.modal h2{margin:0 0 4px;font-size:19px;color:var(--green);padding-right:40px}
+.sizes-t{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px}
+.sizes-t th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:4px 6px}
+.sizes-t td{padding:4px 6px}
+.sizes-t input{width:100%;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 8px;background:#fff}
+.sizes-t input:focus{border-color:var(--green);outline:none}
+.offb{display:inline-block;min-width:44px;text-align:center;font-size:11.5px;font-weight:800;border-radius:6px;padding:3px 6px;background:var(--gold);color:var(--green)}
+.offb.none{background:#EEF0EC;color:var(--muted)}
+.field label.drop{text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--ink)}
+.drop{border:2px dashed #D5CCB8;border-radius:14px;background:#fff;padding:14px;display:flex;gap:14px;align-items:center;cursor:pointer}
+.drop.over{border-color:var(--green);background:var(--green-soft)}
+.drop .pv{width:96px;height:96px;border-radius:12px;background:#F4F0E6;display:grid;place-items:center;overflow:hidden;flex:none}
+.drop .pv img,.drop .pv svg{width:100%;height:100%;object-fit:cover}
+.switch{position:relative;width:46px;height:26px;flex:none;display:inline-block}
+.switch input{opacity:0;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:999px;background:#D5D0C4;transition:.2s;pointer-events:none}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked+span{background:var(--green)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:2px solid var(--gold);outline-offset:2px}
+
+/* promos */
+.promos{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.pban{border-radius:14px;overflow:hidden;position:relative;height:140px;color:#fff;display:flex;align-items:center;padding:16px;background:linear-gradient(120deg,#0B3A23,#1d5c39)}
+.pban.s3{background:linear-gradient(120deg,#5B3A12,#8A5F1C)}
+.pban.off{filter:grayscale(.8);opacity:.6}
+.pban .tx{max-width:60%;position:relative;z-index:1}
+.pban .tx small{color:var(--gold);font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.pban .tx b{display:block;font-size:19px;line-height:1.15}
+.pban .art{position:absolute;right:8px;bottom:-4px;width:42%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.pban .art svg,.pban .art img{width:100%;height:100%;object-fit:contain}
+.pban .tm{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:800;color:var(--gold);z-index:2;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pfoot{padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pfoot .t{flex:1;min-width:0}
+.pfoot .t b{display:block;font-size:13.5px}
+
+/* broadcast + email preview */
+.bc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.mail{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.08);font-size:14px;color:#26332B;border:1px solid var(--line)}
+.mail .mh{background:#0B3A23;color:#fff;text-align:center;padding:16px 12px 12px;font-weight:800;letter-spacing:.12em;font-size:17px}
+.mail .mh img{display:block;margin:0 auto 6px;width:38px}
+.mail .rib{background:#FBF9F4;text-align:center;padding:7px;font-family:var(--f-tag);font-style:italic;font-weight:700;color:#B5832E}
+.mail .mb{padding:18px 20px;white-space:pre-wrap;line-height:1.6;min-height:120px}
+.mail .mb h2{white-space:normal;margin:0 0 8px;font-size:17px;color:#0B3A23}
+.mail .cta{display:block;width:max-content;margin:10px auto 4px;background:#0B3A23;color:#fff;border:2px solid #D49B41;border-radius:999px;padding:10px 20px;font-weight:800;font-size:13.5px}
+.mail .mf{border-top:2px solid #D49B41;text-align:center;padding:12px;font-size:11px;color:#6B7A70;line-height:1.6}
+
+/* chat */
+.chatw{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;height:calc(100vh - 150px);min-height:480px}
+.cq{display:flex;flex-direction:column;overflow:hidden}
+.cq .lst{overflow-y:auto;flex:1}
+.cqi{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
+.cqi.on{background:var(--green-soft)}
+.cqi .t{flex:1;min-width:0}
+.cqi .t b{display:block;font-size:13.5px}
+.cqi .t p{margin:2px 0 0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cqi time{font-size:11px;color:var(--muted)}
+.cpane{display:flex;flex-direction:column;overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cmsgs{flex:1;overflow-y:auto;padding:16px;background:var(--cream);display:flex;flex-direction:column;gap:10px}
+.crow{display:flex;gap:6px;align-items:flex-end}
+.crow.me{justify-content:flex-end}
+.bub{max-width:78%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;background:#fff;border:1px solid var(--line)}
+.bub.bot{background:#F2F5F1}
+.bub.me{background:var(--green);color:#fff;border-color:var(--green)}
+.bub small{display:block;font-size:10px;opacity:.65;margin-top:3px}
+.bub .who{display:block;font-size:10.5px;font-weight:800;color:var(--gold-ink);margin-bottom:2px}
+.csys{align-self:center;font-size:12px;border-radius:999px;padding:4px 12px;background:var(--green-soft);color:var(--green);font-weight:600}
+.csys.end{background:var(--red-soft);color:var(--red)}
+.cfoot{border-top:1px solid var(--line);padding:10px 12px;background:#fff}
+.qr{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;padding-bottom:2px}
+.qr button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600}
+.cin{display:flex;gap:8px}
+.cin input{flex:1;min-width:0;height:42px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px}
+.ctx{padding:12px 16px;border-top:1px solid var(--line);background:#FDFCF8;font-size:12px}
+
+/* reviews */
+.rv{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.stars{color:var(--gold);letter-spacing:1px}
+.reply{background:var(--green-soft);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--green)}
+
+/* toast + banner + loader */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;z-index:300;background:var(--green);color:#fff;font-weight:700;font-size:13px;padding:10px 16px;border-radius:999px;border:1px solid var(--gold);transition:.25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.alertbar{position:fixed;top:14px;left:50%;transform:translate(-50%,-160%);z-index:250;background:var(--gold);color:var(--green);border-radius:14px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 14px 34px rgba(138,95,28,.35);font-weight:700;transition:transform .45s cubic-bezier(.3,1.4,.5,1);max-width:calc(100% - 32px)}
+.alertbar.show{transform:translate(-50%,0)}
+.alertbar .btn{padding:7px 12px;font-size:12.5px}
+.loader{position:fixed;inset:0;z-index:400;background:rgba(251,249,244,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:grid;place-items:center;padding:16px}
+.ldc{background:rgba(255,255,255,.75);border:1px solid #fff;border-radius:20px;padding:24px 28px;text-align:center;box-shadow:0 20px 50px rgba(11,58,35,.15);min-width:240px}
+.ldm{position:relative;width:76px;height:76px;margin:0 auto 10px;display:grid;place-items:center}
+.ldm img{width:38px;animation:br 1.4s ease-in-out infinite}
+.ldm::before{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--gold-soft);border-top-color:var(--gold);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes br{50%{transform:scale(.9)}}
+.ldc b{color:var(--green)}
+
+/* login */
+.login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lart{background:linear-gradient(140deg,#0B3A23,#14532F);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.lart::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;border:2px solid rgba(212,155,65,.35)}
+.lart img{width:150px;background:#FBF9F4;border-radius:16px;padding:10px}
+.lart h1{font-size:34px;line-height:1.1;margin:0 0 10px;max-width:14ch}
+.lart p{color:#CFE0D5;max-width:42ch;margin:0}
+.lform{display:grid;place-items:center;padding:32px 16px}
+.lbox{width:min(400px,100%)}
+.lbox h2{margin:0 0 4px;color:var(--green);font-size:24px}
+.otp1{height:54px!important;font-size:24px!important;font-weight:800;letter-spacing:.5em;text-align:center}
+.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:6px 0 10px}
+.otp input{height:52px;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--line);border-radius:12px;width:100%;min-width:0;padding:0;background:#fff}
+.otp input:focus{border-color:var(--green);outline:none}
+.err{background:var(--red-soft);color:var(--red);border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:600;margin-bottom:10px}
+
+/* scrollbars only while scrolling */
+*{scrollbar-width:thin;scrollbar-color:transparent transparent}
+*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-thumb{background:transparent;border-radius:9px}
+.sb-on{scrollbar-color:rgba(11,58,35,.45) transparent}.sb-on::-webkit-scrollbar-thumb{background:rgba(11,58,35,.45)}
+@media (hover:hover){.queue:hover,.cq .lst:hover,.cmsgs:hover,.tbl-wrap:hover{scrollbar-color:rgba(11,58,35,.35) transparent}.queue:hover::-webkit-scrollbar-thumb,.cq .lst:hover::-webkit-scrollbar-thumb,.cmsgs:hover::-webkit-scrollbar-thumb,.tbl-wrap:hover::-webkit-scrollbar-thumb{background:rgba(11,58,35,.35)}}
+
+
+/* ===== store layout ===== */
+.lay{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.secs{display:flex;flex-direction:column;gap:8px}
+.sec{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:var(--sh1)}
+.sec.off{background:#F6F4EE}
+.sec.off .t b{color:var(--muted);text-decoration:line-through;text-decoration-color:#C9C2B1}
+.sec .t{flex:1;min-width:0}
+.sec .t b{display:block;font-size:14px}
+.sec .t small{color:var(--muted);font-size:12px}
+.sec .mv{display:flex;flex-direction:column;gap:2px}
+.sec .mv button{width:28px;height:22px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:11px;line-height:1;padding:0;color:var(--green)}
+.sec .mv button:disabled{opacity:.3}
+.sec .gi{width:38px;height:38px;border-radius:10px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.sec.off .gi{background:#ECE9E1;color:#A7A08F}
+.subs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0 0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px 5px 8px;font-size:12px;font-weight:700;color:var(--green)}
+.chip.off{color:var(--muted);background:#F6F4EE;text-decoration:line-through}
+.chip i{width:14px;height:14px;border-radius:4px;border:1.5px solid currentColor;display:grid;place-items:center;font-style:normal;font-size:10px}
+.phone{position:sticky;top:80px;border:10px solid #18241D;border-radius:34px;background:var(--cream);padding:10px 8px;height:560px;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.phone .ph{height:24px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:11px;color:var(--green);letter-spacing:.08em;margin-bottom:8px}
+.phone .ph img{height:18px}
+.pb{border-radius:10px;margin-bottom:6px;padding:7px 8px;font-size:10.5px;font-weight:700;display:flex;align-items:center;gap:6px;color:#fff;background:var(--green);animation:fi .25s}
+.pb.gold{background:linear-gradient(135deg,#9A6A22,#D49B41)}
+.pb.cream{background:#EFE7D6;color:var(--green)}
+.pb.plain{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.pb.tall{height:70px;align-items:flex-start}
+.pb .cards{display:flex;gap:4px;margin-left:auto}
+.pb .cards i{width:18px;height:24px;border-radius:4px;background:rgba(255,255,255,.85)}
+.pb.plain .cards i,.pb.cream .cards i{background:#E9E4D8}
+.vis{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--green)}
+.vis.off{color:#A7A08F;background:#F6F4EE}
+.tbl tr.hid td{opacity:.55}
+.tbl tr.hid td:last-child,.tbl tr.hid td:nth-last-child(2){opacity:1}
+@media (max-width:1100px){.lay{grid-template-columns:minmax(0,1fr)}.phone{position:static;height:auto;max-height:520px}}
+
+
+.upd-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.uopt{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;cursor:pointer}
+.uopt input{position:absolute;opacity:0;pointer-events:none}
+.uopt .gi{width:34px;height:34px;border-radius:10px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.uopt b{display:block;font-size:13.5px}
+.uopt small{color:var(--muted);font-size:11.5px;line-height:1.3;display:block}
+.uopt.on{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.uopt.sm{padding:8px 12px;font-size:13px;font-weight:700;flex:1}
+.uopt:has(input:focus-visible){outline:2px solid var(--gold);outline-offset:2px}
+.scrim.instant,.scrim.instant .drawer{animation:none}
+@media (max-width:560px){.upd-opts{grid-template-columns:minmax(0,1fr)}}
+
+
+/* blinking status lights: new orders and orders on the way */
+.led{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.led.new{background:#E8892B;animation:ledN 1s ease-in-out infinite}
+.led.route{background:#2F7BD0}
+.led.issue{background:var(--red);animation:ledN .8s ease-in-out infinite}
+@keyframes ledN{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(232,137,43,.6)}50%{opacity:.25;box-shadow:0 0 0 6px rgba(232,137,43,0)}}
+@keyframes ledR{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(47,123,208,.55)}50%{opacity:.3;box-shadow:0 0 0 6px rgba(47,123,208,0)}}
+.ocard.st-new{border-left:4px solid #E8892B}
+.ocard.st-route{border-left:4px solid #2F7BD0}
+.ocard.st-issue{border-left:4px solid var(--red)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-6px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .led{animation:none!important}
+@media (prefers-reduced-motion:reduce){.led{animation:none!important}}
+
+/* responsive */
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash{grid-template-columns:minmax(0,1fr)}.dbody{grid-template-columns:minmax(0,1fr)}.bc{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:200;transform:translateX(-100%);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+  .side.open{transform:none;box-shadow:20px 0 50px rgba(0,0,0,.25)}
+  .burger{display:grid}
+  .top{padding:10px 16px}
+  .content{padding:16px 16px 60px}
+  .osplit{grid-template-columns:minmax(0,1fr)}
+  .queue{max-height:none}
+  .detail{position:static}
+  .chatw{grid-template-columns:minmax(0,1fr);height:auto}
+  .cpane{height:72vh}
+  .login{grid-template-columns:minmax(0,1fr)}
+  .lart{padding:28px 20px;gap:18px}
+  .lart h1{font-size:24px}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){.kpis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.kpi b{font-size:20px}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.top .sub{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div id="root"></div>
+<div class="alertbar" id="alertbar" role="alert"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="loader" id="loader" hidden><div class="ldc"><div class="ldm"><img src="/icon-sm.png" alt=""></div><b id="ldt">Loading</b></div></div>
+<div id="modal"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+/* Forms: the artifact frame may block real form submission, so submit buttons and Enter fire the submit event directly. */
+function fireForm(f){if(!f)return;f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.type!=='submit'||!b.form||b.disabled)return;e.preventDefault();fireForm(b.form)},true);
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const t=e.target;if(!t.form||t.tagName==='TEXTAREA'||t.tagName==='BUTTON'||t.type==='checkbox'||t.type==='radio')return;e.preventDefault();fireForm(t.form)},true);
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const naira=n=>'₦'+Math.round(n).toLocaleString('en-NG');
+const store={get(k,d){try{const v=localStorage.getItem('tadm_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('tadm_'+k,JSON.stringify(v))}catch(e){}}};
+const PHOTOS=new Set();
+const ICONSRC=document.querySelector('#loader img').src;
+
+/* ---------- icons ---------- */
+const IC={
+ dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+ orders:'<path d="M6 3h12l2 4H4z"/><path d="M4 7v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7"/><path d="M9 12h6"/>',
+ box:'<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
+ promo:'<path d="M3 11l18-7v16L3 13z"/><path d="M7 13v5a2 2 0 0 0 4 0v-3"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+ chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+ star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c-.5-2.6-2-4.4-4-5.1"/>',
+ truck:'<path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+ shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+ bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+ check:'<path d="m5 12 4 4 10-10"/>',
+ send:'<path d="m4 12 16-8-6 16-2-6z"/>',
+ edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+ eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ pin:'<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+ logout:'<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>',
+ upload:'<path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/>',
+ alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
+ eyeoff:'<path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.2 3.8M6.5 7.6C3.8 9.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+ layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+ up:'<path d="m6 15 6-6 6 6"/>',down:'<path d="m6 9 6 6 6-6"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+};
+const ic=(n,s)=>`<svg width="${s||18}" height="${s||18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
+/* ---------- catalog (same as the storefront) ---------- */
+const SZ=['250g','500g','1kg','1 paint'],KG={'250g':.25,'500g':.5,'1kg':1,'1 paint':2.5};
+function mk(id,name,cat,prices,extra){return Object.assign({id,name,cat,sizes:prices.map((p,i)=>({label:SZ[i],price:p,sale:null,kg:KG[SZ[i]],na:p==null})),status:'in',stock:40,low:5},extra||{})}
+/* ---------- state ---------- */
+const S={
+  auth:null,view:'dash',
+  products:[],
+  orders:[],
+  promos:[],
+  chats:[],
+  reviews:[],
+  log:[],
+  fees:{min:0,lagosKg:0,interKg:0,van:0,same:0,express:0,areas:[],regions:[]},
+  sent:[],
+  layout:([
+   ['slider','Top banner slider','Your flash sales and promos (manage in Flash sales)',true,'promo','tall'],
+   ['tiles','Shortcut tiles','Order on WhatsApp · Student combos · Track my order',true,'layout','cream'],
+   ['flash','Flash Sales row','Products on promo with the countdown',true,'promo',''],
+   ['aisles','Shop by aisle','Round category pictures',true,'box','cream'],
+   ['cereals','Breakfast cereals row','All cereal products',true,'box','plain'],
+   ['ccombos','Cereal combo packages','Ready-made breakfast bundles',true,'box','gold'],
+   ['milk','Milk & beverages row','Milk, Milo, Choco Malt, oats',true,'box','plain'],
+   ['fcombos','Foodstuff combos','Rice, garri, beans packs',true,'box',''],
+   ['recent','Recently viewed','Shown only to shoppers who have viewed items',true,'eye','plain'],
+   ['recs','Recommended for you','Grid of all products',true,'dash','plain'],
+   ['note','Combo note','“Quantities differ… you can swap…”',true,'alert','cream']]),
+  tiles:([['wa','Order on WhatsApp',true],['student','Student combos',true],['track','Track my order',true]]),
+  aisles:([['cereal','Cereals',true],['milk','Milk & Drinks',true],['grain','Oats & Custard',true],['ccombo','Cereal Combos',true],['fcombo','Foodstuff Combos',true],['sort','Lowest prices',true]]),
+  ofilter:'new',oq:'',sel:null,iq:'',icat:'all',chatSel:null,rfilter:'pending',cq:'',
+};
+const byId=id=>S.products.find(p=>p.id===id)||(id?{id,name:GONE[id]||'Removed item',cat:'',sizes:[{label:'',price:0,sale:null,kg:0}],stock:0,low:0,status:'na',gone:true}:undefined);
+const save=()=>{};
+const now=()=>new Date();
+const tstr=d=>new Date(d).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const dstr=d=>new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const ago=ms=>{const m=Math.round((Date.now()-ms)/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+function logAct(t){S.log.unshift({t,at:Date.now(),by:S.auth?S.auth.name:'System'});S.log=S.log.slice(0,80);save()}
+
+/* ---------- helpers ---------- */
+const STEP=['new','packed','route','done'];
+const STL={new:['New · paid','p-new'],packed:['Packed','p-packed'],route:['On the way','p-route'],done:['Delivered','p-done'],issue:['Problem','p-gold'],refunded:['Refunded','p-red'],cancelled:['Cancelled','p-red']};
+const ISSUE=o=>['issue','refunded','cancelled'].includes(o.status)||(o.refunds||[]).length;
+const art=id=>PHOTOS.has(id)?`<svg viewBox="0 0 140 140" aria-hidden="true"><use href="#ph-${id}"/></svg>`:`<svg viewBox="0 0 140 140" aria-hidden="true"><rect x="38" y="20" width="64" height="104" rx="8" fill="#D49B41" opacity=".25"/><text x="70" y="78" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="13" fill="#8A5F1C">${esc((byId(id)||{name:'?'}).name.split(' ')[0].toUpperCase())}</text></svg>`;
+const thumb=p=>p.img?`<img src="${p.img}" alt="">`:art(p.id);
+const itemTotal=it=>{if(it[4]!=null)return it[4]*it[2];const p=byId(it[0]);if(!p)return 0;const s=p.sizes.find(x=>x.label===it[1])||p.sizes[0];return (s.sale||s.price)*it[2]};
+const mask=ph=>{ph=(ph||'').replace(/\D/g,'');return ph.length>=8?ph.slice(0,4)+' ••• '+ph.slice(-4):ph};
+const fmtPhone=p=>{p=(p||'').replace(/\D/g,'');return p.length===11?p.slice(0,4)+' '+p.slice(4,7)+' '+p.slice(7):p};
+const lowStock=()=>S.products.filter(p=>p.status!=='out'&&p.stock<=p.low);
+const waitingChats=()=>S.chats.filter(c=>c.status==='waiting');
+const pendingReviews=()=>S.reviews.filter(r=>r.status==='pending');
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+function loading(msg,ms){return new Promise(r=>{$('#ldt').textContent=msg;$('#loader').hidden=false;setTimeout(()=>{$('#loader').hidden=true;r()},ms||600)})}
+function closeModal(){const m=$('#modal'),sc=m.firstElementChild;if(!sc)return;sc.classList.add('closing');setTimeout(()=>{if(m.firstElementChild===sc)m.innerHTML=''},240)}
+
+/* ---------- auth ---------- */
+let login={step:'pw',email:'',err:'',tries:0,lock:0};
+
+/* ---------- shell ---------- */
+const NAV=[['Overview',[['dash','dash','Dashboard']]],['Sales',[['orders','orders','Orders',()=>S.orders.filter(o=>o.status==='new').length,'blink'],['inventory','box','Inventory',()=>lowStock().length,'red'],['promos','promo','Flash sales & banners'],['layout','layout','Store layout',()=>S.layout.filter(x=>!x[3]).length+S.products.filter(p=>p.hidden).length]]],['Customers',[['chat','chat','Live chat',()=>waitingChats().length,'red'],['broadcast','mail','Email broadcast'],['reviews','star','Reviews',()=>pendingReviews().length],['customers','users','Customers']]],['Settings',[['delivery','truck','Delivery & fees'],['security','shield','Security & activity']]]];
+const TITLES={layout:['Store layout','Choose what shoppers see on the home page'],dash:['Dashboard','Today at Tiada Marketplace'],orders:['Orders','Pack, dispatch and deliver'],inventory:['Inventory','Products, prices, weight and stock'],promos:['Flash sales & banners','What shoppers see at the top of the home page'],chat:['Live chat','Customers who asked for a person'],broadcast:['Email broadcast','Send an update to every customer'],reviews:['Reviews','Approve, hide and reply'],customers:['Customers','Everyone who has ordered'],delivery:['Delivery & fees','Lagos areas, other states and weight'],security:['Security & activity','Who did what, and when']};
+function shell(){
+  const [t,sub]=TITLES[S.view];
+  return `<div class="app">
+   <aside class="side" id="side"><div class="brand"><img src="${ICONSRC}" alt=""><span><b>TIADA</b><small>ADMIN DESK</small></span></div>
+    <nav class="nav">${NAV.map(([h,items])=>`<h6>${h}</h6>${items.map(([v,i,l,c,cl])=>{const n=c?c():0;return `<button class="${S.view===v?'on':''}" data-view="${v}">${ic(i)}<span>${l}</span>${n?`<span class="cnt ${cl||''} num">${n}</span>`:''}</button>`}).join('')}`).join('')}</nav>
+    <div class="me"><span class="av">${esc(S.auth.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><span><b>${esc(S.auth.name)}</b><small>${esc(S.auth.role)}</small></span><button data-act="logout" aria-label="Sign out">Sign out</button></div>
+   </aside>
+   <div class="main"><header class="top"><button class="ibtn burger" data-act="menu" aria-label="Open menu">${ic('menu')}</button><div><h1>${t}</h1><div class="sub">${sub}</div></div><span class="grow"></span><span class="live">Store live</span>
+     <button class="ibtn" data-view="orders" aria-label="New orders">${ic('bell')}${S.orders.filter(o=>o.status==='new').length?`<span class="dot num">${S.orders.filter(o=>o.status==='new').length}</span>`:''}</button></header>
+    <div class="content" id="content">${({layout:vLayout,dash:vDash,orders:vOrders,inventory:vInv,promos:vPromos,chat:vChat,broadcast:vBroadcast,reviews:vReviews,customers:vCustomers,delivery:vDelivery,security:vSecurity})[S.view]()}</div></div></div>`;
+}
+function render(){$('#root').innerHTML=S.auth?shell():vLogin();afterRender()}
+function afterRender(){
+  if(S.view==='chat'){const c=$('.cmsgs');if(c)c.scrollTop=c.scrollHeight}
+  if(S.view==='dash')wireChart();
+  tickTimers();
+}
+function go(v){if(v===S.view){render();return}loading('Opening '+TITLES[v][0].toLowerCase(),450).then(()=>{S.view=v;$('#side')&&$('#side').classList.remove('open');render();window.scrollTo(0,0)})}
+
+/* ---------- dashboard ---------- */
+const DAYS=(()=>{const a=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*86400000);a.push(d)}return a})();
+const SALES=[148000,212500,96500,187000,264000,231500,0];
+function vDash(){
+  const today=S.orders.filter(o=>Date.now()-o.at<86400000);
+  const newO=S.orders.filter(o=>o.status==='new').length,route=S.orders.filter(o=>o.status==='route').length;
+  const top=topSellers();
+  const mx=Math.max(50000,...SALES);
+  return `<div class="kpis">
+    <div class="card kpi"><small>Sales today</small><b class="num">${naira(SALES[6])}</b><span class="d">${today.length} order${today.length===1?'':'s'} paid</span></div>
+    <div class="card kpi"><small>Waiting to be packed</small><b class="num">${newO}</b><span class="d ${newO?'warn':''}">${newO?'Needs action':'All caught up'}</span></div>
+    <div class="card kpi"><small>On the way</small><b class="num">${route}</b><span class="d">Riders and couriers</span></div>
+    <div class="card kpi"><small>Low or sold out</small><b class="num">${lowStock().length+S.products.filter(p=>p.status==='out').length}</b><span class="d warn">${lowStock().length} low · ${S.products.filter(p=>p.status==='out').length} sold out</span></div>
+  </div>
+  <div class="dash">
+   <div class="card pad"><div class="row"><h3>Sales, last 7 days</h3><span class="sp"></span><span class="hint num">Total ${naira(SALES.reduce((a,b)=>a+b,0))}</span></div>
+    <div class="chart" id="chart">${barChart(SALES,DAYS,mx)}<div class="ctip" id="ctip"></div></div>
+    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Show as table</summary><table class="tbl" style="min-width:0;margin-top:6px"><tbody>${DAYS.map((d,i)=>`<tr><td>${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}</td><td class="num" style="text-align:right">${naira(SALES[i])}</td></tr>`).join('')}</tbody></table></details>
+   </div>
+   <div class="card pad"><h3>Needs attention</h3><div class="list">
+     ${newO?`<div class="li"><span class="pill p-new">${newO} new</span><span class="t"><b>Orders waiting to be packed</b><small>Paid automatically by transfer</small></span><button class="btn sm" data-view="orders">Open</button></div>`:''}
+     ${waitingChats().length?`<div class="li"><span class="pill p-red">${waitingChats().length} waiting</span><span class="t"><b>Customers asked for a person</b><small>Live chat</small></span><button class="btn sm" data-view="chat">Reply</button></div>`:''}
+     ${lowStock().map(p=>`<div class="li"><span class="thumb">${thumb(p)}</span><span class="t"><b>${esc(p.name)}</b><small style="color:var(--red)">Only ${p.stock} left · restock soon</small></span><button class="btn sm ghost" data-edit="${p.id}">Restock</button></div>`).join('')}
+     ${pendingReviews().length?`<div class="li"><span class="pill p-gold">${pendingReviews().length} new</span><span class="t"><b>Reviews to approve</b><small>Only approved reviews show in the store</small></span><button class="btn sm ghost" data-view="reviews">Review</button></div>`:''}
+   </div></div>
+  </div>
+  <div class="dash" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+   <div class="card pad"><h3>Best sellers this week</h3><div class="list">${top.length?"":"<p class=\"hint\" style=\"margin:0\">Sales will show here.</p>"}${top.map(([id,n])=>{const p=byId(id);return `<div class="li"><span class="thumb">${thumb(p)}</span><span class="t"><b>${esc(p.name)}</b><div class="bar"><i style="width:${n/top[0][1]*100}%"></i></div></span><span class="num hint" style="font-weight:700;color:var(--ink)">${n} sold</span></div>`}).join('')}</div></div>
+   <div class="card pad"><h3>Latest orders</h3><div class="list">${S.orders.length?'':'<p class="hint" style="margin:0">New paid orders appear here automatically.</p>'}${S.orders.slice(0,5).map(o=>`<div class="li">${['new','route','issue'].includes(o.status)?`<span class="led ${o.status}" aria-hidden="true"></span>`:'<span style="width:10px"></span>'}<span class="t"><b class="num">${o.id} · ${esc(o.name)}</b><small>${ago(o.at)} · ${esc(o.area.split(',')[0])}</small></span><span class="pill ${STL[o.status][1]}">${STL[o.status][0]}</span><span class="num" style="font-weight:800;min-width:80px;text-align:right">${naira(o.total)}</span></div>`).join('')}</div></div>
+  </div>`;
+}
+function barChart(v,days,mx){
+  const W=640,H=230,pl=56,pr=8,pt=12,pb=28,iw=W-pl-pr,ih=H-pt-pb,bw=iw/v.length;
+  const top=Math.ceil(mx/50000)*50000,ticks=[0,top/2,top];
+  const y=x=>pt+ih-(x/top)*ih;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales for the last 7 days">
+   ${ticks.map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}" stroke="#E9E4D8" stroke-width="1"/><text x="${pl-8}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="#6B7A70" font-family="Montserrat">${t?'₦'+(t/1000)+'k':'₦0'}</text>`).join('')}
+   ${v.map((x,i)=>{const h=Math.max(2,ih-(y(x)-pt)),bx=pl+i*bw+bw*.22,w=bw*.56,by=y(x);
+     return `<g class="bg" data-i="${i}"><rect x="${pl+i*bw}" y="${pt}" width="${bw}" height="${ih}" fill="transparent"/><path d="M${bx} ${pt+ih} V${by+4} q0 -4 4 -4 h${w-8} q4 0 4 4 V${pt+ih} Z" fill="${i===6?'#D49B41':'#0B3A23'}"/>
+      <text x="${bx+w/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="#6B7A70" font-family="Montserrat">${i===6?'Today':days[i].toLocaleDateString('en-GB',{weekday:'short'})}</text></g>`}).join('')}
+   <line x1="${pl}" x2="${W-pr}" y1="${pt+ih}" y2="${pt+ih}" stroke="#CFC6B2"/>
+  </svg>`;
+}
+function wireChart(){const c=$('#chart');if(!c)return;const tip=$('#ctip');
+  c.querySelectorAll('.bg').forEach(g=>{g.addEventListener('pointerenter',()=>{const i=+g.dataset.i,r=g.getBoundingClientRect(),cr=c.getBoundingClientRect();tip.innerHTML=`<b>${naira(SALES[i])}</b> · ${DAYS[i].toLocaleDateString('en-GB',{weekday:'long'})}`;tip.style.left=(r.left-cr.left+r.width/2)+'px';tip.style.top=(r.top-cr.top+40)+'px';tip.classList.add('on');g.querySelector('path').style.opacity='.8'});
+    g.addEventListener('pointerleave',()=>{tip.classList.remove('on');g.querySelector('path').style.opacity=''})})}
+
+/* ---------- orders ---------- */
+function vOrders(){
+  const F=[['new','New'],['packed','Packed'],['route','On the way'],['done','Delivered'],['issues','Problems & refunds'],['all','All']];
+  let list=S.orders.filter(o=>S.ofilter==='all'||(S.ofilter==='issues'?ISSUE(o):o.status===S.ofilter));
+  if(S.oq){const q=S.oq.toLowerCase();list=S.orders.filter(o=>(o.id+' '+o.name+' '+o.phone+' '+o.area).toLowerCase().includes(q))}
+  if(!S.sel||!list.find(o=>o.id===S.sel))S.sel=list[0]?list[0].id:null;
+  const o=S.orders.find(x=>x.id===S.sel);
+  return `<div class="row" style="margin-bottom:14px"><div class="seg">${F.map(f=>`<button class="${S.ofilter===f[0]&&!S.oq?'on':''}" data-of="${f[0]}">${f[1]}<span class="c num">${f[0]==='all'?S.orders.length:f[0]==='issues'?S.orders.filter(ISSUE).length:S.orders.filter(x=>x.status===f[0]).length}</span></button>`).join('')}</div><span class="sp"></span>
+   <label class="search">${ic('search',16)}<input id="oq" placeholder="Search code, name, phone or area" value="${esc(S.oq)}" aria-label="Search orders"></label></div>
+  <div class="legend"><span><i class="led new"></i>Blinking: needs action now (new order or problem)</span><span><i class="led route"></i>Steady blue: on the way, nothing to do</span></div>
+  <div class="osplit">
+   <div class="queue" id="queue">${list.length?list.map(x=>`<button class="ocard st-${x.status} ${x.id===S.sel?'on':''} ${x.fresh?'fresh':''}" data-osel="${x.id}">
+     <span class="r1">${['new','route','issue'].includes(x.status)?`<span class="led ${x.status}" aria-hidden="true"></span>`:''}<span class="id">${x.id}</span><span class="pill ${STL[x.status][1]}">${STL[x.status][0]}</span>${(x.refunds||[]).length&&x.status!=='refunded'?'<span class="pill p-red">Part refund</span>':''}<span class="sp"></span><b class="num">${naira(x.total)}</b></span>
+     <span class="nm">${esc(x.name)}</span><span class="meta"><span>${ic('clock',13)} ${ago(x.at)}</span><span>${ic('pin',13)} ${esc(x.area.split(',')[0])}</span><span>${x.items.reduce((a,i)=>a+i[2],0)} items</span></span></button>`).join(''):`<div class="card empty"><b>No orders here</b>New paid orders appear at the top automatically.</div>`}</div>
+   <div>${o?orderDetail(o):''}</div>
+  </div>`;
+}
+function orderDetail(o){
+  const ix=STEP.indexOf(o.status==='issue'?(o.prev||'packed'):o.status),kg=o.items.reduce((a,it)=>{const p=byId(it[0]);const s=p&&(p.sizes.find(x=>x.label===it[1])||p.sizes[0]);return a+(s?s.kg*it[2]:0)},0);
+  const sent=S.sent.filter(m=>m.oid===o.id);
+  return `<div class="card detail">
+   <div class="dhead"><div><h2 class="num">${o.id}</h2><div class="hint">${esc(o.name)} · paid ${dstr(o.at)} at ${tstr(o.at)}</div></div><span class="sp"></span>${['new','route','issue'].includes(o.status)?`<span class="led ${o.status}" aria-hidden="true" style="align-self:center"></span>`:''}<span class="pill ${STL[o.status][1]}">${STL[o.status][0]}</span></div>
+   ${o.status==='refunded'||o.status==='cancelled'?`<div class="note" style="margin:12px 18px;background:var(--red-soft);color:var(--red)">${ic('alert',16)}<span><b>${o.status==='refunded'?'Refunded':'Cancelled'}</b> · ${naira((o.refunds||[]).reduce((a,r)=>a+r.amount,0))} returned to ${esc(o.bank)}. ${esc(o.reason||'')}</span></div>`
+     :`<div class="steps">${['Paid','Packed','On the way','Delivered'].map((l,i)=>`<div class="st ${i<ix||o.status==='done'?'done':i===ix?'now':''}"><i></i>${l}</div>`).join('')}</div>`}
+   ${o.status==='issue'?`<div class="note" style="margin:0 18px 4px">${ic('alert',16)}<span><b>Problem reported:</b> ${esc(o.issue.reason)}${o.issue.note?' · '+esc(o.issue.note):''}</span></div>`:''}
+   ${(o.refunds||[]).length&&o.status!=='refunded'&&o.status!=='cancelled'?`<div class="note" style="margin:0 18px 4px;background:var(--red-soft);color:var(--red)">${ic('alert',16)}<span><b>Part refund:</b> ${o.refunds.map(r=>naira(r.amount)+' · '+esc(r.reason)).join('; ')}</span></div>`:''}
+   <div class="dbody">
+    <div>
+     <div class="box"><h4>Pack list · ${kg.toFixed(1)} kg</h4><div class="items">${o.items.map(it=>{const p=byId(it[0]);return `<div class="it"><span class="thumb">${thumb(p)}</span><span class="t"><b>${esc(it[5]||p.name)}</b> <span class="num">× ${it[2]}</span><small>${it[1]}${p.items?' · '+p.items.length+' items':''}</small>${(it[3]||[]).length?`<span class="swaps">${it[3].map(w=>`<span>${esc(w[0])} → ${esc(w[1])}</span>`).join('')}</span>`:''}</span><span class="num" style="font-weight:700">${naira(itemTotal(it))}</span></div>`}).join('')}</div></div>
+     <div class="box" style="margin-bottom:0"><h4>Payment</h4><div class="kv"><span>Method</span><b>Bank transfer · one-time account</b><span>Delivery fee</span><b class="num">${naira(o.fee)}</b><span>Total</span><b class="num">${naira(o.total)}</b><span>Status</span><b style="color:var(--green)">✓ Confirmed automatically by Paystack</b></div></div>
+    </div>
+    <div>
+     <div class="box"><h4>Deliver to</h4><div class="kv"><span>Name</span><b>${esc(o.name)}</b><span>Phone</span><b class="num">${fmtPhone(o.phone)}</b><span>Address</span><b>${esc(o.addr)}</b>${o.landmark?`<span>Landmark</span><b>${esc(o.landmark)}</b>`:''}<span>Area</span><b>${esc(o.area)}</b><span>Speed</span><b>${esc(o.speed)}</b>${o.rider?`<span>Delivery partner</span><b>${riderLine(o.rider)}</b>${o.confirm?`<span>Delivered</span><b style="color:var(--green)">✓ ${esc(o.confirm.how)}${o.confirm.note?' · '+esc(o.confirm.note):''} <span class="hint">(${esc(o.confirm.by)}, ${tstr(o.confirm.at)})</span></b>`:''}${o.rider.cost?`<span>Partner cost</span><b class="num">${naira(o.rider.cost)} <span class="hint">(customer paid ${naira(o.fee)})</span></b>`:''}`:''}</div></div>
+     <div class="box" style="margin-bottom:0"><h4>Customer emails</h4><div class="mails">
+      ${mailRows(o,ix)}
+     </div></div>
+    </div>
+   </div>
+   <div class="actions">
+    ${o.status==='new'?`<button class="btn" data-oact="pack">${ic('box',16)} Mark as packed</button><span class="hint" style="align-self:center">Stock is taken off automatically.</span>`:''}
+    ${o.status==='packed'?`<button class="btn" data-oact="dispatch">${ic('truck',16)} Mark as on the way</button><span class="hint" style="align-self:center">Add the ${o.state?'courier waybill':'bike booking'} and email the customer.</span>`:''}
+    ${o.status==='route'?`<button class="btn" data-oact="deliver">${ic('check',16)} Mark as delivered</button><span class="hint" style="align-self:center">Sends the delivered email and asks for a review.</span>`:''}
+    ${o.status==='done'?`<span class="pill p-done">${ic('check',13)} Completed</span>`:''}
+    ${o.status==='issue'?`<button class="btn" data-oact="resume">${ic('truck',16)} Problem sorted · continue</button>`:''}
+    ${o.status!=='refunded'&&o.status!=='cancelled'?`<button class="btn soft" data-oact="update">${ic('edit',16)} Update status</button>`:''}
+    <span class="sp"></span><a class="btn sm ghost" href="https://wa.me/234${o.phone.replace(/\D/g,'').slice(1)}" target="_blank" rel="noopener">WhatsApp customer</a>
+   </div></div>`;
+}
+const MAIL_SUBJ={placed:o=>`Order confirmed: ${o.id} · Tiada Marketplace`,route:o=>`Your order ${o.id} is on the way!`,done:o=>`Delivered: enjoy your order ${o.id}`,issue:o=>`An update on your order ${o.id}`,refund:o=>`Refund for your order ${o.id}`,cancel:o=>`Your order ${o.id} has been cancelled`,note:o=>`A message about your order ${o.id}`};
+const MAIL_L={placed:'Order confirmed',route:'On the way',done:'Delivered',issue:'Problem or delay',refund:'Refund',cancel:'Cancelled',note:'Message'};
+function mailRows(o,ix){
+  const sent=S.sent.filter(m=>m.oid===o.id).slice().reverse();
+  const rows=[];if(!sent.some(m=>m.kind==='placed'))rows.push({kind:'placed',at:o.at,fake:true});
+  if(!sent.some(m=>m.kind==='route')&&ix>=2&&o.status!=='issue')rows.push({kind:'route',at:o.at,fake:true});
+  sent.forEach(m=>rows.push(m));
+  const next=o.status==='new'||o.status==='packed'?'route':o.status==='route'?'done':null;
+  return rows.map(m=>`<div class="mrow"><span style="color:${['refund','cancel','issue'].includes(m.kind)?'var(--red)':'var(--green)'}">${ic('check',16)}</span><span style="flex:1"><b>${MAIL_L[m.kind]}</b> <span class="hint">sent ${tstr(m.at)}</span></span><button class="btn sm soft" data-email="${o.id}|${m.kind}|${m.id||''}">View</button></div>`).join('')
+   +(next?`<div class="mrow"><span style="color:#C9C2B1">${ic('clock',16)}</span><span style="flex:1"><b>${MAIL_L[next]}</b> <span class="hint">sends automatically at this step</span></span></div>`:'');
+}
+function sendMail(o,kind,data){S.sent.unshift({id:'m'+Date.now()+Math.random().toString(36).slice(2,6),oid:o.id,kind,at:Date.now(),to:o.email,data});save()}
+function emailBody(o,kind){
+  const rows=o.items.map(it=>{const p=byId(it[0]);return `<tr><td style="padding:5px 0;border-bottom:1px solid #EEE9DE">${esc(p.name)}${it[1]!=='Package'?' '+it[1]:''} × ${it[2]}${(it[3]||[]).length?`<br><small style="color:#8A5F1C">${it[3].map(w=>esc(w[0])+' → '+esc(w[1])).join(', ')}</small>`:''}</td><td style="text-align:right;font-weight:600;border-bottom:1px solid #EEE9DE">${naira(itemTotal(it))}</td></tr>`}).join('');
+  const first=esc(o.name.split(' ')[0]);
+  if(kind==='placed')return `<h2>Thank you for your order!</h2>Hello ${first},\n\nWe’ve received your payment and your order is now being packed at our Ojota hub.\n\n<b>Tracking code: ${o.id}</b><table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:13px">${rows}<tr><td><b>Total paid</b></td><td style="text-align:right"><b>${naira(o.total)}</b></td></tr></table><b>Delivery:</b> ${esc(o.speed)}\n<b>Address:</b> ${esc(o.addr)}`;
+  if(kind==='route'){const r=o.rider||{};return `<h2>Your order is on the way 🚚</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been packed, quality checked and handed to our delivery partner.\n\n<b>Delivery partner:</b> ${esc(r.partner||r.name||'')}${r.tracking?`\n<b>Tracking number:</b> ${esc(r.tracking)}`:''}${r.driver?`\n<b>Driver:</b> ${esc(r.driver)}`:''}${r.phone?`\n<b>Phone:</b> ${fmtPhone(r.phone)}`:''}\n<b>Speed:</b> ${esc(o.speed)}\n\nPlease keep your phone line open so the driver can reach you.`}
+  const D=arguments[2]||{};
+  if(kind==='issue')return `<h2>An update on your order</h2>Hello ${first},
+
+We’re sorry, there’s a problem with your order <b>${o.id}</b>.
+
+<b>What happened:</b> ${esc(D.reason||'')}${D.note?`
+${esc(D.note)}`:''}${D.eta?`
+<b>New expected delivery:</b> ${esc(D.eta)}`:''}
+
+We’re working on it and will update you again. Questions? Reply to this email or WhatsApp us on 08075110000.`;
+  if(kind==='refund')return `<h2>Your refund is on its way</h2>Hello ${first},
+
+We’ve refunded <b>${naira(D.amount||0)}</b> for your order <b>${o.id}</b>${D.full?'':' (part of your order)'}.
+
+<b>Reason:</b> ${esc(D.reason||'')}${D.note?`
+${esc(D.note)}`:''}
+<b>Refunded to:</b> the bank account you paid from
+
+It usually shows in your bank app within 24 hours, depending on your bank. We’re sorry for the trouble.`;
+  if(kind==='cancel')return `<h2>Your order has been cancelled</h2>Hello ${first},
+
+Your order <b>${o.id}</b> has been cancelled.
+
+<b>Reason:</b> ${esc(D.reason||'')}${D.note?`
+${esc(D.note)}`:''}
+
+We’ve refunded the full <b>${naira(o.total)}</b> to the bank account you paid from. It usually shows within 1–3 working days.
+
+We’re sorry, and we hope to serve you again soon.`;
+  if(kind==='note')return `<h2>A message about your order</h2>Hello ${first},
+
+${esc(D.note||'')}
+
+Order: <b>${o.id}</b>
+
+Questions? Reply to this email or WhatsApp us on 08075110000.`;
+  return `<h2>Delivered! Enjoy your food 💚</h2>Hello ${first},\n\nYour order <b>${o.id}</b> has been delivered to ${esc(o.addr)}.\n\nSomething missing or damaged? WhatsApp us within 24 hours with your TD code and a photo.\n\nWe’d love to hear how it went. Rate your items in the app.`;
+}
+function mailFrame(subj,to,body,cta){return `<div class="hint" style="margin:10px 0 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px"><span>To</span><b style="color:var(--ink)">${esc(to)}</b><span>Subject</span><b style="color:var(--ink)">${esc(subj)}</b></div>
+  <div class="mail"><div class="mh"><img src="${ICONSRC}" alt="">TIADA MARKETPLACE</div><div class="rib">Foodstuffs and cereals</div><div class="mb">${body}<span class="cta">${cta||'Open App &amp; Shop Now'}</span></div><div class="mf">Tiada Marketplace Hub · Ojota Logistics Center, Ikorodu Road, Lagos, Nigeria<br>WhatsApp 08075110000 · care@tiadamarketplace.com<br><u>Unsubscribe</u></div></div>`}
+const CTA=k=>k==='done'?'Rate your order':k==='route'||k==='issue'?'Track my order':k==='refund'||k==='cancel'?'Shop again':'Open App &amp; Shop Now';
+function openEmail(oid,kind,mid){const o=S.orders.find(x=>x.id===oid),m=S.sent.find(x=>x.id===mid);
+  $('#modal').innerHTML=`<div class="scrim" data-close><div class="drawer" role="dialog" aria-modal="true" aria-label="Email preview"><button class="x" data-close aria-label="Close">×</button><h2>${MAIL_L[kind]} email</h2><p class="hint" style="margin:0">Sent to the customer${m?' at '+tstr(m.at):''}.</p>${mailFrame(MAIL_SUBJ[kind](o),o.email,emailBody(o,kind,m&&m.data),CTA(kind))}</div></div>`}
+const CONFIRM=[['driver','The driver called me'],['app','The partner app shows it completed'],['customer','The customer confirmed'],['tracking','Courier tracking says delivered']];
+function openDeliver(o){
+  $('#modal').innerHTML=`<div class="scrim center" data-close><div class="modal" role="dialog" aria-modal="true" aria-label="Confirm delivery"><button class="x" data-close aria-label="Close">×</button>
+   <h2>Was ${o.id} delivered?</h2><p class="hint" style="margin:0 0 12px">${esc(o.name)} · ${esc(o.addr)}${o.rider?' · '+esc(o.rider.partner||o.rider.name)+(o.rider.tracking?' '+esc(o.rider.tracking):''):''}</p>
+   <form id="f-deliv" novalidate><p style="margin:0 0 8px;font-weight:700;font-size:13px">How did you confirm it?</p>
+    <div class="upd-opts" style="grid-template-columns:minmax(0,1fr)">${CONFIRM.map((c,i)=>`<label class="uopt ${i?'':'on'}"><input type="radio" name="dconf" value="${c[0]}" ${i?'':'checked'}><span class="gi">${ic(c[0]==='driver'?'chat':c[0]==='customer'?'users':c[0]==='app'?'truck':'pin',16)}</span><span><b>${c[1]}</b></span></label>`).join('')}</div>
+    <div class="field"><label for="dl-note">Note (optional)</label><input id="dl-note" placeholder="e.g. Left with the gateman, Mr Ade"></div>
+    <button class="btn" type="submit" style="width:100%;height:46px">${ic('check',16)} Mark as delivered and email customer</button></form></div></div>`;
+}
+/* update status: on the way, delivered, problem, refund, cancel, message */
+const UPD=[['packed','Packed','Packed and ready to go','box'],['route','On the way','Out with a rider or courier','truck'],['done','Delivered','Customer has it','check'],['issue','Problem or delay','Late, out of stock, can’t reach customer…','alert'],['refund','Refund','Full or part refund to their bank','promo'],['cancel','Cancel order','Cancels and refunds in full','logout'],['note','Send a message','Any other update by email','mail']];
+const REASONS={issue:['Delivery is delayed','An item is out of stock','Rider couldn’t reach you','We need to confirm your address','Other'],refund:['An item was missing','An item was damaged','An item was out of stock','Wrong item delivered','Customer asked for a refund','Other'],cancel:['Customer asked to cancel','Items out of stock','Address outside our area','Payment issue','Other']};
+let upd={k:'issue'};
+function openUpdate(o){
+  upd={k:o.status==='new'?'packed':o.status==='packed'?'route':o.status==='route'?'done':'issue',full:true,amount:o.total,reason:'',note:'',eta:'',email:true};
+  drawUpdate(o);
+}
+function updData(o){return {reason:upd.reason||(REASONS[upd.k]||[''])[0],note:upd.note,eta:upd.eta,amount:upd.k==='cancel'?o.total:upd.full?o.total:+upd.amount||0,full:upd.k==='cancel'||upd.full}}
+function drawUpdate(o){
+  const k=upd.k,needRider=k==='route'&&!o.rider,ek=k==='cancel'?'cancel':k;
+  $('#modal').innerHTML=`<div class="scrim" data-close><div class="drawer" role="dialog" aria-modal="true" aria-label="Update order"><button class="x" data-close aria-label="Close">×</button>
+   <h2>Update ${o.id}</h2><p class="hint" style="margin:0 0 14px">${esc(o.name)} · now <b>${STL[o.status][0]}</b>. The customer gets an email for every update.</p>
+   <form id="f-upd" novalidate>
+    <div class="upd-opts">${UPD.map(u=>`<label class="uopt ${k===u[0]?'on':''}"><input type="radio" name="uk" value="${u[0]}" ${k===u[0]?'checked':''}><span class="gi">${ic(u[3],17)}</span><span><b>${u[1]}</b><small>${u[2]}</small></span></label>`).join('')}</div>
+    ${needRider?`<div class="note" style="margin-bottom:12px">${ic('truck',16)}<span>Next you’ll add the delivery partner and booking number.</span></div>`:''}
+    ${false?(o.state?`<div class="grid2"><div class="field"><label for="u-rname">Courier company</label><select id="u-rname"><option>GIG Logistics</option><option>DHL Nigeria</option><option>Red Star Express</option></select></div><div class="field" id="fu-trk"><label for="u-trk">Tracking number</label><input id="u-trk" placeholder="GIG-77421"></div></div><div class="field" id="fu-ph"><label for="u-rph">Courier phone</label><input id="u-rph" value="07000444000"></div>`
+      :`<div class="grid2"><div class="field" id="fu-name"><label for="u-rname">Rider name</label><input id="u-rname" placeholder="e.g. Tunde"></div><div class="field" id="fu-ph"><label for="u-rph">Rider phone</label><input id="u-rph" inputmode="tel" placeholder="0801 234 5678"></div></div>`):''}
+    ${REASONS[k]?`<div class="field"><label for="u-reason">Reason</label><select id="u-reason">${REASONS[k].map(r=>`<option ${upd.reason===r?'selected':''}>${r}</option>`).join('')}</select></div>`:''}
+    ${k==='refund'?`<div class="row" style="margin-bottom:10px"><label class="uopt sm ${upd.full?'on':''}"><input type="radio" name="uf" value="1" ${upd.full?'checked':''}> Full refund · ${naira(o.total)}</label><label class="uopt sm ${upd.full?'':'on'}"><input type="radio" name="uf" value="0" ${upd.full?'':'checked'}> Part refund</label></div>
+      ${upd.full?'':`<div class="field" id="fu-amt"><label for="u-amt">Amount to refund ₦</label><input id="u-amt" class="num" inputmode="numeric" value="${upd.amount===o.total?'':upd.amount}" placeholder="e.g. 1800"></div>`}`:''}
+    ${k==='done'?`<div class="field"><label for="u-conf">How did you confirm it?</label><select id="u-conf">${CONFIRM.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join('')}</select></div>`:''}
+    ${k==='issue'?`<div class="field"><label for="u-eta">New expected delivery (optional)</label><input id="u-eta" value="${esc(upd.eta)}" placeholder="e.g. Tomorrow before 2pm"></div>`:''}
+    ${['issue','refund','cancel','note'].includes(k)?`<div class="field" id="fu-note"><label for="u-note">${k==='note'?'Your message':'Note for the customer (optional)'}</label><textarea id="u-note" style="min-height:90px" maxlength="500" placeholder="${k==='note'?'e.g. Your rider will arrive after 4pm today.':'e.g. We’ll replace the Coco Pops with Frosties of the same value.'}">${esc(upd.note)}</textarea></div>`:''}
+    ${k==='refund'||k==='cancel'?`<div class="safe" style="margin-bottom:12px">${ic('shield',16)}<span>The refund goes back through Paystack to the bank account the customer paid from. No bank details are typed in here.</span></div>`:''}
+    <button class="btn ${k==='cancel'||k==='refund'?'red':''}" type="submit" style="width:100%;height:46px">${{packed:'Mark as packed',route:'Mark as on the way',done:'Mark as delivered',issue:'Report problem',refund:'Send refund',cancel:'Cancel and refund',note:'Send message'}[k]}${k==='packed'?'':' and email customer'}</button>
+    ${k==='packed'?'<p class="hint" style="margin:10px 0 0">Packing doesn’t email the customer. They get an email when it’s on the way.</p>':`<p class="hint" style="margin:14px 0 4px;font-weight:700">Email preview</p><div id="u-prev">${mailFrame(MAIL_SUBJ[ek](o),o.email,emailBody(o,ek,updData(o)),CTA(ek))}</div>`}
+   </form></div></div>`;
+  $('#modal .scrim').classList.add('instant');
+}
+function updPreview(o){const ek=upd.k;if(ek==='packed')return;const el=$('#u-prev');if(el)el.innerHTML=mailFrame(MAIL_SUBJ[ek](o),o.email,emailBody(o,ek,updData(o)),CTA(ek))}
+const PARTNERS={lagos:[['Kwik Delivery','Bike'],['GIG Go','Bike'],['Gokada','Bike'],['GIG Logistics','Van, for heavy orders'],['Other','']],inter:[['GIG Logistics','Interstate'],['DHL Nigeria','Interstate'],['Red Star Express','Interstate'],['ABC Transport (park drop-off)','Interstate'],['Other','']]};
+const riderLine=r=>r?`${esc(r.partner||r.name)}${r.tracking?' · '+esc(r.tracking):''}${r.driver?' · '+esc(r.driver):''}${r.phone?' · '+fmtPhone(r.phone):''}`:'';
+function openDispatch(o){
+  const inter=!!o.state,list=inter?PARTNERS.inter:PARTNERS.lagos;
+  $('#modal').innerHTML=`<div class="scrim center" data-close><div class="modal" role="dialog" aria-modal="true" aria-label="Book delivery"><button class="x" data-close aria-label="Close">×</button>
+   <h2>Book delivery for ${o.id}</h2><p class="hint" style="margin:0 0 12px">${inter?`Going to ${esc(o.area)}. Book an interstate courier, then add the waybill number here.`:`Going to ${esc(o.area.split(',')[0])}. Book a bike in the partner’s app, then add the booking details here.`}</p>
+   <div class="note" style="margin-bottom:12px">${ic('truck',16)}<span><b>${esc(o.name)}</b> · ${esc(o.addr)}${o.landmark?' · '+esc(o.landmark):''} · ${fmtPhone(o.phone)} <button type="button" class="btn sm soft" data-copyaddr="${o.id}" style="margin-left:4px">Copy for booking</button></span></div>
+   <form id="f-dispatch" novalidate>
+    <div class="field"><label for="d-partner">Delivery partner</label><select id="d-partner">${list.map(p=>`<option value="${esc(p[0])}">${esc(p[0])}${p[1]?' · '+esc(p[1]):''}</option>`).join('')}</select></div>
+    <div class="field" id="fd-trk"><label for="d-trk">${inter?'Waybill / tracking number':'Booking or tracking number'}</label><input id="d-trk" placeholder="${inter?'e.g. GIG-77421':'e.g. KWK-55120'}"></div>
+    <div class="grid2"><div class="field"><label for="d-driver">Driver name <span style="text-transform:none;font-weight:500">(optional)</span></label><input id="d-driver" placeholder="From the partner app"></div>
+     <div class="field" id="fd-ph"><label for="d-ph">Driver or partner phone <span style="text-transform:none;font-weight:500">(optional)</span></label><input id="d-ph" inputmode="tel" placeholder="${inter?'07000444000':'0801 234 5678'}"></div></div>
+    <div class="field"><label for="d-cost">What you paid the partner ₦ <span style="text-transform:none;font-weight:500">(for your records)</span></label><input id="d-cost" class="num" inputmode="numeric" placeholder="e.g. ${inter?'5500':'2200'}"><span class="hint">Customer paid ${naira(o.fee)} for delivery.</span></div>
+    <button class="btn" type="submit" style="width:100%;height:44px">${ic('truck',16)} Mark as on the way and email customer</button>
+    <p class="hint" style="margin:10px 0 0">When the partner confirms the drop-off, come back and tap “Mark as delivered”.</p></form></div></div>`;
+  setTimeout(()=>{const f=$('#d-trk');f&&f.focus()},250);
+}
+
+/* ---------- inventory ---------- */
+function vInv(){
+  const cats=['all',...new Set(S.products.map(p=>p.cat))];
+  let list=S.products.filter(p=>S.icat==='all'||p.cat===S.icat);
+  if(S.iq){const q=S.iq.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q))}
+  return `<div class="row" style="margin-bottom:14px"><label class="search">${ic('search',16)}<input id="iq" placeholder="Search products" value="${esc(S.iq)}" aria-label="Search products"></label>
+   <div class="seg">${cats.map(c=>`<button class="${S.icat===c?'on':''}" data-icat="${esc(c)}">${c==='all'?'All':esc(c)}</button>`).join('')}</div><span class="sp"></span><button class="btn" data-edit="new">${ic('plus',16)} Add product</button></div>
+  ${lowStock().length?`<div class="note" style="margin-bottom:12px">${ic('alert',16)}<span><b>${lowStock().length} product${lowStock().length>1?'s are':' is'} running low</b> (highlighted in red). Restock soon to avoid selling out.</span></div>`:''}
+  <div class="card tbl-wrap"><table class="tbl"><thead><tr><th>Product</th><th>Sizes & prices</th><th>Promo</th><th>Weight</th><th>Stock</th><th>Status</th><th>In shop</th><th></th></tr></thead><tbody>
+  ${list.map(p=>{const low=p.status!=='out'&&p.stock<=p.low;const sale=p.sizes.filter(s=>s.sale&&!s.na);return `<tr class="${low?'low':''} ${p.hidden?'hid':''}">
+   <td><span class="pn"><span class="thumb">${thumb(p)}</span><span><b>${esc(p.name)}</b><span class="hint">${esc(p.cat)}${p.hidden?' · <b style="color:var(--red)">Hidden</b>':''}</span></span></span></td>
+   <td class="num" style="font-size:12.5px">${p.sizes.filter(s=>!s.na).map(s=>`${s.label==='1 paint'?'Paint':s.label}: ${s.sale?`<s style="color:var(--muted)">${naira(s.price)}</s> <b>${naira(s.sale)}</b>`:naira(s.price)}`).join('<br>')}</td>
+   <td>${sale.length?sale.map(s=>`<span class="offb">-${Math.round((1-s.sale/s.price)*100)}%</span>`).join(' '):'<span class="offb none">None</span>'}</td>
+   <td class="num hint">${p.sizes.filter(s=>!s.na).map(s=>s.kg+' kg').join(' / ')}</td>
+   <td><span class="stock"><button data-stk="${p.id}|-1" aria-label="One less">−</button><b class="num" style="${low?'color:var(--red)':''}">${p.stock}</b><button data-stk="${p.id}|1" aria-label="One more">+</button></span>${low?`<div style="color:var(--red);font-size:11px;font-weight:700">Below ${p.low}</div>`:''}</td>
+   <td><select data-status="${p.id}" aria-label="Status for ${esc(p.name)}">${[['in','In stock'],['fast','Fast selling'],['out','Sold out'],['na','Not available']].map(o=>`<option value="${o[0]}" ${p.status===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></td>
+   <td><button class="vis ${p.hidden?'off':''}" data-hide="${p.id}" aria-label="${p.hidden?'Show':'Hide'} ${esc(p.name)} in the shop" title="${p.hidden?'Hidden from shoppers. Click to show':'Visible to shoppers. Click to hide'}">${ic(p.hidden?'eyeoff':'eye',17)}</button></td>
+   <td><button class="btn sm ghost" data-edit="${p.id}">${ic('edit',14)} Edit</button></td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+let draftImg=null;
+function openEdit(id){
+  const isNew=id==='new',p=isNew?{id:'new',name:'',cat:'Cereals',sizes:SZ.map(l=>({label:l,price:null,sale:null,kg:KG[l],na:false})),status:'in',stock:20,low:5}:JSON.parse(JSON.stringify(byId(id)));
+  draftImg=p.img||null;
+  const combo=!!p.items;
+  $('#modal').innerHTML=`<div class="scrim" data-close><div class="drawer" role="dialog" aria-modal="true" aria-label="${isNew?'Add product':'Edit product'}"><button class="x" data-close aria-label="Close">×</button>
+   <h2>${isNew?'Add a product':'Edit '+esc(p.name)}</h2><p class="hint" style="margin:0 0 16px">Changes go live in the store as soon as you save.</p>
+   <form id="f-edit" data-id="${p.id}" novalidate>
+    <div class="grid2"><div class="field" id="fe-name"><label for="e-name">Product title</label><input id="e-name" value="${esc(p.name)}" placeholder="e.g. Quaker Oats"></div>
+     <div class="field"><label for="e-cat">Category</label><select id="e-cat">${['Cereals','Milk & drinks','Oats & custard','Cereal combos','Foodstuff combos'].map(c=>`<option ${p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div></div>
+    <label style="font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase">Prices, promo and weight per size</label>
+    <table class="sizes-t"><thead><tr><th>Size</th><th>Regular ₦</th><th>Promo ₦</th><th>Weight kg</th><th>Tag</th></tr></thead><tbody>
+     ${p.sizes.map((s,i)=>`<tr data-sz="${i}"><td style="font-weight:700;white-space:nowrap">${s.label==='1 paint'?'1 paint':s.label}</td><td><input class="num" inputmode="numeric" data-f="price" value="${s.price??''}" placeholder="Not sold" aria-label="${s.label} regular price"></td><td><input class="num" inputmode="numeric" data-f="sale" value="${s.sale??''}" placeholder="—" aria-label="${s.label} promo price"></td><td><input class="num" inputmode="decimal" data-f="kg" value="${s.kg}" aria-label="${s.label} weight in kg"></td><td><span class="offb ${s.sale&&s.price&&s.sale<s.price?'':'none'}" data-off="${i}">${s.sale&&s.price&&s.sale<s.price?'-'+Math.round((1-s.sale/s.price)*100)+'%':'None'}</span></td></tr>`).join('')}
+    </tbody></table>
+    <p class="hint" style="margin:-4px 0 14px">Enter a promo price lower than the regular price and the store shows the gold −% tag and crossed-out price automatically. Leave regular price empty for sizes you don’t sell. Weight is used to work out delivery fees.</p>
+    ${combo?`<div class="field"><label for="e-items">What’s inside (one per line)</label><textarea id="e-items" style="min-height:110px">${esc(p.items.join('\n'))}</textarea></div>`:''}
+    <div class="grid3"><div class="field"><label for="e-stock">Units in stock</label><input id="e-stock" class="num" inputmode="numeric" value="${p.stock}"></div>
+     <div class="field"><label for="e-low">Low-stock alert at</label><input id="e-low" class="num" inputmode="numeric" value="${p.low}"></div>
+     <div class="field"><label for="e-status">Status</label><select id="e-status">${[['in','In stock'],['fast','Fast selling'],['out','Sold out'],['na','Not available']].map(o=>`<option value="${o[0]}" ${p.status===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div></div>
+    <div class="row" style="justify-content:space-between;margin:0 0 12px"><span><b>Show in the shop</b><br><span class="hint">Turn off to hide this product everywhere, including search.</span></span><label class="switch"><input type="checkbox" id="e-vis" ${p.hidden?'':'checked'} aria-label="Show in the shop"><span></span></label></div>
+    <div class="field"><label>Product photo</label><label class="drop" id="drop"><span class="pv" id="pv">${draftImg?`<img src="${draftImg}" alt="">`:isNew?ic('upload',30):art(p.id)}</span><span><b style="color:var(--green)">Drop a photo here or tap to choose</b><br><span class="hint">We crop it to a square and centre it, so every card lines up. JPG or PNG.</span></span><input type="file" id="e-img" accept="image/*" hidden></label></div>
+    <div class="row" style="margin-top:6px"><button class="btn" style="flex:1;height:44px">${isNew?'Add to store':'Save changes'}</button>${!isNew?`<button type="button" class="btn ghost" data-act="cancel-edit" style="height:44px">Cancel</button>`:''}</div>
+   </form></div></div>`;
+}
+function cropSquare(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=480;const g=c.getContext('2d');g.fillStyle='#FBF9F4';g.fillRect(0,0,480,480);g.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,480,480);res(c.toDataURL('image/jpeg',.85))};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
+
+/* ---------- promos ---------- */
+function hms(ms){ms=Math.max(0,ms);const h=Math.floor(ms/3.6e6),m=Math.floor(ms%3.6e6/6e4),s=Math.floor(ms%6e4/1e3);return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':')}
+function vPromos(){
+  return `<div class="row" style="margin-bottom:14px"><p class="hint" style="margin:0;flex:1;min-width:220px">Live banners slide across the top of the shop home page. Each one disappears on its own when its timer hits zero.</p><button class="btn" data-promo="new">${ic('plus',16)} New flash sale</button></div>
+  <div class="promos">${S.promos.map(p=>{const live=p.on&&p.end>Date.now();return `<div class="card" style="overflow:hidden">
+   <div class="pban ${p.cls} ${live?'':'off'}">${live?`<span class="tm num" data-end="${p.end}">⏱ ${hms(p.end-Date.now())}</span>`:''}<div class="tx"><small>${esc(p.eyebrow)}</small><b>${esc(p.title)}</b></div><div class="art">${p.img?`<img src="${p.img}" alt="">`:art(p.art)}</div></div>
+   <div class="pfoot"><span class="t"><b>${live?'Live in the store':p.end<=Date.now()?'Ended':'Switched off'}</b><span class="hint">${p.end>Date.now()?'Ends '+new Date(p.end).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Ended '+dstr(p.end)}</span></span>
+    <label class="switch" title="Show in store"><input type="checkbox" data-ptog="${p.id}" ${p.on?'checked':''} aria-label="Show ${esc(p.title)} in the store"><span></span></label><button class="btn sm ghost" data-promo="${p.id}">${ic('edit',14)} Edit</button></div></div>`}).join('')}</div>`;
+}
+function toLocalInput(ms){const d=new Date(ms);const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`}
+function openPromo(id){
+  const isNew=id==='new',p=isNew?{id:'new',title:'',eyebrow:'Flash deal',text:'',art:'cc6',end:Date.now()+86400000,on:true,cls:''}:S.promos.find(x=>x.id===id);
+  draftImg=p.img||null;
+  $('#modal').innerHTML=`<div class="scrim" data-close><div class="drawer" role="dialog" aria-modal="true" aria-label="Flash sale"><button class="x" data-close aria-label="Close">×</button>
+   <h2>${isNew?'New flash sale':'Edit flash sale'}</h2><p class="hint" style="margin:0 0 16px">The countdown in the corner of the banner runs to the end time you pick.</p>
+   <form id="f-promo" data-id="${p.id}" novalidate>
+    <div class="field" id="fp-title"><label for="p-title">Headline</label><input id="p-title" maxlength="40" value="${esc(p.title)}" placeholder="e.g. Milo 500g now ₦6,500"></div>
+    <div class="field"><label for="p-eye">Small label</label><input id="p-eye" maxlength="40" value="${esc(p.eyebrow)}"></div>
+    <div class="field"><label for="p-text">Short description</label><input id="p-text" maxlength="90" value="${esc(p.text)}"></div>
+    <div class="grid2"><div class="field" id="fp-end"><label for="p-end">Sale ends</label><input id="p-end" type="datetime-local" value="${toLocalInput(p.end)}"></div>
+     <div class="field"><label for="p-art">Links to product</label><select id="p-art">${S.products.map(x=>`<option value="${x.id}" ${p.art===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div></div>
+    <div class="field"><label>Banner image (optional)</label><label class="drop" id="drop"><span class="pv" id="pv">${draftImg?`<img src="${draftImg}" alt="">`:art(p.art)}</span><span><b style="color:var(--green)">Upload a banner picture</b><br><span class="hint">Without one we use the product photo.</span></span><input type="file" id="e-img" accept="image/*" hidden></label></div>
+    <div class="row" style="justify-content:space-between;margin:4px 0 14px"><span><b>Show in the store</b><br><span class="hint">Turn off to remove it from the home page straight away.</span></span><label class="switch"><input type="checkbox" id="p-on" ${p.on?'checked':''} aria-label="Show in the store"><span></span></label></div>
+    <div class="row"><button class="btn" style="flex:1;height:44px">${isNew?'Launch flash sale':'Save changes'}</button>${!isNew?`<button type="button" class="btn ghost" data-pdel="${p.id}" style="height:44px;color:var(--red);border-color:var(--red)">Delete</button>`:''}</div>
+   </form></div></div>`;
+}
+
+/* ---------- store layout ---------- */
+function vLayout(){
+  const hidP=S.products.filter(p=>p.hidden);
+  return `<div class="lay"><div>
+   <div class="safe" style="margin-bottom:12px">${ic('eye',16)}<span>Switch a section off and it disappears from the shop’s home page straight away. Nothing is deleted, so you can switch it back on any time. Use the arrows to change the order.</span></div>
+   <div class="secs">${S.layout.map((x,i)=>`<div class="sec ${x[3]?'':'off'}">
+     <span class="mv"><button data-mv="${i}|-1" aria-label="Move ${esc(x[1])} up" ${i?'':'disabled'}>${ic('up',12)}</button><button data-mv="${i}|1" aria-label="Move ${esc(x[1])} down" ${i<S.layout.length-1?'':'disabled'}>${ic('down',12)}</button></span>
+     <span class="gi">${ic(x[3]?x[4]:'eyeoff',18)}</span>
+     <span class="t"><b>${esc(x[1])}</b><small>${x[3]?esc(x[2]):'Hidden from shoppers'}</small>
+      ${x[0]==='tiles'&&x[3]?`<div class="subs">${S.tiles.map((t,j)=>`<button class="chip ${t[2]?'':'off'}" data-tile="${j}" aria-pressed="${t[2]}"><i>${t[2]?'✓':''}</i>${esc(t[1])}</button>`).join('')}</div>`:''}
+      ${x[0]==='aisles'&&x[3]?`<div class="subs">${S.aisles.map((t,j)=>`<button class="chip ${t[2]?'':'off'}" data-aisle="${j}" aria-pressed="${t[2]}"><i>${t[2]?'✓':''}</i>${esc(t[1])}</button>`).join('')}</div>`:''}
+      ${x[0]==='slider'&&x[3]?`<div class="subs">${S.promos.map(p=>`<span class="chip ${p.on&&p.end>Date.now()?'':'off'}"><i>${p.on&&p.end>Date.now()?'✓':''}</i>${esc(p.title)}</span>`).join('')}<button class="btn sm soft" data-view="promos">Manage banners</button></div>`:''}
+     </span>
+     <label class="switch"><input type="checkbox" data-sec="${i}" ${x[3]?'checked':''} aria-label="Show ${esc(x[1])}"><span></span></label></div>`).join('')}</div>
+   <div class="card pad" style="margin-top:16px"><div class="row"><h3>Hidden products</h3><span class="sp"></span><button class="btn sm ghost" data-view="inventory">Go to inventory</button></div>
+    <p class="hint" style="margin:2px 0 10px">Hide a product with the ${'👁'} button in Inventory. Hidden products don’t show anywhere in the shop, including search.</p>
+    ${hidP.length?`<div class="list">${hidP.map(p=>`<div class="li"><span class="thumb">${thumb(p)}</span><span class="t"><b>${esc(p.name)}</b><small>${esc(p.cat)}</small></span><button class="btn sm" data-hide="${p.id}">${ic('eye',14)} Show again</button></div>`).join('')}</div>`:'<p class="hint" style="margin:0">No hidden products.</p>'}</div>
+   <div class="row" style="margin-top:12px"><button class="btn ghost sm" data-act="lay-reset">Reset to default layout</button></div>
+  </div>
+  <div><p class="hint" style="margin:0 0 6px;font-weight:700;text-align:center">Home page preview</p><div class="phone" aria-label="Preview of the shop home page">
+   <div class="ph"><img src="${ICONSRC}" alt="">TIADA</div>
+   ${S.layout.filter(x=>x[3]).map(x=>{
+     if(x[0]==='tiles'){const on=S.tiles.filter(t=>t[2]);return on.length?`<div style="display:grid;grid-template-columns:repeat(${on.length},1fr);gap:4px;margin-bottom:6px">${on.map(t=>`<div class="pb" style="margin:0;font-size:9px;height:34px">${esc(t[1])}</div>`).join('')}</div>`:''}
+     if(x[0]==='aisles'){const on=S.aisles.filter(t=>t[2]);return on.length?`<div class="pb cream" style="flex-wrap:wrap">Shop by aisle<span style="display:flex;gap:3px;width:100%">${on.map(()=>'<i style="width:18px;height:18px;border-radius:50%;background:#fff;display:block"></i>').join('')}</span></div>`:''}
+     if(x[0]==='slider'){const live=S.promos.filter(p=>p.on&&p.end>Date.now());return live.length?`<div class="pb tall">${esc(live[0].title)}<span class="cards" style="margin-left:auto"><i style="width:34px;height:46px;border-radius:50%"></i></span></div>`:''}
+     if(x[0]==='note')return `<div class="pb cream" style="font-weight:600">Combo note</div>`;
+     return `<div class="pb ${x[5]}">${esc(x[1].replace(' row',''))}<span class="cards"><i></i><i></i><i></i></span></div>`}).join('')}
+   <p class="hint" style="text-align:center;font-size:10px">${S.layout.filter(x=>!x[3]).length} section${S.layout.filter(x=>!x[3]).length===1?'':'s'} hidden</p>
+  </div></div></div>`;
+}
+/* ---------- broadcast ---------- */
+let bc={subj:'',body:'',aud:'promo',confirm:false};
+const AUD={all:['All customers',1284],lagos:['Customers in Lagos',902],other:['Customers outside Lagos',382],promo:['Only people who opted in to promotions',611]};
+function vBroadcast(){
+  return `<div class="bc">
+   <div class="card pad"><h3>Write your update</h3><p class="hint" style="margin:0 0 14px">Stock arrivals, price changes, holiday hours or safety notices.</p>
+    <form id="f-bc" novalidate>
+     <div class="field"><label for="bc-aud">Send to</label><select id="bc-aud">${Object.entries(AUD).map(([k,v])=>`<option value="${k}" ${bc.aud===k?'selected':''}>${v[0]} (${v[1].toLocaleString()})</option>`).join('')}</select></div>
+     <div class="field" id="fb-subj"><label for="bc-subj">Email subject</label><input id="bc-subj" maxlength="80" value="${esc(bc.subj)}" placeholder="e.g. Fresh cereals just arrived at our Ojota hub"></div>
+     <div class="field" id="fb-body"><label for="bc-body">Message</label><textarea id="bc-body" maxlength="1500" placeholder="Type your message…">${esc(bc.body)}</textarea><span class="hint"><span id="bc-n" class="num">${bc.body.length}</span>/1500</span></div>
+     <div class="row"><button type="button" class="btn ghost sm" data-act="bc-sample">Use a sample message</button><span class="sp"></span><button class="btn" style="height:44px">${ic('send',16)} Broadcast email</button></div>
+     <div class="note" style="margin-top:12px">${ic('alert',16)}<span>Every email includes an unsubscribe link. Promotions only go to people who opted in; service notices go to everyone.</span></div>
+    </form></div>
+   <div><p class="hint" style="margin:0 0 6px;font-weight:700">Live preview</p><div id="bc-prev">${bcPreview()}</div>
+    ${S.log.filter(l=>l.t.startsWith('Broadcast')).slice(0,3).map(l=>`<div class="hint" style="margin-top:8px">${ic('check',13)} ${esc(l.t)} · ${ago(l.at)}</div>`).join('')}</div>
+  </div>`;
+}
+function bcPreview(){return mailFrame(bc.subj||'Your subject line',AUD[bc.aud][0],`${bc.subj?`<h2>${esc(bc.subj)}</h2>`:''}${esc(bc.body)||'<span style="color:#9AA59E">Your message will appear here.</span>'}`)}
+
+/* ---------- live chat ---------- */
+const QUICK=['Hi! I’m from Tiada. How can I help?','Let me check that for you now.','Your order is on its way and the rider will call you.','I’ve updated that for you.','Is there anything else I can help with?'];
+function vChat(){
+  const list=S.chats.slice().sort((a,b)=>(a.status==='waiting'?0:a.status==='open'?1:2)-(b.status==='waiting'?0:b.status==='open'?1:2)||b.at-a.at);
+  if(!S.chatSel&&list[0])S.chatSel=list[0].id;
+  const c=S.chats.find(x=>x.id===S.chatSel);
+  return `<div class="chatw">
+   <div class="card cq"><div style="padding:12px 14px;border-bottom:1px solid var(--line)" class="row"><b style="color:var(--green)">Conversations</b><span class="sp"></span><span class="pill p-red">${waitingChats().length} waiting</span></div>
+    <div class="lst">${list.map(x=>`<button class="cqi ${x.id===S.chatSel?'on':''}" data-csel="${x.id}"><span class="av" style="width:34px;height:34px;font-size:12px;${x.status==='closed'?'background:#E2DED3;color:#6B7A70':''}">${esc(x.name==='Guest'?'G':x.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><span class="t"><b>${esc(x.name)} ${x.status==='waiting'?'<span class="pill p-red" style="margin-left:4px">Waiting</span>':x.status==='open'?'<span class="pill p-packed" style="margin-left:4px">You’re in</span>':''}</b><p>${esc((x.msgs[x.msgs.length-1]||['',''])[1])}</p></span><time>${ago(x.at)}</time></button>`).join('')}</div></div>
+   ${c?`<div class="card cpane">
+    <div class="chead"><span class="av" style="width:36px;height:36px;font-size:12px">${esc(c.name==='Guest'?'G':c.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><span style="flex:1;min-width:0"><b>${esc(c.name)}</b><br><span class="hint">${esc(c.phone)}${c.order?' · '+c.order:''}</span></span>
+     ${c.status==='open'?`<button class="btn sm ghost" style="color:var(--red);border-color:var(--red)" data-act="cend">End chat</button>`:''}</div>
+    <div class="cmsgs">${c.msgs.map(m=>m[0]==='sys'?`<div class="csys ${/ended|left/i.test(m[1])?'end':''}">${esc(m[1])}</div>`:`<div class="crow ${m[0]==='agent'?'me':''}"><div class="bub ${m[0]==='bot'?'bot':m[0]==='agent'?'me':''}">${m[0]==='bot'?'<span class="who">Assistant</span>':m[0]==='me'?`<span class="who">${esc(c.name)}</span>`:''}${esc(m[1])}<small>${tstr(m[2])}</small></div></div>`).join('')}</div>
+    ${c.status==='waiting'?`<div class="cfoot"><div class="row"><span class="hint" style="flex:1">${esc(c.name)} asked for a person ${ago(c.at)}. They’ll see “${esc(S.auth.name.split(' ')[0])} has joined the chat”.</span><button class="btn" data-act="cjoin">Join chat</button></div></div>`
+     :c.status==='open'?`<div class="cfoot"><div class="qr">${QUICK.map(q=>`<button data-cq="${esc(q)}">${esc(q.length>34?q.slice(0,32)+'…':q)}</button>`).join('')}</div><form class="cin" id="f-chat"><input id="c-text" placeholder="Reply to ${esc(c.name.split(' ')[0])}…" autocomplete="off" aria-label="Reply"><button class="btn" aria-label="Send">${ic('send',16)}</button></form></div>`
+     :`<div class="ctx hint">This chat has ended. The customer can start a new one from the app.</div>`}
+   </div>`:`<div class="card empty"><b>No conversations</b>When a shopper types “person” in the app, they appear here.</div>`}
+  </div>`;
+}
+
+/* ---------- reviews ---------- */
+function vReviews(){
+  const F=[['pending','To approve'],['live','Live'],['hidden','Hidden']];
+  const list=S.reviews.filter(r=>r.status===S.rfilter);
+  return `<div class="row" style="margin-bottom:14px"><div class="seg">${F.map(f=>`<button class="${S.rfilter===f[0]?'on':''}" data-rf="${f[0]}">${f[1]}<span class="c num">${S.reviews.filter(r=>r.status===f[0]).length}</span></button>`).join('')}</div><span class="sp"></span><span class="hint">Only verified buyers can review. Approve to show it in the store.</span></div>
+  <div style="display:flex;flex-direction:column;gap:10px">${list.length?list.map(r=>{const p=byId(r.pid);return `<div class="card rv">
+   <div class="row"><span class="thumb">${thumb(p)}</span><span style="flex:1;min-width:0"><b>${esc(p.name)}</b><br><span class="hint">${esc(r.name)} · ${r.order} · ${ago(r.at)}</span></span><span class="stars" aria-label="${r.stars} out of 5">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span></div>
+   <p style="margin:2px 0">${esc(r.text)}</p>
+   ${r.reply?`<div class="reply"><b>Tiada replied:</b> ${esc(r.reply)}</div>`:''}
+   <div class="row">${r.status!=='live'?`<button class="btn sm" data-rv="${r.id}|live">${ic('check',14)} Approve</button>`:''}${r.status!=='hidden'?`<button class="btn sm ghost" data-rv="${r.id}|hidden">Hide</button>`:''}<button class="btn sm soft" data-rreply="${r.id}">${r.reply?'Edit reply':'Reply'}</button>${r.stars<=2?'<span class="pill p-red">Low rating · check the order</span>':''}</div></div>`}).join(''):`<div class="card empty"><b>Nothing here</b>${S.rfilter==='pending'?'New reviews from customers appear here first.':''}</div>`}</div>`;
+}
+
+/* ---------- customers ---------- */
+function vCustomers(){
+  const map={};S.orders.forEach(o=>{const k=o.email;map[k]=map[k]||{name:o.name,email:o.email,phone:o.phone,area:o.area,orders:0,spent:0,last:0};map[k].orders++;map[k].spent+=o.total;map[k].last=Math.max(map[k].last,o.at)});
+  let list=Object.values(map).sort((a,b)=>b.spent-a.spent);
+  if(S.cq){const q=S.cq.toLowerCase();list=list.filter(c=>(c.name+c.email+c.area).toLowerCase().includes(q))}
+  return `<div class="row" style="margin-bottom:14px"><label class="search">${ic('search',16)}<input id="cq" placeholder="Search customers" value="${esc(S.cq)}" aria-label="Search customers"></label><span class="sp"></span><span class="hint">Phone numbers are partly hidden. Only owners can see them in full.</span></div>
+  <div class="card tbl-wrap"><table class="tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Area</th><th>Orders</th><th>Total spent</th><th>Last order</th></tr></thead><tbody>
+   ${list.map(c=>`<tr><td><span class="pn"><span class="av" style="width:34px;height:34px;font-size:12px">${esc(c.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><span><b>${esc(c.name)}</b><span class="hint">${esc(c.email)}</span></span></span></td><td class="num">${S.auth.role==='Owner'?fmtPhone(c.phone):mask(c.phone)}</td><td>${esc(c.area.split(',')[0])}</td><td class="num">${c.orders}</td><td class="num"><b>${naira(c.spent)}</b></td><td>${ago(c.last)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* ---------- delivery ---------- */
+function vDelivery(){
+  const f=S.fees;
+  return `<form id="f-fees" novalidate><div class="dash" style="margin-top:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+   <div class="card pad"><h3>Lagos · our riders</h3><p class="hint" style="margin:0 0 12px">Base fee by area from the Ojota hub.</p>
+    ${f.areas.map((a,i)=>`<div class="row" style="margin-bottom:8px"><span style="flex:1;min-width:0;font-size:13px">${esc(a[0])}</span><input class="num" style="width:110px;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 10px" inputmode="numeric" data-area="${i}" value="${a[1]}" aria-label="Fee for ${esc(a[0])}"></div>`).join('')}
+    <div class="grid2" style="margin-top:10px"><div class="field"><label for="fe-same">Same-day extra ₦</label><input id="fe-same" class="num" value="${f.same}"></div><div class="field"><label for="fe-lkg">Per kg above 5 kg ₦</label><input id="fe-lkg" class="num" value="${f.lagosKg}"></div></div>
+    <div class="field"><label for="fe-van">Van fee for 20 kg+ ₦</label><input id="fe-van" class="num" value="${f.van}"></div></div>
+   <div class="card pad"><h3>Other states · courier</h3><p class="hint" style="margin:0 0 12px">Covers the first 5 kg. All 36 states and Abuja.</p>
+    ${f.regions.map((r,i)=>`<div class="row" style="margin-bottom:8px"><span style="flex:1;min-width:0;font-size:13px"><b>${esc(r[0])}</b><br><span class="hint">${esc(r[2])}</span></span><input class="num" style="width:110px;height:38px;border:1.5px solid var(--line);border-radius:9px;padding:0 10px" inputmode="numeric" data-region="${i}" value="${r[1]}" aria-label="Fee for ${esc(r[0])}"></div>`).join('')}
+    <div class="grid2" style="margin-top:10px"><div class="field"><label for="fe-ikg">Per kg above 5 kg ₦</label><input id="fe-ikg" class="num" value="${f.interKg}"></div><div class="field"><label for="fe-exp">Express extra ₦</label><input id="fe-exp" class="num" value="${f.express}"></div></div>
+    <div class="field"><label for="fe-min">Minimum order for delivery ₦</label><input id="fe-min" class="num" value="${f.min}"></div></div>
+  </div><div class="row" style="margin-top:14px"><span class="hint" style="flex:1">New fees apply to checkouts from the moment you save.</span><button class="btn" style="height:44px">Save delivery fees</button></div></form>`;
+}
+
+/* ---------- security ---------- */
+
+/* ---------- live: a new paid order arrives ---------- */
+let actx=null,interacted=false;document.addEventListener('pointerdown',()=>{interacted=true},{once:true});
+function beep(){if(!interacted)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.setValueAtTime(880,actx.currentTime);o.frequency.setValueAtTime(1320,actx.currentTime+.12);g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.15,actx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.35);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+.4)}catch(e){}}
+
+
+/* ---------- events ---------- */
+function tickTimers(){document.querySelectorAll('[data-end]').forEach(t=>{t.textContent='⏱ '+hms(+t.dataset.end-Date.now())})}
+setInterval(tickTimers,1000);
+document.addEventListener('click',e=>{
+  const sd=$('#side');if(sd&&sd.classList.contains('open')&&!e.target.closest('#side')&&!e.target.closest('[data-act="menu"]')){sd.classList.remove('open');return}
+  const t=e.target.closest('button,[data-close],a,label.drop');if(!t)return;const d=t.dataset;
+  if(d.close!==undefined&&(e.target===t||t.tagName==='BUTTON')){closeModal();return}
+  if(d.view){go(d.view);return}
+  if(d.viewo){$('#alertbar').classList.remove('show');S.ofilter='new';S.oq='';S.sel=d.viewo;go('orders');return}
+  if(d.of){S.ofilter=d.of;S.oq='';S.sel=null;render();return}
+  if(d.osel){S.sel=d.osel;const o=S.orders.find(x=>x.id===d.osel);if(o)o.fresh=false;const y=window.scrollY;render();window.scrollTo(0,y);if(innerWidth<900){const el=$('.detail');el&&el.scrollIntoView({behavior:'smooth'})}return}
+  if(d.oact){const o=S.orders.find(x=>x.id===S.sel);if(!o)return;
+    if(d.oact==='pack'){loading('Marking as packed',600).then(()=>{o.status='packed';o.items.forEach(it=>{const p=byId(it[0]);if(p){p.stock=Math.max(0,p.stock-it[2]);if(!p.stock)p.status='out'}});logAct(`Packed ${o.id} for ${o.name}`);S.ofilter='packed';S.sel=o.id;save();render();toast(`${o.id} packed. Stock updated.`)})}
+    if(d.oact==='dispatch')openDispatch(o);
+    if(d.oact==='update')openUpdate(o);
+    if(d.oact==='resume'){loading('Updating order',500).then(()=>{o.status=o.prev||'packed';delete o.issue;logAct(`Marked the problem on ${o.id} as sorted`);S.ofilter=o.status;S.sel=o.id;save();render();toast('Order is back on track')})}
+    if(d.oact==='deliver'){openDeliver(o)}
+    return}
+  if(d.email){const [oid,k,mid]=d.email.split('|');openEmail(oid,k,mid);return}
+  if(d.edit){openEdit(d.edit);return}
+  if(d.icat){S.icat=d.icat;render();return}
+  if(d.stk){const [id,n]=d.stk.split('|');const p=byId(id);p.stock=Math.max(0,p.stock+ +n);if(p.stock>0&&p.status==='out')p.status='in';if(!p.stock)p.status='out';save();const y=window.scrollY;render();window.scrollTo(0,y);return}
+  if(d.copyaddr){const o=S.orders.find(x=>x.id===d.copyaddr);const txt=`${o.name}, ${fmtPhone(o.phone)}, ${o.addr}${o.landmark?' ('+o.landmark+')':''}, ${o.area}`;try{navigator.clipboard.writeText(txt).then(()=>toast('Address copied. Paste it into the partner app.'),()=>toast(txt))}catch(_){toast(txt)}return}
+  if(d.promo){openPromo(d.promo);return}
+  if(d.hide){const p=byId(d.hide);p.hidden=!p.hidden;logAct(`${p.hidden?'Hid':'Showed'} ${p.name} ${p.hidden?'from':'in'} the shop`);save();const y=window.scrollY;render();window.scrollTo(0,y);toast(p.hidden?`${p.name} is hidden from shoppers`:`${p.name} is back in the shop`);return}
+  if(d.mv){const [i,dir]=d.mv.split('|').map(Number),j=i+dir;if(j<0||j>=S.layout.length)return;const L=S.layout;[L[i],L[j]]=[L[j],L[i]];logAct(`Moved “${L[j][1]}” ${dir<0?'up':'down'} on the home page`);save();const y=window.scrollY;render();window.scrollTo(0,y);return}
+  if(d.tile){const t=S.tiles[+d.tile];t[2]=!t[2];logAct(`${t[2]?'Showed':'Hid'} the “${t[1]}” tile`);save();const y=window.scrollY;render();window.scrollTo(0,y);toast(t[2]?`“${t[1]}” is showing`:`“${t[1]}” is hidden`);return}
+  if(d.aisle){const t=S.aisles[+d.aisle];t[2]=!t[2];logAct(`${t[2]?'Showed':'Hid'} the “${t[1]}” aisle`);save();const y=window.scrollY;render();window.scrollTo(0,y);toast(t[2]?`“${t[1]}” is showing`:`“${t[1]}” is hidden`);return}
+  if(d.pdel){if(!t.dataset.armed){t.dataset.armed=1;t.textContent='Tap again to delete';setTimeout(()=>{if(t.isConnected){delete t.dataset.armed;t.textContent='Delete'}},3000);return}
+    const p=S.promos.find(x=>x.id===d.pdel);S.promos=S.promos.filter(x=>x.id!==d.pdel);logAct(`Deleted flash sale “${p.title}”`);save();closeModal();render();toast('Flash sale deleted');return}
+  if(d.csel){S.chatSel=d.csel;render();return}
+  if(d.cq){const i=$('#c-text');if(i){i.value=d.cq;i.focus()}return}
+  if(d.rf){S.rfilter=d.rf;render();return}
+  if(d.rv){const [id,st]=d.rv.split('|');const r=S.reviews.find(x=>x.id===id);r.status=st;logAct(`${st==='live'?'Approved':'Hid'} a ${r.stars}-star review of ${byId(r.pid).name}`);save();render();toast(st==='live'?'Review is now live in the store':'Review hidden from the store');return}
+  if(d.rreply){openReply(d.rreply);return}
+  const a=d.act;
+  if(a==='lay-reset'){S.layout.forEach(x=>x[3]=true);S.tiles.forEach(x=>x[2]=true);S.aisles.forEach(x=>x[2]=true);logAct('Reset the home page layout');save();render();toast('Everything is showing again');return}
+  if(a==='menu'){$('#side').classList.toggle('open');return}
+  if(a==='logout'){loading('Signing out',500).then(()=>{logAct('Signed out');S.auth=null;save();login={step:'pw',email:'',err:'',tries:0,lock:0};render()});return}
+  if(a==='lback'){login.step='pw';login.err='';render();return}
+  if(a==='cancel-edit'){closeModal();return}
+  if(a==='bc-sample'){bc.subj='Fresh cereals just arrived at our Ojota hub';bc.body='Good news! A fresh shipment of Golden Morn, Cornflakes, Coco Pops and Milo has just arrived.\n\nOur Student Combo is back in stock at ₦10,000, and you can still swap any item for something worth the same.\n\nOrder today for same-day delivery in Lagos, or 1–5 days anywhere in Nigeria.';render();return}
+  if(a==='cjoin'){const c=S.chats.find(x=>x.id===S.chatSel);loading('Joining chat',500).then(()=>{c.status='open';c.msgs.push(['sys',`${S.auth.name.split(' ')[0]} has joined the chat`,Date.now()]);c.at=Date.now();logAct(`Joined live chat ${c.id} with ${c.name}`);save();render();setTimeout(()=>{const i=$('#c-text');i&&i.focus()},50)});return}
+  if(a==='cend'){const c=S.chats.find(x=>x.id===S.chatSel);c.status='closed';c.msgs.push(['sys','Chat ended',Date.now()]);logAct(`Ended live chat ${c.id}`);save();render();toast('Chat ended. The customer was emailed a copy.');return}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.status){const p=byId(t.dataset.status);p.status=t.value;if(t.value==='out')p.stock=0;logAct(`Set ${p.name} to “${t.selectedOptions[0].text}”`);save();render();toast(`${p.name}: ${t.selectedOptions[0].text}`);return}
+  if(t.name==='dconf'){document.querySelectorAll('#f-deliv .uopt').forEach(l=>l.classList.toggle('on',l.contains(t)));return}
+  if(t.name==='uk'){const o=S.orders.find(x=>x.id===S.sel);upd.k=t.value;upd.reason='';drawUpdate(o);return}
+  if(t.name==='uf'){const o=S.orders.find(x=>x.id===S.sel);upd.full=t.value==='1';drawUpdate(o);return}
+  if(t.id==='u-conf'){upd.conf=t.value;return}
+  if(t.id==='u-reason'){upd.reason=t.value;updPreview(S.orders.find(x=>x.id===S.sel));return}
+  if(t.dataset.sec){const x=S.layout[+t.dataset.sec];x[3]=t.checked;logAct(`${x[3]?'Showed':'Hid'} “${x[1]}” on the home page`);save();const y=window.scrollY;render();window.scrollTo(0,y);toast(x[3]?`${x[1]} is showing`:`${x[1]} is hidden from shoppers`);return}
+  if(t.dataset.ptog){const p=S.promos.find(x=>x.id===t.dataset.ptog);p.on=t.checked;logAct(`${p.on?'Switched on':'Switched off'} flash sale “${p.title}”`);save();render();toast(p.on?'Banner is live in the store':'Banner removed from the store');return}
+  if(t.id==='bc-aud'){bc.aud=t.value;$('#bc-prev').innerHTML=bcPreview();return}
+  if(t.id==='e-img')handleImg(t.files[0]);
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='oq'){S.oq=t.value;const p=t.selectionStart;render();const i=$('#oq');i.focus();i.setSelectionRange(p,p);return}
+  if(t.id==='iq'){S.iq=t.value;const p=t.selectionStart;render();const i=$('#iq');i.focus();i.setSelectionRange(p,p);return}
+  if(t.id==='cq'){S.cq=t.value;const p=t.selectionStart;render();const i=$('#cq');i.focus();i.setSelectionRange(p,p);return}
+  if(['u-note','u-eta','u-amt'].includes(t.id)){const k={'u-note':'note','u-eta':'eta','u-amt':'amount'}[t.id];upd[k]=k==='amount'?t.value.replace(/\D/g,''):t.value;if(k==='amount')t.value=upd.amount;updPreview(S.orders.find(x=>x.id===S.sel));return}
+  if(t.id==='bc-subj'){bc.subj=t.value;$('#bc-prev').innerHTML=bcPreview();return}
+  if(t.id==='bc-body'){bc.body=t.value;$('#bc-n').textContent=t.value.length;$('#bc-prev').innerHTML=bcPreview();return}
+  if(t.dataset.f){const tr=t.closest('tr'),i=tr.dataset.sz,pr=+tr.querySelector('[data-f=price]').value,sa=+tr.querySelector('[data-f=sale]').value,b=$(`[data-off="${i}"]`);
+    if(pr&&sa&&sa<pr){b.textContent='-'+Math.round((1-sa/pr)*100)+'%';b.classList.remove('none')}else{b.textContent=sa&&pr&&sa>=pr?'Too high':'None';b.classList.add('none')}}
+  if(t.id==='otp1'){t.value=t.value.replace(/\D/g,'').slice(0,6);if(t.value.length===6)submitForm($('#f-otp'))}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+function submitForm(f){fireForm(f)}
+document.addEventListener('dragover',e=>{const d=e.target.closest('.drop');if(d){e.preventDefault();d.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const d=e.target.closest('.drop');if(d)d.classList.remove('over')});
+document.addEventListener('drop',e=>{const d=e.target.closest('.drop');if(!d)return;e.preventDefault();d.classList.remove('over');if(e.dataTransfer.files[0])handleImg(e.dataTransfer.files[0])});
+function handleImg(f){if(!f||!/^image\//.test(f.type)){toast('Choose a JPG or PNG picture');return}cropSquare(f).then(u=>{draftImg=u;$('#pv').innerHTML=`<img src="${u}" alt="">`;toast('Photo cropped to a square')}).catch(()=>toast('That picture couldn’t be read. Try another.'))}
+function openReply(id){const r=S.reviews.find(x=>x.id===id);
+  $('#modal').innerHTML=`<div class="scrim center" data-close><div class="modal" role="dialog" aria-modal="true" aria-label="Reply to review"><button class="x" data-close aria-label="Close">×</button><h2>Reply to ${esc(r.name)}</h2><p class="hint" style="margin:0 0 10px">Your reply shows under the review in the store.</p><p style="background:var(--cream);border-radius:10px;padding:10px;font-size:13px;margin:0 0 12px"><span class="stars">${'★'.repeat(r.stars)}</span> ${esc(r.text)}</p><form id="f-reply" data-id="${id}"><div class="field"><textarea id="r-text" maxlength="400" style="min-height:100px">${esc(r.reply||'')}</textarea></div><button class="btn" style="width:100%;height:44px">Post reply</button></form></div></div>`;setTimeout(()=>$('#r-text').focus(),200)}
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target;
+  if(f.id==='f-deliv'){const o=S.orders.find(x=>x.id===S.sel),c=(f.querySelector('input[name=dconf]:checked')||{}).value||'driver',note=$('#dl-note').value.trim(),lab=CONFIRM.find(x=>x[0]===c)[1];
+    closeModal();loading('Marking as delivered',700).then(()=>{o.status='done';o.confirm={how:lab,note,at:Date.now(),by:S.auth.name};sendMail(o,'done');logAct(`Marked ${o.id} as delivered (${lab.toLowerCase()})`);S.ofilter='done';S.sel=o.id;save();render();toast(`Delivered email sent to ${o.email}`)});return}
+  if(f.id==='f-upd'){const o=S.orders.find(x=>x.id===S.sel),k=upd.k,D=updData(o);
+    if(k==='route'&&!o.rider){closeModal();setTimeout(()=>openDispatch(o),260);return}
+    if(false){const nm=$('#u-rname').value.trim(),ph=($('#u-rph').value||'').replace(/\D/g,''),trk=$('#u-trk')?$('#u-trk').value.trim():'';let ok=true;
+      if(!nm){$('#fu-name')&&$('#fu-name').classList.add('bad');ok=false}if(ph.length<10){$('#fu-ph').classList.add('bad');ok=false}if($('#u-trk')&&!trk){$('#fu-trk').classList.add('bad');ok=false}if(!ok)return;
+      o.rider={name:nm,phone:ph,courier:!!o.state,tracking:trk||undefined}}
+    if(k==='refund'&&!D.full&&(!D.amount||D.amount>o.total)){$('#fu-amt').classList.add('bad');toast(`Enter an amount up to ${naira(o.total)}`);return}
+    if(k==='note'&&!D.note.trim()){$('#fu-note').classList.add('bad');$('#u-note').focus();return}
+    closeModal();
+    loading({packed:'Marking as packed',route:'Marking as on the way',done:'Marking as delivered',issue:'Reporting problem',refund:'Sending refund',cancel:'Cancelling order',note:'Sending message'}[k],800).then(()=>{
+      if(k==='packed'){if(o.status==='new')o.items.forEach(it=>{const p=byId(it[0]);if(p){p.stock=Math.max(0,p.stock-it[2]);if(!p.stock)p.status='out'}});o.status='packed'}
+      if(k==='route'){o.status='route';sendMail(o,'route')}
+      if(k==='done'){const c=upd.conf||'driver';o.status='done';o.confirm={how:CONFIRM.find(x=>x[0]===c)[1],at:Date.now(),by:S.auth.name};sendMail(o,'done')}
+      if(k==='issue'){if(o.status!=='issue')o.prev=o.status;o.status='issue';o.issue={reason:D.reason,note:D.note};sendMail(o,'issue',D)}
+      if(k==='refund'){(o.refunds=o.refunds||[]).push({amount:D.amount,reason:D.reason,at:Date.now()});if(D.full){o.status='refunded';o.reason=D.reason}sendMail(o,'refund',D)}
+      if(k==='cancel'){o.refunds=[{amount:o.total,reason:D.reason,at:Date.now()}];o.status='cancelled';o.reason=D.reason;o.items.forEach(it=>{const p=byId(it[0]);if(p){p.stock+=it[2];if(p.status==='out'&&p.stock)p.status='in'}});sendMail(o,'cancel',D)}
+      if(k==='note')sendMail(o,'note',D);
+      logAct({packed:`Packed ${o.id} for ${o.name}`,route:`Marked ${o.id} as on the way`,done:`Marked ${o.id} as delivered`,issue:`Reported a problem on ${o.id}: ${D.reason}`,refund:`Refunded ${naira(D.amount)} on ${o.id} (${D.reason})`,cancel:`Cancelled ${o.id} and refunded ${naira(o.total)} (${D.reason})`,note:`Emailed ${o.name} about ${o.id}`}[k]);
+      S.ofilter=k==='packed'?'packed':k==='route'?'route':k==='done'?'done':k==='note'?S.ofilter:'issues';S.oq='';S.sel=o.id;
+      save();render();toast(k==='packed'?`${o.id} packed. Stock updated.`:`${MAIL_L[k==='cancel'?'cancel':k]} email sent to ${o.email}`)});return}
+  if(f.id==='f-dispatch'){const o=S.orders.find(x=>x.id===S.sel),partner=$('#d-partner').value,trk=$('#d-trk').value.trim(),driver=$('#d-driver').value.trim(),ph=$('#d-ph').value.replace(/\D/g,''),cost=+$('#d-cost').value.replace(/\D/g,'')||0;
+    let ok=true;if(!trk){$('#fd-trk').classList.add('bad');$('#d-trk').focus();ok=false}if(ph&&ph.length<10){$('#fd-ph').classList.add('bad');ok=false}if(!ok)return;
+    closeModal();loading('Booking saved · emailing customer',800).then(()=>{o.status='route';o.rider={partner,name:partner,driver,phone:ph,tracking:trk,courier:true,cost};sendMail(o,'route');logAct(`Sent ${o.id} with ${partner} (${trk})${cost?' · paid '+naira(cost):''}`);S.ofilter='route';S.sel=o.id;save();render();toast(`On-the-way email sent to ${o.email}`)});return}
+  if(f.id==='f-edit'){const id=f.dataset.id,isNew=id==='new',name=$('#e-name').value.trim();if(!name){$('#fe-name').classList.add('bad');$('#e-name').focus();return}
+    const sizes=[...f.querySelectorAll('[data-sz]')].map((tr,i)=>{const lab=tr.querySelector('td').textContent.trim();const pr=+tr.querySelector('[data-f=price]').value||null,sa=+tr.querySelector('[data-f=sale]').value||null,kg=+tr.querySelector('[data-f=kg]').value||0;return {label:lab==='1 paint'?'1 paint':lab,price:pr,sale:pr&&sa&&sa<pr?sa:null,kg,na:!pr}});
+    if(!sizes.some(s=>!s.na)){toast('Add a regular price for at least one size');return}
+    const base=isNew?{id:'p'+Date.now()}:byId(id);
+    Object.assign(base,{name,cat:$('#e-cat').value,sizes,stock:Math.max(0,+$('#e-stock').value||0),low:Math.max(0,+$('#e-low').value||0),status:$('#e-status').value,img:draftImg||base.img,hidden:!$('#e-vis').checked});
+    if($('#e-items'))base.items=$('#e-items').value.split('\n').map(x=>x.trim()).filter(Boolean);
+    if(isNew)S.products.unshift(base);
+    closeModal();loading(isNew?'Adding to store':'Saving changes',600).then(()=>{logAct(`${isNew?'Added':'Updated'} ${name}`);save();render();toast(isNew?`${name} is now in the store`:`${name} updated in the store`)});return}
+  if(f.id==='f-promo'){const id=f.dataset.id,isNew=id==='new',title=$('#p-title').value.trim(),end=new Date($('#p-end').value).getTime();
+    if(!title){$('#fp-title').classList.add('bad');return}if(!end||end<=Date.now()){$('#fp-end').classList.add('bad');toast('Pick an end time in the future');return}
+    const p=isNew?{id:'pr'+Date.now(),cls:''}:S.promos.find(x=>x.id===id);Object.assign(p,{title,eyebrow:$('#p-eye').value.trim(),text:$('#p-text').value.trim(),end,art:$('#p-art').value,on:$('#p-on').checked,img:draftImg||p.img});if(isNew)S.promos.unshift(p);
+    closeModal();loading(isNew?'Launching flash sale':'Saving',600).then(()=>{logAct(`${isNew?'Launched':'Updated'} flash sale “${title}”`);save();render();toast(p.on?'Banner is live in the store':'Saved (switched off)')});return}
+  if(f.id==='f-bc'){if(!bc.subj.trim()){$('#fb-subj').classList.add('bad');$('#bc-subj').focus();return}if(bc.body.trim().length<10){$('#fb-body').classList.add('bad');$('#bc-body').focus();return}
+    if(!bc.confirm){bc.confirm=true;const btn=f.querySelector('button:not([type])');btn.innerHTML=`Tap again to send to ${AUD[bc.aud][1].toLocaleString()} people`;btn.classList.add('gold');setTimeout(()=>{bc.confirm=false;if(btn.isConnected){btn.innerHTML=ic('send',16)+' Broadcast email';btn.classList.remove('gold')}},4000);return}
+    bc.confirm=false;loading(`Sending to ${AUD[bc.aud][1].toLocaleString()} customers`,1400).then(()=>{logAct(`Broadcast “${bc.subj}” to ${AUD[bc.aud][0].toLowerCase()} (${AUD[bc.aud][1].toLocaleString()})`);bc={subj:'',body:'',aud:'all',confirm:false};save();render();toast('Broadcast queued. Emails go out within minutes.')});return}
+  if(f.id==='f-chat'){const v=$('#c-text').value.trim();if(!v)return;const c=S.chats.find(x=>x.id===S.chatSel);c.msgs.push(['agent',v,Date.now()]);c.at=Date.now();save();render();
+    setTimeout(()=>{if(c.status!=='open')return;c.msgs.push(['me',/anything else/i.test(v)?'No, that’s all. Thank you!':'Okay, thank you 🙏',Date.now()]);save();if(S.view==='chat'&&S.chatSel===c.id){render();const i=$('#c-text');i&&i.focus()}},2200);return}
+  if(f.id==='f-reply'){const r=S.reviews.find(x=>x.id===f.dataset.id);r.reply=$('#r-text').value.trim()||undefined;logAct(`Replied to a review of ${byId(r.pid).name}`);save();closeModal();render();toast('Reply posted');return}
+  if(f.id==='f-fees'){const F=S.fees;f.querySelectorAll('[data-area]').forEach(i=>F.areas[+i.dataset.area][1]=+i.value||0);f.querySelectorAll('[data-region]').forEach(i=>F.regions[+i.dataset.region][1]=+i.value||0);
+    F.same=+$('#fe-same').value||0;F.lagosKg=+$('#fe-lkg').value||0;F.van=+$('#fe-van').value||0;F.interKg=+$('#fe-ikg').value||0;F.express=+$('#fe-exp').value||0;F.min=+$('#fe-min').value||0;
+    loading('Saving delivery fees',600).then(()=>{logAct('Updated delivery fees');save();render();toast('Delivery fees saved')});return}
+});
+/* idle lock */
+let lastAct=Date.now();['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now()},{passive:true}));
+setInterval(()=>{if(S.auth&&Date.now()-lastAct>15*60000){api('/api/admin/logout?idle=1',{body:{}}).catch(()=>{});S.auth=null;login={step:'pw',email:'',err:'',ticket:''};closeModal();render();toast('Locked after 15 minutes of inactivity')}},30000);
+/* scrollbars only while scrolling */
+document.addEventListener('scroll',e=>{const el=(e.target===document)?document.documentElement:e.target;if(!el.classList)return;el.classList.add('sb-on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('sb-on'),900)},{capture:true,passive:true});
+document.addEventListener('submit',()=>{},true);
+/* ================= LIVE LAYER: the admin desk talks to the real server =================
+   The screens above are the design. This part signs staff in, loads real orders, stock, chats
+   and settings from /api/admin, and sends every change back to the server. Nothing is kept in
+   the browser's storage. */
+const api=async(path,opts={})=>{
+  const r=await fetch(path,{method:opts.method||(opts.body?'POST':'GET'),headers:opts.body?{'Content-Type':'application/json'}:{},body:opts.body?JSON.stringify(opts.body):undefined,credentials:'same-origin',cache:'no-store'});
+  let j={};try{j=await r.json()}catch(_){}
+  if(r.status===401&&S.auth&&!/\/(login|setup|me)\b/.test(path)){S.auth=null;login={step:'pw',email:'',err:'Your session ended. Please sign in again.'};closeModal();render()}
+  if(!r.ok)throw Object.assign(new Error(j.error||'Something went wrong. Please try again.'),{status:r.status});
+  return j;
+};
+const errMsg=e=>(e&&e.message)||'Something went wrong. Please try again.';
+const CAT_NAME={cereal:'Cereals',milk:'Milk & drinks',grain:'Oats & custard',ccombo:'Cereal combos',fcombo:'Foodstuff combos'};
+const CAT_CODE=Object.fromEntries(Object.entries(CAT_NAME).map(([k,v])=>[v,k]));
+const LAYOUT_META=Object.fromEntries(S.layout.map(x=>[x[0],x.slice()]));
+const TILE_META=S.tiles.map(t=>t.slice()),AISLE_META=S.aisles.map(t=>t.slice());
+const REGION_NAME={sw:'South-West',ss:'South-South & South-East',nc:'North-Central & Abuja',nw:'North'};
+const GONE={},FRESH=new Set();
+let SEEN=null,SEEN_CHAT=null,setupNeeded=false,setupInfo=null;
+S.staff=[];S.customers=[];
+delete AUD.lagos;delete AUD.other;AUD.all[0]='All customers · service notices only';AUD.promo[0]='Customers who opted in to promotions';AUD.test=['Only me · a test email',1];
+
+const busy=m=>{$('#ldt').textContent=m;$('#loader').hidden=false};
+const idle=()=>{$('#loader').hidden=true};
+const keepY=()=>{const y=window.scrollY;render();window.scrollTo(0,y)};
+async function run(msg,fn,okMsg){busy(msg);try{const r=await fn();await refresh();keepY();if(okMsg)toast(typeof okMsg==='function'?okMsg(r):okMsg);return r}catch(e){toast(errMsg(e));try{await refresh();keepY()}catch(_){}}finally{idle()}}
+
+/* ---------- server data → the shapes the screens use ---------- */
+function applyData(d){
+  S.auth=Object.assign({at:(S.auth&&S.auth.at)||Date.now()},d.me);
+  QUICK[0]=`Hi! I’m ${d.me.name.split(' ')[0]} from Tiada. How can I help?`;
+  S.products=d.products.map(p=>({id:p.id,name:p.name,cat:CAT_NAME[p.cat]||p.cat,items:p.items||undefined,sizes:p.sizes.map(s=>({label:s.label,price:s.price,sale:s.sale||null,kg:+s.kg,na:!!s.na||s.price==null})),status:p.status,stock:p.stock,low:p.low,hidden:p.hidden,img:p.img||null}));
+  const Z=Object.fromEntries(d.zones.map(z=>[z.id,z]));
+  S.orders=d.orders.map(o=>{(o.items||[]).forEach(i=>{if(i.pid)GONE[i.pid]=i.name});const z=Z[o.zone_id]||{};
+    return {id:o.id,name:o.name,email:o.email,phone:o.phone,addr:o.address,landmark:o.landmark||'',area:z.label||o.area_label||'',state:!!z.state,speed:o.speed_label||o.speed,fee:o.delivery_fee,
+      items:(o.items||[]).map(i=>[i.pid,i.size,i.qty,(i.swaps||[]).map(w=>[w.from,w.to]),i.price,i.name]),total:o.total,at:Date.parse(o.paid_at||o.created_at),status:o.status,prev:o.prev_status,
+      rider:o.rider?Object.assign({name:o.rider.partner,courier:true},o.rider):null,confirm:o.confirm?Object.assign({},o.confirm,{at:Date.parse(o.confirm.at)}):null,
+      issue:o.issue||{reason:''},refunds:(o.refunds||[]).map(r=>Object.assign({},r,{at:Date.parse(r.at)})),reason:(o.issue&&o.issue.reason)||'',bank:'their bank',note:o.note||'',fresh:FRESH.has(o.id)}});
+  S.sent=d.messages.map(m=>({id:m.id,oid:m.order_id,kind:m.kind,at:Date.parse(m.created_at),to:m.email_to,data:m.data||{},ok:m.email_ok}));
+  S.promos=d.promos.map(p=>({id:p.id,title:p.title,eyebrow:p.eyebrow||'',text:p.text||'',art:p.product_id,img:p.img||null,cls:p.cls||'',end:Date.parse(p.ends_at),on:p.is_on}));
+  S.reviews=d.reviews.map(r=>({id:r.id,pid:r.product_id,name:r.name,stars:r.stars,text:r.text,at:Date.parse(r.created_at),status:r.status,order:r.order_id||'',reply:r.reply||undefined}));
+  S.log=d.activity.map(a=>({t:a.text,at:Date.parse(a.created_at),by:a.staff_name||'System'}));
+  const st=d.settings||{},fees=st.fees||{};
+  S.fees={min:fees.min||0,lagosKg:fees.lagosKg||0,interKg:fees.interKg||0,van:fees.van||0,same:fees.same||0,express:fees.express||0,eco:fees.eco||0,
+    areas:d.zones.filter(z=>!z.state).map(z=>[z.label,z.fee,z.id]),
+    regions:Object.keys(REGION_NAME).map(k=>{const zs=d.zones.filter(z=>z.region===k),r=(fees.regions||{})[k]||{};return [REGION_NAME[k],r.fee!=null?r.fee:(zs[0]?zs[0].fee:0),r.days||(zs[0]&&zs[0].days)||'',k]})};
+  const lay=st.layout&&st.layout.length?st.layout:Object.keys(LAYOUT_META).map(k=>[k,true]);
+  S.layout=lay.filter(l=>LAYOUT_META[l[0]]).map(([k,on])=>{const m=LAYOUT_META[k].slice();m[3]=on!==false;return m});
+  Object.keys(LAYOUT_META).forEach(k=>{if(!S.layout.some(x=>x[0]===k)){const m=LAYOUT_META[k].slice();m[3]=true;S.layout.push(m)}});
+  S.tiles=TILE_META.map(t=>[t[0],t[1],(st.tiles||{})[t[0]]!==false]);
+  S.aisles=AISLE_META.map(t=>[t[0],t[1],(st.aisles||{})[t[0]]!==false]);
+  S.staff=d.staff||[];S.customers=d.customers||[];
+  AUD.all[1]=S.customers.length;AUD.promo[1]=S.customers.filter(c=>c.promo_ok).length;
+  applyChats(d.chats);
+  computeSales();
+  const nw=S.orders.filter(o=>o.status==='new'&&SEEN&&!SEEN.has(o.id));
+  nw.forEach(o=>{FRESH.add(o.id);o.fresh=true});
+  if(nw.length){const o=nw[0],a=$('#alertbar');a.innerHTML=`${ic('bell')} <span>New paid order <b class="num">${o.id}</b> · ${naira(o.total)} · ${esc(o.name)}${nw.length>1?` (+${nw.length-1} more)`:''}</span><button class="btn sm" data-viewo="${o.id}">Open</button>`;a.classList.add('show');setTimeout(()=>a.classList.remove('show'),9000);beep()}
+  SEEN=new Set(S.orders.map(o=>o.id));
+}
+function applyChats(list){
+  S.chats=list.map(c=>({id:c.id,name:c.name||'Guest',phone:c.email||'Guest · not signed in',status:c.status==='bot'?'closed':c.status,at:Date.parse(c.updated_at),order:'',agent:c.agent,
+    msgs:c.messages.map(m=>[m.who,m.text,Date.parse(m.created_at)])}));
+  const waiting=S.chats.filter(c=>c.status==='waiting');
+  const nw=waiting.filter(c=>SEEN_CHAT&&!SEEN_CHAT.has(c.id));
+  if(nw.length&&S.view!=='chat'){const a=$('#alertbar');a.innerHTML=`${ic('chat')} <span><b>${esc(nw[0].name)}</b> wants to chat with a person</span><button class="btn sm" data-view="chat">Open chat</button>`;a.classList.add('show');setTimeout(()=>a.classList.remove('show'),9000);beep()}
+  SEEN_CHAT=new Set(waiting.map(c=>c.id).concat(SEEN_CHAT?[...SEEN_CHAT]:[]));
+}
+function computeSales(){
+  for(let i=0;i<7;i++)DAYS[i]=new Date(Date.now()-(6-i)*86400000);
+  for(let i=0;i<7;i++){const dd=DAYS[i].toDateString();SALES[i]=S.orders.filter(o=>o.status!=='cancelled'&&new Date(o.at).toDateString()===dd).reduce((a,o)=>a+o.total-(o.refunds||[]).reduce((x,r)=>x+r.amount,0),0)}
+}
+function topSellers(){
+  const n={},since=Date.now()-7*86400000;
+  S.orders.filter(o=>o.at>=since&&o.status!=='cancelled').forEach(o=>o.items.forEach(it=>{if(it[0])n[it[0]]=(n[it[0]]||0)+it[2]}));
+  return Object.entries(n).sort((a,b)=>b[1]-a[1]).slice(0,5);
+}
+async function refresh(){applyData(await api('/api/admin/data'))}
+
+/* ---------- order emails: what really went out ---------- */
+function mailRows(o){
+  const sent=S.sent.filter(m=>m.oid===o.id).slice().reverse();
+  const next=o.status==='new'||o.status==='packed'?'route':o.status==='route'?'done':null;
+  return (sent.length?sent.map(m=>`<div class="mrow"><span style="color:${m.ok===false||['refund','cancel','issue'].includes(m.kind)?'var(--red)':'var(--green)'}">${ic(m.ok===false?'alert':'check',16)}</span><span style="flex:1"><b>${MAIL_L[m.kind]||esc(m.kind)}</b> <span class="hint">${m.ok===false?'saved to their inbox, but the email didn’t send':'sent '+dstr(m.at)+', '+tstr(m.at)}</span></span><button class="btn sm soft" data-email="${o.id}|${m.kind}|${m.id}">View</button></div>`).join(''):'<p class="hint" style="margin:0 0 6px">No emails yet.</p>')
+   +(next?`<div class="mrow"><span style="color:#C9C2B1">${ic('clock',16)}</span><span style="flex:1"><b>${MAIL_L[next]}</b> <span class="hint">sends automatically at this step</span></span></div>`:'');
+}
+
+/* ---------- sign in (password + authenticator app) and first-time owner setup ---------- */
+login={step:'check',email:'',err:'',ticket:''};
+function vLogin(){
+  const err=login.err?`<div class="err">${esc(login.err)}</div>`:'';
+  let box='';
+  if(login.step==='check')box=`<h2>Opening…</h2>`;
+  else if(login.step==='setup')box=`<h2>Set up the owner account</h2><p class="hint" style="margin:0 0 14px">This only appears once, before anyone has an account. You’ll need the setup key you added in Vercel (SETUP_TOKEN) and an authenticator app such as Google Authenticator.</p>
+     <form id="f-setup" novalidate>${err}
+      <div class="field"><label for="s-name">Your full name</label><input id="s-name" autocomplete="name" maxlength="60" value="${esc(login.name||'')}"></div>
+      <div class="field"><label for="s-email">Your email</label><input id="s-email" type="email" autocomplete="username" value="${esc(login.email||'')}"></div>
+      <div class="field"><label for="s-pw">Choose a password</label><input id="s-pw" type="password" autocomplete="new-password" placeholder="At least 10 characters"></div>
+      <div class="field"><label for="s-token">Setup key</label><input id="s-token" type="password" autocomplete="off" placeholder="From Vercel → Environment Variables"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Continue</button></form>`;
+  else if(login.step==='setup2')box=`<h2>Scan this code</h2><p class="hint" style="margin:0 0 10px">Open your authenticator app, tap <b>+</b>, then scan. It adds “Tiada Admin”.</p>
+     <div style="text-align:center;margin:0 0 10px"><img src="${setupInfo.qr}" alt="QR code for your authenticator app" width="200" height="200" style="border-radius:12px;border:1px solid var(--line)"></div>
+     <p class="hint" style="margin:0 0 12px;word-break:break-all">Can’t scan? Type this key instead: <b class="num">${esc(setupInfo.secret)}</b></p>
+     <form id="f-setup2" novalidate>${err}<div class="field"><label for="otp1">6-digit code from the app</label><input id="otp1" class="otp1 num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Finish setup and open desk</button></form>`;
+  else if(login.step==='pw')box=`<h2>Sign in</h2><p class="hint" style="margin:0 0 16px">Use your staff email and password.</p>
+     <form id="f-login" novalidate>${err}
+      <div class="field"><label for="l-email">Staff email</label><input id="l-email" type="email" autocomplete="username" value="${esc(login.email||'')}"></div>
+      <div class="field"><label for="l-pw">Password</label><input id="l-pw" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Continue</button>
+      ${setupNeeded?`<p class="hint" style="margin:12px 0 0;text-align:center"><button type="button" class="btn ghost sm" data-act="gosetup">First time here? Set up the owner account</button></p>`:''}</form>`;
+  else box=`<h2>Two-step check</h2><p class="hint" style="margin:0 0 12px">Enter the 6-digit code from your authenticator app.</p>
+     <form id="f-otp" novalidate>${err}
+      <div class="field"><label for="otp1">6-digit code</label><input id="otp1" class="otp1 num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="6-digit code"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Verify and open desk</button>
+      <div class="row" style="margin-top:10px"><span class="sp"></span><button type="button" class="btn ghost sm" data-act="lback">Back</button></div></form>`;
+  return `<div class="login">
+   <section class="lart"><img src="${ICONSRC}" alt="Tiada Marketplace" style="width:64px"><div><h1>Tiada Admin Desk</h1><p>Run orders, stock, promotions and customer support for Tiada Marketplace from one place.</p></div><p class="hint" style="color:#9FBFAA">Staff access only. Every action is recorded in the activity log.</p></section>
+   <section class="lform"><div class="lbox">${box}
+    <div class="safe" style="margin-top:16px">${ic('shield',16)}<span>The desk locks after 15 minutes of inactivity. Customer card details and bank logins are never stored here.</span></div>
+   </div></section></div>`;
+}
+async function openDesk(){busy('Opening your desk');await refresh();S.view='dash';idle();render();toast(`Welcome, ${S.auth.name.split(' ')[0]}`)}
+
+/* ---------- security: staff accounts and the activity log ---------- */
+function vSecurity(){
+  const owner=S.auth.role==='Owner';
+  return `<div class="dash" style="margin-top:0;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)">
+   <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="card pad"><h3>Your session</h3><div class="kv" style="margin-top:8px"><span>Signed in as</span><b>${esc(S.auth.name)} (${esc(S.auth.role)})</b><span>Email</span><b>${esc(S.auth.email)}</b><span>Since</span><b>${tstr(S.auth.at)}</b><span>Two-step check</span><b style="color:var(--green)">On</b><span>Auto lock</span><b>After 15 minutes idle</b></div>
+     <div class="row" style="margin-top:12px"><button class="btn ghost sm" data-act="logout">${ic('logout',14)} Sign out of this device</button><button class="btn soft sm" data-act="pwopen">Change my password</button></div></div>
+    <div class="card pad"><h3>Staff</h3>
+     ${owner?`<div class="list">${S.staff.map(s=>`<div class="li"><span class="av" style="width:34px;height:34px;font-size:12px;${s.active?'':'background:#E2DED3;color:#6B7A70'}">${esc(s.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><span class="t"><b>${esc(s.name)}</b><small>${esc(s.email)}${s.active?'':' · switched off'}</small></span><span class="pill p-packed">${esc(s.role)}</span>${s.email!==S.auth.email?`<button class="btn sm ghost" data-staff="reset|${s.id}" title="New password and authenticator">Reset</button><button class="btn sm ghost" data-staff="${s.active?'off':'on'}|${s.id}">${s.active?'Switch off':'Switch on'}</button>`:''}</div>`).join('')}</div>
+      <form id="f-staff" novalidate style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><b style="font-size:13px">Add a staff member</b>
+       <div class="grid2" style="margin-top:8px"><div class="field"><label for="st-name">Name</label><input id="st-name" maxlength="60"></div><div class="field"><label for="st-email">Email</label><input id="st-email" type="email"></div></div>
+       <div class="field"><label for="st-role">Access</label><select id="st-role"><option value="staff">Staff · orders, stock and flash sales</option><option value="support">Support · live chat and reviews</option><option value="owner">Owner · everything, including refunds</option></select></div>
+       <button class="btn" type="submit" style="width:100%">${ic('plus',16)} Add and show their sign-in details</button></form>`
+     :`<p class="hint" style="margin:0">Only the owner can add or remove staff.</p>`}
+     <p class="hint" style="margin:8px 0 0">Each person signs in with their own account so the log shows who did what.</p></div>
+    <div class="safe">${ic('shield',16)}<span>Payments are confirmed by Paystack, not typed in by staff. Bank logins, card numbers and PINs never reach this desk.</span></div>
+   </div>
+   <div class="card pad"><h3>Activity log</h3><div class="log" style="margin-top:8px">${S.log.length?S.log.slice(0,80).map(l=>`<div class="li" style="padding:8px 0"><span class="t"><b style="font-size:13px;white-space:normal">${esc(l.t)}</b><small>${esc(l.by)} · ${new Date(l.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></span></div>`).join(''):'<p class="hint">Actions will be listed here.</p>'}</div></div>
+  </div>`;
+}
+function showCreds(title,email,r){
+  $('#modal').innerHTML=`<div class="scrim center"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+   <h2>${esc(title)}</h2><p class="hint" style="margin:0 0 10px">Give these to them privately (in person is best). This is the only time the password is shown.</p>
+   <div class="kv" style="margin-bottom:10px"><span>Email</span><b>${esc(email)}</b><span>Password</span><b class="num" style="font-size:16px">${esc(r.password)}</b></div>
+   <p class="hint" style="margin:0 0 6px">They scan this with their authenticator app:</p>
+   <div style="text-align:center"><img src="${r.qr}" alt="Authenticator QR code" width="180" height="180" style="border-radius:12px;border:1px solid var(--line)"></div>
+   <p class="hint" style="word-break:break-all">Key: <b class="num">${esc(r.secret)}</b></p>
+   <button class="btn" data-close style="width:100%;height:44px">I’ve passed these on</button></div></div>`;
+}
+function openPw(){
+  $('#modal').innerHTML=`<div class="scrim center" data-close><div class="modal" role="dialog" aria-modal="true" aria-label="Change password"><button class="x" data-close aria-label="Close">×</button><h2>Change my password</h2>
+   <form id="f-pw" novalidate><div class="field"><label for="pw-cur">Current password</label><input id="pw-cur" type="password" autocomplete="current-password"></div>
+   <div class="field"><label for="pw-new">New password</label><input id="pw-new" type="password" autocomplete="new-password" placeholder="At least 10 characters"></div>
+   <button class="btn" type="submit" style="width:100%;height:44px">Save new password</button></form></div></div>`;
+}
+
+/* ---------- helpers that send changes ---------- */
+async function orderAct(o,body,msg,filter){
+  const r=await run(msg,()=>api('/api/admin/orders/'+encodeURIComponent(o.id),{body}),r=>r&&r.email&&!r.email.ok?`Saved. The email didn’t send: ${r.email.error||'check email setup'}`:{packed:`${o.id} packed. Stock updated.`,resume:'Order is back on track'}[body.action]||`Saved and emailed ${o.email}`);
+  if(r){S.ofilter=filter||S.ofilter;S.oq='';S.sel=o.id;keepY()}
+}
+const saveLayout=log=>api('/api/admin/settings',{body:{key:'layout',value:S.layout.map(x=>[x[0],x[3]]),log}});
+const saveTiles=log=>api('/api/admin/settings',{body:{key:'tiles',value:Object.fromEntries(S.tiles.map(t=>[t[0],t[2]])),log}});
+const saveAisles=log=>api('/api/admin/settings',{body:{key:'aisles',value:Object.fromEntries(S.aisles.map(t=>[t[0],t[2]])),log}});
+async function quick(p,msg){try{await p;if(msg)toast(msg)}catch(e){toast(errMsg(e));await refresh().catch(()=>{});keepY()}}
+const upload=(dataUrl,folder)=>api('/api/admin/upload',{body:{dataUrl,folder}}).then(r=>r.url);
+
+/* ---------- forms ---------- */
+document.addEventListener('submit',async e=>{
+  const f=e.target,id=f.id;
+  const mine=['f-setup','f-setup2','f-login','f-otp','f-deliv','f-upd','f-dispatch','f-edit','f-promo','f-bc','f-chat','f-reply','f-fees','f-staff','f-pw'];
+  if(!mine.includes(id))return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const v=s=>($(s)||{value:''}).value;
+  if(id==='f-setup'){login.name=v('#s-name').trim();login.email=v('#s-email').trim();
+    busy('Checking your setup key');
+    try{setupInfo=await api('/api/admin/setup',{body:{action:'start',token:v('#s-token').trim(),name:login.name,email:login.email,password:v('#s-pw')}});login.step='setup2';login.err=''}catch(err){login.err=errMsg(err)}
+    idle();render();const i=$('#otp1');i&&i.focus();return}
+  if(id==='f-setup2'){const code=v('#otp1').replace(/\D/g,'');busy('Creating your account');
+    try{await api('/api/admin/setup',{body:{action:'finish',ticket:setupInfo.ticket,code}});setupInfo=null;setupNeeded=false;await openDesk()}catch(err){idle();login.err=errMsg(err);render();$('#otp1')&&$('#otp1').focus()}
+    return}
+  if(id==='f-login'){login.email=v('#l-email').trim();busy('Checking your details');
+    try{const r=await api('/api/admin/login',{body:{step:'pw',email:login.email,password:v('#l-pw')}});login.ticket=r.ticket;login.step='otp';login.err=''}catch(err){login.err=errMsg(err)}
+    idle();render();($('#otp1')||$('#l-pw')||{focus(){}}).focus();return}
+  if(id==='f-otp'){const code=v('#otp1').replace(/\D/g,'');if(code.length!==6){login.err='Enter all 6 digits.';render();return}
+    busy('Verifying code');
+    try{await api('/api/admin/login',{body:{step:'code',ticket:login.ticket,code}});login={step:'pw',email:login.email,err:'',ticket:''};await openDesk()}
+    catch(err){idle();login.err=errMsg(err);if(/password again/.test(login.err))login.step='pw';render();($('#otp1')||$('#l-pw')).focus()}
+    return}
+  const o=S.orders.find(x=>x.id===S.sel);
+  if(id==='f-deliv'){const c=(f.querySelector('input[name=dconf]:checked')||{}).value||'driver',lab=CONFIRM.find(x=>x[0]===c)[1];closeModal();
+    orderAct(o,{action:'done',how:lab,note:v('#dl-note').trim()||undefined},'Marking as delivered','done');return}
+  if(id==='f-dispatch'){const partner=v('#d-partner'),trk=v('#d-trk').trim(),driver=v('#d-driver').trim(),ph=v('#d-ph').replace(/\D/g,''),cost=+v('#d-cost').replace(/\D/g,'')||0;
+    let okk=true;if(!trk){$('#fd-trk').classList.add('bad');$('#d-trk').focus();okk=false}if(ph&&ph.length<10){$('#fd-ph').classList.add('bad');okk=false}if(!okk)return;
+    closeModal();orderAct(o,{action:'route',partner,tracking:trk,driver:driver||undefined,phone:ph||undefined,cost},'Booking saved · emailing customer','route');return}
+  if(id==='f-upd'){const k=upd.k,D=updData(o);
+    if(k==='route'&&!o.rider){closeModal();setTimeout(()=>openDispatch(o),260);return}
+    if(k==='refund'&&!D.full&&(!D.amount||D.amount>o.total)){$('#fu-amt').classList.add('bad');toast(`Enter an amount up to ${naira(o.total)}`);return}
+    if(k==='note'&&!(D.note||'').trim()){$('#fu-note').classList.add('bad');$('#u-note').focus();return}
+    const opt=s=>s&&String(s).trim()?String(s).trim():undefined;
+    const body={packed:{action:'packed'},route:o.rider?{action:'route',partner:o.rider.partner,tracking:o.rider.tracking||'-',driver:opt(o.rider.driver),phone:opt(o.rider.phone),cost:o.rider.cost||0}:null,
+      done:{action:'done',how:CONFIRM.find(x=>x[0]===(upd.conf||'driver'))[1]},issue:{action:'issue',reason:D.reason,note:opt(D.note),eta:opt(D.eta)},
+      refund:{action:'refund',full:!!D.full,amount:D.full?undefined:+D.amount,reason:D.reason,note:opt(D.note)},cancel:{action:'cancel',reason:D.reason,note:opt(D.note)},note:{action:'note',note:(D.note||'').trim()}}[k];
+    closeModal();
+    orderAct(o,body,{packed:'Marking as packed',route:'Marking as on the way',done:'Marking as delivered',issue:'Reporting problem',refund:'Sending refund through Paystack',cancel:'Cancelling and refunding',note:'Sending message'}[k],
+      k==='packed'?'packed':k==='route'?'route':k==='done'?'done':k==='note'?S.ofilter:'issues');return}
+  if(id==='f-edit'){const pid=f.dataset.id,isNew=pid==='new',name=v('#e-name').trim();if(!name){$('#fe-name').classList.add('bad');$('#e-name').focus();return}
+    const sizes=[...f.querySelectorAll('[data-sz]')].map(tr=>{const lab=tr.querySelector('td').textContent.trim();const pr=+tr.querySelector('[data-f=price]').value||null,sa=+tr.querySelector('[data-f=sale]').value||null,kg=+tr.querySelector('[data-f=kg]').value||0;return {label:lab,price:pr,sale:pr&&sa&&sa<pr?sa:null,kg,na:!pr}});
+    if(!sizes.some(s=>!s.na)){toast('Add a regular price for at least one size');return}
+    const img=draftImg,items=$('#e-items')?v('#e-items').split('\n').map(x=>x.trim()).filter(Boolean):null;
+    const body={id:isNew?undefined:pid,name,cat:CAT_CODE[v('#e-cat')]||'cereal',items,sizes,stock:Math.max(0,+v('#e-stock')||0),low:Math.max(0,+v('#e-low')||0),status:v('#e-status'),hidden:!$('#e-vis').checked};
+    closeModal();
+    run(isNew?'Adding to store':'Saving changes',async()=>{body.img=img&&img.startsWith('data:')?await upload(img,'products'):(img||null);return api('/api/admin/products',{body})},isNew?`${name} is now in the store`:`${name} updated in the store`);return}
+  if(id==='f-promo'){const pid=f.dataset.id,isNew=pid==='new',title=v('#p-title').trim(),end=new Date(v('#p-end')).getTime();
+    if(!title){$('#fp-title').classList.add('bad');return}if(!end||end<=Date.now()){$('#fp-end').classList.add('bad');toast('Pick an end time in the future');return}
+    const img=draftImg,old=S.promos.find(x=>x.id===pid)||{};
+    const body={id:isNew?undefined:pid,title,eyebrow:v('#p-eye').trim(),text:v('#p-text').trim(),product_id:v('#p-art')||null,cls:old.cls||'',ends_at:new Date(end).toISOString(),is_on:$('#p-on').checked};
+    closeModal();
+    run(isNew?'Launching flash sale':'Saving',async()=>{body.img=img&&img.startsWith('data:')?await upload(img,'banners'):(img||null);return api('/api/admin/promos',{body})},body.is_on?'Banner is live in the store':'Saved (switched off)');return}
+  if(id==='f-bc'){if(!bc.subj.trim()){$('#fb-subj').classList.add('bad');$('#bc-subj').focus();return}if(bc.body.trim().length<10){$('#fb-body').classList.add('bad');$('#bc-body').focus();return}
+    const n=AUD[bc.aud][1];
+    if(!bc.confirm){bc.confirm=true;const btn=f.querySelector('button:not([type])');btn.innerHTML=bc.aud==='test'?'Tap again to send yourself a test':`Tap again to send to ${n.toLocaleString()} ${n===1?'person':'people'}`;btn.classList.add('gold');setTimeout(()=>{bc.confirm=false;if(btn.isConnected){btn.innerHTML=ic('send',16)+' Broadcast email';btn.classList.remove('gold')}},4000);return}
+    bc.confirm=false;const aud=bc.aud;
+    const r=await run(aud==='test'?'Sending you a test':`Sending to ${n.toLocaleString()} customers`,()=>api('/api/admin/broadcast',{body:{subject:bc.subj.trim(),body:bc.body.trim(),audience:aud}}),r=>aud==='test'?`Test sent to ${S.auth.email}`:r.sent<r.total?`Sent ${r.sent} of ${r.total}. The rest need a verified email domain in Resend.`:`Sent to ${r.sent} customers`);
+    if(r&&aud!=='test'){bc={subj:'',body:'',aud:'promo',confirm:false};render()}
+    return}
+  if(id==='f-chat'){const t=v('#c-text').trim();if(!t)return;const c=S.chats.find(x=>x.id===S.chatSel);if(!c)return;
+    c.msgs.push(['agent',t,Date.now()]);render();const i=$('#c-text');i&&i.focus();
+    api('/api/admin/chat',{body:{action:'send',id:c.id,text:t}}).then(pollChats).catch(err=>toast(errMsg(err)));return}
+  if(id==='f-reply'){const rid=f.dataset.id;closeModal();run('Posting reply',()=>api('/api/admin/reviews',{body:{id:rid,reply:v('#r-text').trim()||null}}),'Reply posted');return}
+  if(id==='f-fees'){const F=S.fees,num=s=>+String(v(s)).replace(/\D/g,'')||0;
+    const body={min:num('#fe-min'),lagosKg:num('#fe-lkg'),interKg:num('#fe-ikg'),van:num('#fe-van'),same:num('#fe-same'),express:num('#fe-exp'),eco:F.eco,
+      areas:[...f.querySelectorAll('[data-area]')].map(i=>({id:F.areas[+i.dataset.area][2],fee:+i.value.replace(/\D/g,'')||0})),
+      regions:Object.fromEntries([...f.querySelectorAll('[data-region]')].map(i=>[F.regions[+i.dataset.region][3],+i.value.replace(/\D/g,'')||0]))};
+    run('Saving delivery fees',()=>api('/api/admin/fees',{body}),'Delivery fees saved');return}
+  if(id==='f-staff'){const name=v('#st-name').trim(),email=v('#st-email').trim(),role=v('#st-role');
+    if(name.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Add their name and a valid email');return}
+    busy('Creating their account');
+    try{const r=await api('/api/admin/staff',{body:{action:'add',name,email,role}});await refresh();idle();render();showCreds(`${name} can now sign in`,email,r)}catch(err){idle();toast(errMsg(err))}
+    return}
+  if(id==='f-pw'){const cur=v('#pw-cur'),nx=v('#pw-new');if(nx.length<10){toast('Use at least 10 characters');return}
+    busy('Saving');try{await api('/api/admin/staff',{body:{action:'password',current:cur,next:nx}});closeModal();toast('Password changed')}catch(err){toast(errMsg(err))}idle();return}
+},true);
+
+/* ---------- buttons ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,[data-close],a,label.drop');if(!t)return;const d=t.dataset,a=d.act;
+  const stop=()=>{e.preventDefault();e.stopImmediatePropagation()};
+  if(d.osel)FRESH.delete(d.osel);
+  if(d.viewo)FRESH.delete(d.viewo);
+  if(a==='gosetup'){stop();login.step='setup';login.err='';render();return}
+  if(a==='lback'){stop();login.step='pw';login.err='';render();return}
+  if(a==='logout'){stop();busy('Signing out');api('/api/admin/logout',{body:{}}).catch(()=>{}).then(()=>{S.auth=null;login={step:'pw',email:'',err:'',ticket:''};idle();render()});return}
+  if(a==='pwopen'){stop();openPw();return}
+  if(d.staff){stop();const [k,sid]=d.staff.split('|'),s=S.staff.find(x=>x.id===sid);if(!s)return;
+    if(!t.dataset.armed){t.dataset.armed=1;const old=t.textContent;t.textContent='Tap again';setTimeout(()=>{if(t.isConnected){delete t.dataset.armed;t.textContent=old}},3000);return}
+    if(k==='reset'){busy('Resetting');api('/api/admin/staff',{body:{action:'reset',id:sid}}).then(async r=>{await refresh();idle();render();showCreds(`New sign-in details for ${s.name}`,s.email,r)}).catch(err=>{idle();toast(errMsg(err))});return}
+    run(k==='off'?'Switching off':'Switching on',()=>api('/api/admin/staff',{body:{action:'active',id:sid,active:k==='on'}}),k==='off'?`${s.name} can no longer sign in`:`${s.name} can sign in again`);return}
+  if(d.oact==='pack'||d.oact==='resume'){stop();const o=S.orders.find(x=>x.id===S.sel);if(!o)return;
+    orderAct(o,{action:d.oact==='pack'?'packed':'resume'},d.oact==='pack'?'Marking as packed':'Updating order',d.oact==='pack'?'packed':null);return}
+  if(d.stk){stop();const [pid,n]=d.stk.split('|');const p=S.products.find(x=>x.id===pid);if(!p)return;
+    p.stock=Math.max(0,p.stock+ +n);if(p.stock>0&&p.status==='out')p.status='in';if(!p.stock)p.status='out';keepY();
+    quick(api('/api/admin/products',{method:'PATCH',body:{id:pid,stockDelta:+n}}));return}
+  if(d.hide){stop();const p=S.products.find(x=>x.id===d.hide);if(!p)return;p.hidden=!p.hidden;keepY();
+    quick(api('/api/admin/products',{method:'PATCH',body:{id:p.id,hidden:p.hidden}}),p.hidden?`${p.name} is hidden from shoppers`:`${p.name} is back in the shop`);return}
+  if(d.mv){stop();const [i,dir]=d.mv.split('|').map(Number),j=i+dir;if(j<0||j>=S.layout.length)return;const L=S.layout;[L[i],L[j]]=[L[j],L[i]];keepY();
+    quick(saveLayout(`Moved “${L[j][1]}” ${dir<0?'up':'down'} on the home page`));return}
+  if(d.tile){stop();const x=S.tiles[+d.tile];x[2]=!x[2];keepY();quick(saveTiles(`${x[2]?'Showed':'Hid'} the “${x[1]}” tile`),x[2]?`“${x[1]}” is showing`:`“${x[1]}” is hidden`);return}
+  if(d.aisle){stop();const x=S.aisles[+d.aisle];x[2]=!x[2];keepY();quick(saveAisles(`${x[2]?'Showed':'Hid'} the “${x[1]}” aisle`),x[2]?`“${x[1]}” is showing`:`“${x[1]}” is hidden`);return}
+  if(a==='lay-reset'){stop();S.layout.forEach(x=>x[3]=true);S.tiles.forEach(x=>x[2]=true);S.aisles.forEach(x=>x[2]=true);keepY();
+    quick(Promise.all([saveLayout('Reset the home page layout'),saveTiles(),saveAisles()]),'Everything is showing again');return}
+  if(d.pdel){stop();if(!t.dataset.armed){t.dataset.armed=1;t.textContent='Tap again to delete';setTimeout(()=>{if(t.isConnected){delete t.dataset.armed;t.textContent='Delete'}},3000);return}
+    closeModal();run('Deleting',()=>api('/api/admin/promos?id='+encodeURIComponent(d.pdel),{method:'DELETE'}),'Flash sale deleted');return}
+  if(d.rv){stop();const [rid,st]=d.rv.split('|');run(st==='live'?'Approving':'Hiding',()=>api('/api/admin/reviews',{body:{id:rid,status:st}}),st==='live'?'Review is now live in the store':'Review hidden from the store');return}
+  if(a==='cjoin'){stop();const c=S.chats.find(x=>x.id===S.chatSel);if(!c)return;run('Joining chat',()=>api('/api/admin/chat',{body:{action:'join',id:c.id}})).then(()=>{const i=$('#c-text');i&&i.focus()});return}
+  if(a==='cend'){stop();const c=S.chats.find(x=>x.id===S.chatSel);if(!c)return;run('Ending chat',()=>api('/api/admin/chat',{body:{action:'end',id:c.id}}),'Chat ended');return}
+  if(a==='fillpw'||a==='fillcode'){stop();return}
+},true);
+document.addEventListener('change',e=>{
+  const t=e.target,stop=()=>e.stopImmediatePropagation();
+  if(t.dataset.status){stop();const p=S.products.find(x=>x.id===t.dataset.status);if(!p)return;p.status=t.value;if(t.value==='out')p.stock=0;const lab=t.selectedOptions[0].text;keepY();
+    quick(api('/api/admin/products',{method:'PATCH',body:{id:p.id,status:t.value}}),`${p.name}: ${lab}`);return}
+  if(t.dataset.sec){stop();const x=S.layout[+t.dataset.sec];x[3]=t.checked;keepY();quick(saveLayout(`${x[3]?'Showed':'Hid'} “${x[1]}” on the home page`),x[3]?`${x[1]} is showing`:`${x[1]} is hidden from shoppers`);return}
+  if(t.dataset.ptog){stop();const p=S.promos.find(x=>x.id===t.dataset.ptog);if(!p)return;p.on=t.checked;keepY();quick(api('/api/admin/promos',{method:'PATCH',body:{id:p.id,is_on:p.on}}),p.on?'Banner is live in the store':'Banner removed from the store');return}
+},true);
+document.addEventListener('input',e=>{
+  if(e.target.id==='otp1'){e.stopImmediatePropagation();const t=e.target;t.value=t.value.replace(/\D/g,'').slice(0,6);if(t.value.length===6)fireForm(t.form)}
+},true);
+
+/* ---------- keep the desk up to date ---------- */
+const typing=()=>{const a=document.activeElement;return a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.id!=='oq'&&a.id!=='iq'&&a.id!=='cq'};
+async function poll(){
+  if(!S.auth||document.hidden)return;
+  try{await refresh();if(!$('#modal').innerHTML&&!typing())keepY()}catch(_){}
+}
+let chatSig='';
+async function pollChats(){
+  if(!S.auth||S.view!=='chat'||document.hidden)return;
+  try{const d=await api('/api/admin/data?part=chats');const sig=JSON.stringify(d.chats.map(c=>[c.id,c.status,c.messages.length]));if(sig===chatSig)return;chatSig=sig;
+    applyChats(d.chats);if($('#modal').innerHTML)return;
+    const i=$('#c-text'),val=i?i.value:'',foc=document.activeElement===i;render();const j=$('#c-text');if(j){j.value=val;if(foc)j.focus()}}catch(_){}
+}
+async function bootAdmin(){
+  busy('Opening your desk');
+  try{const m=await api('/api/admin/me');
+    if(m.staff){await refresh();S.view='dash'}
+    else{const s=await api('/api/admin/setup');setupNeeded=s.needed;login={step:s.needed?'setup':'pw',email:'',err:'',ticket:''}}}
+  catch(e){login={step:'pw',email:'',err:errMsg(e),ticket:''}}
+  idle();render();
+  setInterval(poll,20000);setInterval(pollChats,4000);
+}
+if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},render,refresh};
+bootAdmin();
+})();
+</script>
+</html>

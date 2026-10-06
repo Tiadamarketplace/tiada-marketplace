@@ -1,0 +1,35 @@
+{
+  "name": "tiada-marketplace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "pages": "python3 frontend/make_shop.py && python3 frontend/make_admin.py",
+    "test:ui": "python3 tests/shop_flow.py && python3 tests/admin_flow.py"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.3",
+    "next": "^16.3.8",
+    "otpauth": "^9.3.4",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.16.11",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.6.3"
+  }
+}

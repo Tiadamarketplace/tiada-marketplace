@@ -1,0 +1,88 @@
+-- Starting data: products, combos, delivery areas and settings. Run after schema.sql.
+insert into products (id,name,cat,items,sizes,status,stock,low,img,short,sort) values
+('milk','Powdered Milk','milk',null,'[{"label": "250g", "price": 3500, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 5800, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 10500, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 19000, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',34,5,'/img/milk.jpg','MILK',0),
+('milo','Milo','milk',null,'[{"label": "250g", "price": 4000, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 7300, "sale": 6500, "kg": 0.5, "na": false}, {"label": "1kg", "price": 13500, "sale": 12000, "kg": 1, "na": false}, {"label": "1 paint", "price": 27000, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'fast',22,5,'/img/milo.jpg','MILO',1),
+('chocomalt','Choco Malt','milk',null,'[{"label": "250g", "price": 3500, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 5800, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 10500, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 12500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',18,5,null,'CHOCO MALT',2),
+('frosties','Frosties','cereal',null,'[{"label": "250g", "price": 2800, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 4900, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 8700, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 10500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',26,5,null,'FROSTIES',3),
+('cornflakes','Cornflakes','cereal',null,'[{"label": "250g", "price": 2800, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 4500, "sale": 3900, "kg": 0.5, "na": false}, {"label": "1kg", "price": 7500, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 10000, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'fast',31,5,'/img/cornflakes.jpg','CORN FLAKES',4),
+('cocopops','Coco Pops','cereal',null,'[{"label": "250g", "price": 3000, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 4900, "sale": 4200, "kg": 0.5, "na": false}, {"label": "1kg", "price": 7300, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 10500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',14,5,'/img/cocopops.jpg','COCO POPS',5),
+('moonstar','Moon and Star','cereal',null,'[{"label": "250g", "price": 3500, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 5700, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 10500, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 12500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',15,5,'/img/moonstar.jpg','MOON & STAR',6),
+('fruitfiber','Fruit and Fiber','cereal',null,'[{"label": "250g", "price": 4800, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 8300, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 15500, "sale": 13500, "kg": 1, "na": false}, {"label": "1 paint", "price": 18500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',12,5,'/img/fruitfiber.jpg','FRUIT & FIBER',7),
+('goldenmorn','Golden Morn','cereal',null,'[{"label": "250g", "price": 2600, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 3100, "sale": 2800, "kg": 0.5, "na": false}, {"label": "1kg", "price": 6700, "sale": 5900, "kg": 1, "na": false}, {"label": "1 paint", "price": 10500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',29,5,'/img/goldenmorn.jpg','GOLDEN MORN',8),
+('oat','Oats','grain',null,'[{"label": "250g", "price": 2500, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": 4000, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 6100, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 9000, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'in',40,5,'/img/oat.jpg','OATS',9),
+('granola','Granola','grain',null,'[{"label": "250g", "price": 9500, "sale": null, "kg": 0.25, "na": false}, {"label": "500g", "price": null, "sale": null, "kg": 0.5, "na": true}, {"label": "1kg", "price": null, "sale": null, "kg": 1, "na": true}, {"label": "1 paint", "price": null, "sale": null, "kg": 2.5, "na": true}]'::jsonb,'in',3,5,null,'GRANOLA',10),
+('custard','Custard','grain',null,'[{"label": "250g", "price": null, "sale": null, "kg": 0.25, "na": true}, {"label": "500g", "price": 4500, "sale": null, "kg": 0.5, "na": false}, {"label": "1kg", "price": 7500, "sale": null, "kg": 1, "na": false}, {"label": "1 paint", "price": 10500, "sale": null, "kg": 2.5, "na": false}]'::jsonb,'out',0,5,null,'CUSTARD',11),
+('cc1','Tiada''s Measured Cereals Combo','ccombo','["Lactorich milk", "Cornflakes", "Coco pops", "Golden Morn"]'::jsonb,'[{"label": "Package", "price": 17000, "sale": null, "kg": 2.2, "na": false}]'::jsonb,'in',20,3,'/img/cc1.jpg',null,50),
+('cc2','Breakfast Starter','ccombo','["Coco pops", "Milk", "Moon and Star", "Cornflakes"]'::jsonb,'[{"label": "Package", "price": 12000, "sale": 10800, "kg": 1.8, "na": false}]'::jsonb,'in',20,3,'/img/cc2.jpg',null,51),
+('cc3','Oat & Stars','ccombo','["Coco pops", "Lactorich milk", "Moon and Star", "Oat"]'::jsonb,'[{"label": "Package", "price": 15000, "sale": null, "kg": 2, "na": false}]'::jsonb,'in',20,3,'/img/cc3.jpg',null,52),
+('cc4','Full Pantry Cereals','ccombo','["Dano milk", "Coco pops", "Moon and Star", "Oat", "Golden Morn", "Fruit and Fiber"]'::jsonb,'[{"label": "Package", "price": 18500, "sale": 16500, "kg": 3, "na": false}]'::jsonb,'in',20,3,'/img/cc4.jpg',null,53),
+('cc5','Choco Trio','ccombo','["Lactorich milk", "Moon and Star", "Coco pops"]'::jsonb,'[{"label": "Package", "price": 17000, "sale": null, "kg": 1.8, "na": false}]'::jsonb,'in',20,3,'/img/cc5.jpg',null,54),
+('cc6','Milo Morning Box','ccombo','["Moon and Star", "Cornflakes", "Coco pops", "Milk", "Milo"]'::jsonb,'[{"label": "Package", "price": 21000, "sale": null, "kg": 2.6, "na": false}]'::jsonb,'in',20,3,'/img/cc6.jpg',null,55),
+('cc7','Sweet Breakfast','ccombo','["Coco pops", "Cornflakes", "Golden Morn", "Lactorich milk", "Sugar"]'::jsonb,'[{"label": "Package", "price": 12500, "sale": null, "kg": 2.4, "na": false}]'::jsonb,'in',20,3,'/img/cc7.jpg',null,56),
+('fcE','Emergency Combo','fcombo','["Rice", "Spaghetti", "Noodles", "Garri", "Beans", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 5000, "sale": null, "kg": 3, "na": false}]'::jsonb,'in',20,3,'/img/fcE.jpg',null,57),
+('fc1','Student Combo','fcombo','["Rice", "Spaghetti", "Noodles", "Garri", "Beans", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 10000, "sale": null, "kg": 6, "na": false}]'::jsonb,'in',20,3,'/img/fc1.jpg',null,58),
+('fc3','Combo 15k','fcombo','["Rice", "Spaghetti", "Noodles", "Garri", "Veg oil", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 15000, "sale": null, "kg": 8, "na": false}]'::jsonb,'in',20,3,'/img/fc3.jpg',null,59),
+('fc4','Combo 20k','fcombo','["Rice", "Spaghetti", "Noodles", "Oil", "Garri", "Semo", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 20000, "sale": 18000, "kg": 11, "na": false}]'::jsonb,'in',2,3,'/img/fc4.jpg',null,60),
+('fc5','Combo 25k','fcombo','["Rice", "Spaghetti", "Noodles", "Garri", "Veg oil", "Semo", "Palm oil", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 25000, "sale": null, "kg": 14, "na": false}]'::jsonb,'in',20,3,'/img/fc5.jpg',null,61),
+('fc6','Combo 30k','fcombo','["Rice", "Spaghetti", "Noodles", "Garri", "Veg oil", "Semo", "Palm oil", "Junks/beverages"]'::jsonb,'[{"label": "Package", "price": 30000, "sale": null, "kg": 17, "na": false}]'::jsonb,'in',20,3,'/img/fc6.jpg',null,62)
+on conflict (id) do nothing;
+
+insert into zones (id,label,km,fee,day,state,city,region,days,sort) values
+('z1','Ojota, Ketu, Mile 12, Maryland',6,1500,'Tuesday',null,null,null,null,0),
+('z2','Ikeja, Ogba, Gbagada, Anthony',12,2000,'Tuesday',null,null,null,null,1),
+('z3','Yaba, Surulere, Unilag, Akoka',15,2500,'Wednesday',null,null,null,null,2),
+('z4','Ikorodu town, Agric, Ogolonto',22,3000,'Monday',null,null,null,null,3),
+('z5','Lagos Island, VI, Ikoyi, Lekki Phase 1',24,3000,'Friday',null,null,null,null,4),
+('z6','Ajah, Sangotedo, Highland Estate',30,3500,'Thursday',null,null,null,null,5),
+('z7','Epe, Ibeju-Lekki, Badagry',65,5000,'Saturday',null,null,null,null,6),
+('st:Ogun','Ogun (Abeokuta and all towns)',60,4500,null,'Ogun','Abeokuta','sw','1–2 days',100),
+('st:Oyo','Oyo (Ibadan and all towns)',130,4500,null,'Oyo','Ibadan','sw','1–2 days',101),
+('st:Osun','Osun (Osogbo and all towns)',230,4500,null,'Osun','Osogbo','sw','1–2 days',102),
+('st:Ondo','Ondo (Akure and all towns)',300,4500,null,'Ondo','Akure','sw','1–2 days',103),
+('st:Ekiti','Ekiti (Ado-Ekiti and all towns)',330,4500,null,'Ekiti','Ado-Ekiti','sw','1–2 days',104),
+('st:Edo','Edo (Benin City and all towns)',320,6500,null,'Edo','Benin City','ss','2–4 days',105),
+('st:Delta','Delta (Asaba and all towns)',420,6500,null,'Delta','Asaba','ss','2–4 days',106),
+('st:Anambra','Anambra (Awka and all towns)',470,6500,null,'Anambra','Awka','ss','2–4 days',107),
+('st:Enugu','Enugu (Enugu and all towns)',560,6500,null,'Enugu','Enugu','ss','2–4 days',108),
+('st:Imo','Imo (Owerri and all towns)',540,6500,null,'Imo','Owerri','ss','2–4 days',109),
+('st:Abia','Abia (Umuahia and all towns)',590,6500,null,'Abia','Umuahia','ss','2–4 days',110),
+('st:Ebonyi','Ebonyi (Abakaliki and all towns)',640,6500,null,'Ebonyi','Abakaliki','ss','2–4 days',111),
+('st:Rivers','Rivers (Port Harcourt and all towns)',610,6500,null,'Rivers','Port Harcourt','ss','2–4 days',112),
+('st:Bayelsa','Bayelsa (Yenagoa and all towns)',560,6500,null,'Bayelsa','Yenagoa','ss','2–4 days',113),
+('st:Akwa Ibom','Akwa Ibom (Uyo and all towns)',690,6500,null,'Akwa Ibom','Uyo','ss','2–4 days',114),
+('st:Cross River','Cross River (Calabar and all towns)',760,6500,null,'Cross River','Calabar','ss','2–4 days',115),
+('st:FCT Abuja','FCT Abuja (Abuja and all towns)',760,7000,null,'FCT Abuja','Abuja','nc','2–4 days',116),
+('st:Kwara','Kwara (Ilorin and all towns)',300,7000,null,'Kwara','Ilorin','nc','2–4 days',117),
+('st:Kogi','Kogi (Lokoja and all towns)',540,7000,null,'Kogi','Lokoja','nc','2–4 days',118),
+('st:Niger','Niger (Minna and all towns)',620,7000,null,'Niger','Minna','nc','2–4 days',119),
+('st:Nasarawa','Nasarawa (Lafia and all towns)',820,7000,null,'Nasarawa','Lafia','nc','2–4 days',120),
+('st:Benue','Benue (Makurdi and all towns)',780,7000,null,'Benue','Makurdi','nc','2–4 days',121),
+('st:Plateau','Plateau (Jos and all towns)',1000,7000,null,'Plateau','Jos','nc','2–4 days',122),
+('st:Kaduna','Kaduna (Kaduna and all towns)',880,8500,null,'Kaduna','Kaduna','nw','3–5 days',123),
+('st:Kano','Kano (Kano and all towns)',1060,8500,null,'Kano','Kano','nw','3–5 days',124),
+('st:Katsina','Katsina (Katsina and all towns)',1140,8500,null,'Katsina','Katsina','nw','3–5 days',125),
+('st:Kebbi','Kebbi (Birnin Kebbi and all towns)',1000,8500,null,'Kebbi','Birnin Kebbi','nw','3–5 days',126),
+('st:Sokoto','Sokoto (Sokoto and all towns)',1100,8500,null,'Sokoto','Sokoto','nw','3–5 days',127),
+('st:Zamfara','Zamfara (Gusau and all towns)',1020,8500,null,'Zamfara','Gusau','nw','3–5 days',128),
+('st:Jigawa','Jigawa (Dutse and all towns)',1160,8500,null,'Jigawa','Dutse','nw','3–5 days',129),
+('st:Bauchi','Bauchi (Bauchi and all towns)',1100,8500,null,'Bauchi','Bauchi','nw','3–5 days',130),
+('st:Gombe','Gombe (Gombe and all towns)',1230,8500,null,'Gombe','Gombe','nw','3–5 days',131),
+('st:Adamawa','Adamawa (Yola and all towns)',1350,8500,null,'Adamawa','Yola','nw','3–5 days',132),
+('st:Taraba','Taraba (Jalingo and all towns)',1190,8500,null,'Taraba','Jalingo','nw','3–5 days',133),
+('st:Borno','Borno (Maiduguri and all towns)',1520,8500,null,'Borno','Maiduguri','nw','3–5 days',134),
+('st:Yobe','Yobe (Damaturu and all towns)',1380,8500,null,'Yobe','Damaturu','nw','3–5 days',135)
+on conflict (id) do nothing;
+
+insert into settings (key,value) values
+('fees','{"min": 10000, "lagosKg": 50, "interKg": 400, "van": 3000, "same": 2500, "express": 3500, "eco": 1000, "regions": {"sw": {"fee": 4500, "days": "1\u20132 days"}, "ss": {"fee": 6500, "days": "2\u20134 days"}, "nc": {"fee": 7000, "days": "2\u20134 days"}, "nw": {"fee": 8500, "days": "3\u20135 days"}}}'::jsonb),
+('layout','[["slider", true], ["tiles", true], ["flash", true], ["aisles", true], ["cereals", true], ["ccombos", true], ["milk", true], ["fcombos", true], ["recent", true], ["recs", true], ["note", true]]'::jsonb),
+('tiles','{"wa": true, "student": true, "track": true}'::jsonb),
+('aisles','{"cereal": true, "milk": true, "grain": true, "ccombo": true, "fcombo": true, "sort": true}'::jsonb),
+('store','{"whatsapp": "08075110000", "tiktok": "tiadamarketplace", "email": "care@tiadamarketplace.com", "hub": "Ojota Logistics Hub, Ikorodu Road, Lagos, Nigeria"}'::jsonb)
+on conflict (key) do nothing;
+
+insert into promos (id,title,eyebrow,text,product_id,cls,ends_at,is_on) values
+('pr1','Milo Morning Box','Flash deal · Cereal Combo 6','Moon and Star, Cornflakes, Coco Pops, Milk & Milo for ₦21,000.','cc6','',now()+interval '7 days',true),
+('pr2','Student Combo ₦10k','Made for students','Rice, spaghetti, noodles, garri, beans and snacks in one pack.','fc1','s2',now()+interval '7 days',true),
+('pr3','Golden Morn now ₦5,900','Golden Morn 1kg','Down from ₦6,700 while this week’s stock lasts.','goldenmorn','s3',now()+interval '7 days',true)
+on conflict (id) do nothing;
