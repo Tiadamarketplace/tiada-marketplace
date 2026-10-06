@@ -1188,7 +1188,30 @@ function vLogin(){
       <div class="field"><label for="l-email">Staff email</label><input id="l-email" type="email" autocomplete="username" value="${esc(login.email||'')}"></div>
       <div class="field"><label for="l-pw">Password</label><input id="l-pw" type="password" autocomplete="current-password" placeholder="••••••••"></div>
       <button class="btn" type="submit" style="width:100%;height:46px">Continue</button>
+      <p class="hint" style="margin:12px 0 0;text-align:center"><button type="button" class="btn ghost sm" data-act="lforgot">Forgot password?</button></p>
       ${setupNeeded?`<p class="hint" style="margin:12px 0 0;text-align:center"><button type="button" class="btn ghost sm" data-act="gosetup">First time here? Set up the owner account</button></p>`:''}</form>`;
+  else if(login.step==='forgot')box=`<h2>Forgot your password?</h2><p class="hint" style="margin:0 0 16px">Enter your staff email. We’ll send a link to choose a new password. You’ll also need your authenticator app.</p>
+     <form id="f-forgot" novalidate>${err}
+      <div class="field"><label for="fg-email">Staff email</label><input id="fg-email" type="email" autocomplete="username" value="${esc(login.email||'')}"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Email me a reset link</button>
+      <div class="row" style="margin-top:10px"><span class="sp"></span><button type="button" class="btn ghost sm" data-act="lback">Back to sign in</button></div></form>`;
+  else if(login.step==='sent')box=`<h2>Check your email</h2><p class="hint" style="margin:0 0 14px">${esc(login.msg||'')}</p>
+     <div class="safe" style="margin:0 0 14px">${ic('clock',16)}<span>Can’t see it? Check spam or promotions. The link only works once.</span></div>
+     <button type="button" class="btn" style="width:100%;height:46px" data-act="lback">Back to sign in</button>`;
+  else if(login.step==='reset')box=`<h2>Choose a new password</h2><p class="hint" style="margin:0 0 16px">${login.lost?'Enter the setup key from Vercel (SETUP_TOKEN). You’ll scan a new authenticator code next.':'Then enter the 6-digit code from your authenticator app to confirm it’s you.'}</p>
+     <form id="f-reset" novalidate>${err}
+      <div class="field"><label for="rs-pw">New password</label><input id="rs-pw" type="password" autocomplete="new-password" placeholder="At least 10 characters"></div>
+      <div class="field"><label for="rs-pw2">Type it again</label><input id="rs-pw2" type="password" autocomplete="new-password"></div>
+      ${login.lost?`<div class="field"><label for="rs-key">Setup key</label><input id="rs-key" type="password" autocomplete="off" placeholder="From Vercel → Environment Variables"></div>`
+        :`<div class="field"><label for="otp1">6-digit code</label><input id="otp1" class="otp1 num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>`}
+      <button class="btn" type="submit" style="width:100%;height:46px">Save new password</button>
+      <p class="hint" style="margin:12px 0 0;text-align:center"><button type="button" class="btn ghost sm" data-act="llost">${login.lost?'I have my authenticator app':'Lost your authenticator app?'}</button></p>
+      ${login.lost?`<p class="hint" style="margin:8px 0 0">Only the owner can use the setup key. Other staff: ask the owner to reset your access from Security.</p>`:''}</form>`;
+  else if(login.step==='reset2')box=`<h2>Scan your new code</h2><p class="hint" style="margin:0 0 10px">Open your authenticator app, tap <b>+</b>, then scan. Delete the old “Tiada Admin” entry afterwards.</p>
+     <div style="text-align:center;margin:0 0 10px"><img src="${login.qr}" alt="QR code for your authenticator app" width="200" height="200" style="border-radius:12px;border:1px solid var(--line)"></div>
+     <p class="hint" style="margin:0 0 12px;word-break:break-all">Can’t scan? Type this key instead: <b class="num">${esc(login.secret||'')}</b></p>
+     <form id="f-reset2" novalidate>${err}<div class="field"><label for="otp1">6-digit code from the app</label><input id="otp1" class="otp1 num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>
+      <button class="btn" type="submit" style="width:100%;height:46px">Finish</button></form>`;
   else box=`<h2>Two-step check</h2><p class="hint" style="margin:0 0 12px">Enter the 6-digit code from your authenticator app.</p>
      <form id="f-otp" novalidate>${err}
       <div class="field"><label for="otp1">6-digit code</label><input id="otp1" class="otp1 num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="6-digit code"></div>
@@ -1252,7 +1275,7 @@ const upload=(dataUrl,folder)=>api('/api/admin/upload',{body:{dataUrl,folder}}).
 /* ---------- forms ---------- */
 document.addEventListener('submit',async e=>{
   const f=e.target,id=f.id;
-  const mine=['f-setup','f-setup2','f-login','f-otp','f-deliv','f-upd','f-dispatch','f-edit','f-promo','f-bc','f-chat','f-reply','f-fees','f-staff','f-pw'];
+  const mine=['f-setup','f-setup2','f-login','f-otp','f-forgot','f-reset','f-reset2','f-deliv','f-upd','f-dispatch','f-edit','f-promo','f-bc','f-chat','f-reply','f-fees','f-staff','f-pw'];
   if(!mine.includes(id))return;
   e.preventDefault();e.stopImmediatePropagation();
   const v=s=>($(s)||{value:''}).value;
@@ -1265,6 +1288,27 @@ document.addEventListener('submit',async e=>{
     return}
   if(id==='f-login'){login.email=v('#l-email').trim();busy('Checking your details');
     try{const r=await api('/api/admin/login',{body:{step:'pw',email:login.email,password:v('#l-pw')}});login.ticket=r.ticket;login.step='otp';login.err=''}catch(err){login.err=errMsg(err)}
+    idle();render();($('#otp1')||$('#l-pw')||{focus(){}}).focus();return}
+  if(id==='f-forgot'){login.email=v('#fg-email').trim();if(!/^\S+@\S+\.\S+$/.test(login.email)){login.err='Enter a valid staff email.';render();return}
+    busy('Sending your reset link');
+    try{const r=await api('/api/admin/reset',{body:{action:'request',email:login.email}});login.msg=r.message;login.step='sent';login.err=''}catch(err){login.err=errMsg(err)}
+    idle();render();return}
+  if(id==='f-reset'){const pw=v('#rs-pw'),pw2=v('#rs-pw2');
+    if(pw.length<10){login.err='Use at least 10 characters for the password.';render();return}
+    if(pw!==pw2){login.err='The two passwords don’t match.';render();return}
+    const body={action:'finish',token:login.token,password:pw};
+    if(login.lost){body.setupKey=v('#rs-key').trim();if(!body.setupKey){login.err='Enter the setup key.';render();return}}
+    else{body.code=v('#otp1').replace(/\D/g,'');if(body.code.length!==6){login.err='Enter all 6 digits.';render();return}}
+    busy('Saving your new password');
+    try{const r=await api('/api/admin/reset',{body});
+      if(r.ticket){login.ticket=r.ticket;login.qr=r.qr;login.secret=r.secret;login.step='reset2';login.err=''}
+      else{login={step:'pw',email:r.email||'',err:'',ticket:''};toast('Password changed. Sign in with your new password.')}}
+    catch(err){login.err=errMsg(err);if(/expired|already used/.test(login.err)){login.step='forgot'}}
+    idle();render();($('#otp1')||$('#rs-pw')||$('#l-pw')||{focus(){}}).focus();return}
+  if(id==='f-reset2'){const code=v('#otp1').replace(/\D/g,'');if(code.length!==6){login.err='Enter all 6 digits.';render();return}
+    busy('Finishing');
+    try{const r=await api('/api/admin/reset',{body:{action:'confirm',ticket:login.ticket,code}});login={step:'pw',email:r.email||'',err:'',ticket:''};toast('All set. Sign in with your new password and code.')}
+    catch(err){login.err=errMsg(err)}
     idle();render();($('#otp1')||$('#l-pw')||{focus(){}}).focus();return}
   if(id==='f-otp'){const code=v('#otp1').replace(/\D/g,'');if(code.length!==6){login.err='Enter all 6 digits.';render();return}
     busy('Verifying code');
@@ -1334,6 +1378,8 @@ document.addEventListener('click',e=>{
   if(d.viewo)FRESH.delete(d.viewo);
   if(a==='gosetup'){stop();login.step='setup';login.err='';render();return}
   if(a==='lback'){stop();login.step='pw';login.err='';render();return}
+  if(a==='lforgot'){stop();login.email=($('#l-email')||{value:login.email}).value.trim();login.step='forgot';login.err='';render();const i=$('#fg-email');i&&i.focus();return}
+  if(a==='llost'){stop();login.lost=!login.lost;login.err='';render();return}
   if(a==='logout'){stop();busy('Signing out');api('/api/admin/logout',{body:{}}).catch(()=>{}).then(()=>{S.auth=null;login={step:'pw',email:'',err:'',ticket:''};idle();render()});return}
   if(a==='pwopen'){stop();openPw();return}
   if(d.staff){stop();const [k,sid]=d.staff.split('|'),s=S.staff.find(x=>x.id===sid);if(!s)return;
@@ -1387,7 +1433,9 @@ async function pollChats(){
 async function bootAdmin(){
   busy('Opening your desk');
   try{const m=await api('/api/admin/me');
-    if(m.staff){await refresh();S.view='dash'}
+    const rm=/[#&]reset=([\w.-]+)/.exec(location.hash);
+    if(rm){history.replaceState(null,'',location.pathname+location.search);login={step:'reset',email:'',err:'',ticket:'',token:rm[1],lost:false}}
+    else if(m.staff){await refresh();S.view='dash'}
     else{const s=await api('/api/admin/setup');setupNeeded=s.needed;login={step:s.needed?'setup':'pw',email:'',err:'',ticket:''}}}
   catch(e){login={step:'pw',email:'',err:errMsg(e),ticket:''}}
   idle();render();

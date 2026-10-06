@@ -52,7 +52,12 @@ def handle(route, req):
         return J({'staff': st['me']})
     if path == '/api/admin/login':
         return J({'ticket': 't'}) if body['step'] == 'pw' else J({'staff': st['me']})
-    if path == '/api/admin/logout': st['me'] = None; return J({'ok': True})
+    if path == '/api/admin/reset':
+        if body['action'] == 'request': return J({'message': 'If that email belongs to a staff account, a reset link is on its way.'})
+        if body['action'] == 'finish':
+            if body.get('code') != '123456': return J({'error': 'That code isn’t right.'}, 401)
+            return J({'done': True, 'email': 'grace@mail.test'})
+        if path == '/api/admin/logout': st['me'] = None; return J({'ok': True})
     if path == '/api/admin/data':
         if 'part=chats' in req.url: return J({'chats': st['chats']})
         return J(data())
@@ -129,6 +134,23 @@ with sync_playwright() as p:
     assert 'TD-84960' in pg.inner_html('#alertbar')
     pg.screenshot(path=str(OUT / 'a7_alert.png'))
 
+    # forgot password: request a link, then open it
+    pg.click('[data-view=dash]'); pg.wait_for_timeout(500); pg.click('[data-act=logout]'); pg.wait_for_selector('#f-login', timeout=5000)
+    pg.click('[data-act=lforgot]'); pg.fill('#fg-email', 'grace@mail.test'); pg.click('#f-forgot button[type=submit]'); pg.wait_for_timeout(800)
+    assert 'reset link is on its way' in pg.content()
+    pg.screenshot(path=str(OUT / 'a9_forgot.png'))
+    pg.goto('http://127.0.0.1:8766/admin.html?test=1&x=1#reset=abc.def.ghi'); pg.wait_for_selector('#f-reset', timeout=8000)
+    assert 'reset=' not in pg.url
+    pg.fill('#rs-pw', 'newpassword12'); pg.fill('#rs-pw2', 'newpassword12'); pg.fill('#otp1', '000000'); pg.wait_for_timeout(900)
+    print('reset box:', repr(pg.inner_text('.lbox')[:400]), [c for c in st['calls'] if 'reset' in c[1]]); assert 'isn’t right' in pg.inner_text('.lbox')
+    pg.fill('#rs-pw', 'newpassword12'); pg.fill('#rs-pw2', 'newpassword12'); pg.fill('#otp1', '123456'); pg.wait_for_timeout(1200)
+    pg.screenshot(path=str(OUT / 'a10_reset.png'))
+    assert pg.is_visible('#f-login') and pg.input_value('#l-email') == 'grace@mail.test'
+    fin = [c[2] for c in st['calls'] if c[1] == '/api/admin/reset'][-1]
+    assert fin == {'action': 'finish', 'token': 'abc.def.ghi', 'password': 'newpassword12', 'code': '123456'}, fin
+    b.close()
+    print('calls:', sorted({f'{m} {pth}' for m, pth, _ in st['calls']}))
+    print('JS errors:', errors or 'none'); print('ALL PASSED'); sys.exit(0)
     # security page
     pg.click('[data-view=security]'); pg.wait_for_timeout(900)
     pg.screenshot(path=str(OUT / 'a8_security.png'))

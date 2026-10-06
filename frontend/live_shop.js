@@ -82,6 +82,16 @@ Object.assign(STATUS,{paid:['Paid · packing','paid'],issue:['Problem · we’ll
 /* ---------- sign up / sign in (6-digit email code, no password) ---------- */
 auth={step:'email',mode:'signup',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
 const AUTH_PERKS=[['truck','Track every order','See packing, dispatch and delivery in one place'],['pin','Saved addresses','Check out in seconds next time'],['star','Rate what you buy','Help other shoppers pick well'],['shield','No password to forget','We email you a one-time code']];
+/* customers have no password: this explains what to do instead of a "reset password" page */
+function authHelp(onCode){
+  return `<details class="au2-help"${auth.help?' open':''}><summary>${ic('lock',16)} ${onCode?'Code not arriving?':'Forgot your password?'}</summary>
+   <ol>${onCode?'':'<li><b>You don’t need a password.</b> Tiada never uses one. Enter your email and we send a fresh 6-digit code every time you sign in.</li>'}
+    <li>Look in <b>spam</b>, <b>promotions</b> or <b>updates</b> for an email from <b>tiadamarketplace.com</b>. It usually arrives within a minute.</li>
+    <li>Check the email is spelt right${onCode?` (<b>${esc(auth.email)}</b>)`:''}. ${onCode?'If not, tap “Use another email”.':''}</li>
+    <li>Still nothing after a few minutes? ${onCode?'Tap <b>Resend code</b> below.':'Send the code again.'} Only the newest code works.</li>
+    <li>Lost access to that email? Our team can move your account to a new one after checking it’s you.</li></ol>
+   <div class="au2-hbtns"><button type="button" class="btn ghost" data-go="__chat">${ic('help',16)} Ask our assistant</button><a class="btn ghost" href="https://wa.me/2348075110000" target="_blank" rel="noopener">${ic('chat',16)} WhatsApp us</a></div></details>`;
+}
 function authShell(inner){
   return `<div class="au2">
    <aside class="au2-side"><img src="/icon-sm.png" alt="" class="au2-logo"><h2>Welcome to <br>Tiada Marketplace</h2><p>Foodstuffs and cereals, delivered anywhere in Nigeria.</p>
@@ -96,8 +106,7 @@ function vAuth(){
       <div id="otp-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
       <button class="btn" type="submit">${auth.mode==='signup'?'Verify and create my account':'Verify and sign in'}</button>
       <p class="hint au2-c"><span id="resend"></span></p>
-      <p class="hint au2-c">Can’t see it? Check your spam or promotions folder.</p>
-    </form>
+    </form>${authHelp(true)}
     <div class="note-row warn" style="margin-top:14px">${ic('alert',16)}<span>Never share this code. Tiada staff will never ask for it.</span></div>`);
   const up=auth.mode==='signup';
   return authShell(`<div class="au2-tabs" role="tablist"><button role="tab" aria-selected="${up}" class="${up?'on':''}" data-authmode="signup">Create account</button><button role="tab" aria-selected="${!up}" class="${up?'':'on'}" data-authmode="signin">Sign in</button></div>
@@ -113,6 +122,7 @@ function vAuth(){
       <div id="auth-err" class="alert" ${auth.err?'':'hidden'}>${esc(auth.err)}</div>
       <button class="btn" type="submit">${up?'Create account':'Email me a code'}</button>
     </form>
+    ${up?'':authHelp(false)}
     <p class="au2-switch">${up?'Already have an account? <button class="link" data-authmode="signin">Sign in</button>':'New to Tiada? <button class="link" data-authmode="signup">Create an account</button>'}</p>
     <div class="note-row safe" style="margin-top:12px">${ic('lock',16)}<span>Your details are only used for your orders. We never sell them or share them with advertisers.</span></div>`);
 }
@@ -288,6 +298,139 @@ async function escalate(){
   startChatPoll();
 }
 function agentReply(){}
+
+/* ---------- the assistant: answers on the page, hands over to a person only when asked ---------- */
+let botMiss=0;
+const chip=(label,q)=>`<button data-chatq="${esc(q||label)}">${esc(label)}</button>`;
+const PERSON_BTN='<button data-chatq="Talk to a person">Talk to a person</button>';
+const WANTS_HUMAN=/\b((talk|speak|chat) (to|with) (a |an |the |your |some )?(human|person|agent|someone|somebody|staff|team|support|customer (care|service)|representative|manager)|real (human|person)|live (agent|person|chat)|customer (care|service)|representative|call me|human|agent)\b|^\s*(person|human|agent|someone)\s*[.!?]*$/;
+const STOP=new Set(['the','and','for','you','your','have','has','with','what','how','much','can','get','want','need','buy','add','put','please','some','any','into','basket','cart','does','did','are','is','its','this','that','there','price','prices','cost','size','sizes','big','small','one','two','three','order','pls','plz','abeg','sell','selling','got','my','me','i','a','an','of','to','in','on','do','u','x']);
+function lev(a,b){if(Math.abs(a.length-b.length)>1)return 9;const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+/* products the message mentions: exact names first, then near-misses ("cornflaks", "goldenmorn") */
+function findProducts(q){
+  const words=q.replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>=3&&!STOP.has(w));if(!words.length)return [];
+  const flat=q.replace(/[^a-z0-9]/g,'');
+  const scored=ALL.filter(p=>!p.hidden).map(p=>{
+    const name=p.name.toLowerCase(),nw=name.replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>=3);
+    let sc=0;if(flat.includes(name.replace(/[^a-z0-9]/g,'')))sc+=10;
+    for(const w of words)for(const n of nw){if(w===n)sc+=4;else if(n.startsWith(w)||w.startsWith(n))sc+=2;else if(w.length>=4&&lev(w,n)<=1)sc+=2}
+    for(const al of (ALIAS[p.id]||[]))if(q.includes(al))sc+=6;
+    return [p,sc]}).filter(x=>x[1]>=2).sort((a,b)=>b[1]-a[1]);
+  if(!scored.length)return [];const top=scored[0][1];
+  return scored.filter(x=>x[1]>=Math.max(2,top-3)).map(x=>x[0]);
+}
+const fromPrice=p=>{const s=p.sizes.filter(x=>!x.na).map(x=>(p.sale&&p.sale[x.label])||x.price);return Math.min(...s)};
+const pLine=p=>`<b>${esc(p.name)}</b>${p.status==='out'?' · <span style="color:var(--red)">sold out right now</span>':p.stock<5?` · only ${p.stock} left`:''}<br>${priceLine(p)}`;
+function basketInfo(){
+  const lines=S.cart.map(c=>{const p=byId(c.pid);if(!p)return null;const pr=priceOf(p,c.size);return {p,c,sum:pr.now*c.qty}}).filter(Boolean);
+  return {lines,total:lines.reduce((a,l)=>a+l.sum,0),count:lines.reduce((a,l)=>a+l.c.qty,0)};
+}
+function basketReply(lead){
+  const b=basketInfo();
+  if(!b.count)return {t:(lead||'')+'Your basket is empty right now. Tell me what you need, like <b>“add Milo”</b>, and I’ll put it in for you.',btn:chip('What’s popular?','What do you recommend?')+chip('Combo prices')};
+  const short=MIN-b.total;
+  return {t:(lead||'')+`<b>Your basket</b> (${b.count} item${b.count>1?'s':''})<br>${b.lines.slice(0,6).map(l=>`${esc(l.p.name)}${l.c.size!=='Package'?' '+esc(l.c.size):''} × ${l.c.qty}: <b>${naira(l.sum)}</b>`).join('<br>')}${b.lines.length>6?`<br>…and ${b.lines.length-6} more`:''}<br><br>Subtotal: <b>${naira(b.total)}</b>. ${short>0?`Add <b>${naira(short)}</b> more to reach the ${naira(MIN)} minimum for delivery.`:'Delivery is worked out at checkout from your address.'}`,
+    btn:`<button data-go="cart">View basket</button>${short>0?chip('Suggest something','What do you recommend?'):'<button data-go="checkout">Checkout</button>'}`};
+}
+function etaText(z){const e=etaDays(z.km||0,!!z.state);return `${e[0]===e[1]?e[0]:e[0]+'–'+e[1]} day${e[1]>1?'s':''}`}
+function botSmart(raw){
+  const q=raw.toLowerCase().replace(/[’']/g,"'").replace(/\s+/g,' ').trim(),has=re=>re.test(q);
+  if(has(WANTS_HUMAN))return 'HUMAN';
+
+  // someone typing a secret into the chat
+  if(has(/\b(pin|otp|password|passcode|bvn|cvv)\b/)&&has(/\d{4,}|\bis\b.{1,30}\d/))return {t:'Please don’t share PINs, codes, passwords or card details here, even with us. Tiada will never ask for them. If you typed one by mistake, nothing has been saved by me, but change it with your bank if it’s a bank PIN.'};
+
+  // forgot password / can't sign in / code not arriving
+  if(has(/\b(forgot|forget|forgotten|reset|recover|lost|change|remember)\b.{0,25}\b(password|pass ?word|passcode|login|log ?in|sign ?in|account)\b|\bpassword\b|can'?t (sign|log) ?in|cannot (sign|log) ?in|unable to (sign|log) ?in|locked out|(code|otp)\b.{0,25}\b(not|never|didn'?t|isn'?t|hasn'?t)\b.{0,15}\b(come|coming|arrive|arriving|receive|received|deliver|work|working)|(didn'?t|did not|haven'?t|not) (get|got|gotten|receive|received|see) (the |my |a |any )?(code|otp)|\bno (code|otp)\b|wrong code|code (is )?(wrong|expired|invalid)/))
+    return {t:'Good news: <b>there’s no password at Tiada</b>, so there’s nothing to reset.<br><br>To sign in, go to <b>Account → Sign in</b>, enter your email, and we email you a fresh <b>6-digit code</b>. Then:<br>1. Check <b>spam</b> or <b>promotions</b> for an email from tiadamarketplace.com.<br>2. Make sure the email is spelt right.<br>3. Wait 30 seconds, then tap <b>Resend code</b>. Only the newest code works, and it lasts 10 minutes.<br><br>If you no longer have that email, our team can move your account after checking it’s you.',
+      btn:'<button data-go="account">Go to sign in</button>'+PERSON_BTN};
+  if(has(/\b(sign ?in|signin|log ?in|login|register|sign ?up|signup|create (an |my )?account|open (an )?account)\b/))
+    return {t:S.user?`You’re already signed in as <b>${esc(S.user.email)}</b>. Your orders, saved addresses and messages are in <b>Account</b>.`:'Tap <b>Account</b>, enter your email, and we email you a <b>6-digit code</b>. No password needed. New here? Pick <b>Create account</b> and it takes under a minute.',btn:'<button data-go="account">Go to Account</button>'};
+
+  // order emails not arriving
+  if(has(/(didn'?t|did not|haven'?t|not|never|no)\b.{0,20}\b(get|got|receive|received|see|seen)?\b.{0,15}\b(e-?mail|mail|receipt|confirmation|notification)s?\b|\bno (e-?mail|receipt|confirmation)\b|where is my (e-?mail|receipt)|\b(e-?mail|mail|receipt|confirmation)s?\b.{0,20}\b(didn'?t|did not|not|never|hasn'?t|haven'?t|isn'?t)\b.{0,12}\b(come|coming|arrive|arriving|show|showing|reach|received|sent)/))
+    return {t:`Every order email also lands in your <b>Account → Inbox</b>${S.user?'':' once you’re signed in'}, so nothing gets lost.<br><br>For the email itself, check spam or promotions for <b>tiadamarketplace.com</b>, and add it to your contacts so the next ones land in your inbox.${S.user?` We send to <b>${esc(S.user.email)}</b>.`:''}`,
+      btn:(S.user?'<button data-inbox="1">Open my inbox</button>':'<button data-go="account">Sign in</button>')+PERSON_BTN};
+
+  // changing name, phone, addresses
+  if(has(/\b(change|update|edit|correct|fix|add|save|set|remove|delete)\b.{0,25}\b(name|phone|number|address|addresses|details|profile|landmark|default)\b|\bmy details\b|\baddress book\b|\bdefault address\b/)&&!has(/\b(order|orders)\b.{0,10}\b(address)\b/))
+    return S.user?{t:'You can change your <b>name, phone number and saved addresses</b> any time. Your default address fills in checkout for you, so you won’t have to type it again.',btn:'<button data-accgo="profile">My details</button><button data-accgo="addresses">Address book</button>'}
+      :{t:'Sign in first, then open <b>Account → My details</b> to set your name, phone and delivery address. Checkout will fill them in for you after that.',btn:'<button data-go="account">Sign in</button>'};
+  if(has(/\b(order|orders)\b.{0,15}\b(address|wrong address)\b|\bchange (the )?(delivery )?address\b/))
+    return {t:'For an order you’ve already paid for, a team member has to change the address before it’s dispatched. Send us your TD code and the new address.',btn:PERSON_BTN};
+
+  // my orders
+  if(has(/\b(my orders|order history|past orders|previous orders|recent orders|all orders|what did i (buy|order)|my last order|my purchases)\b/)){
+    if(!S.user)return {t:'Sign in to see all your orders in one place. Or send me a TD code (like <b>TD-84920</b>) and I’ll look it up.',btn:'<button data-go="account">Sign in</button><button data-go="track">Track an order</button>'};
+    if(!S.orders.length)return {t:'You haven’t placed an order yet. Want some ideas?',btn:chip('What’s popular?','What do you recommend?')+chip('Combo prices')};
+    return {t:`Your recent orders:<br>${S.orders.slice(0,4).map(o=>`<b>${o.id}</b> · ${naira(o.total)} · ${esc((STATUS[o.status]||[o.status])[0])}`).join('<br>')}`,btn:S.orders.slice(0,2).map(o=>`<button data-track="${o.id}">Track ${o.id}</button>`).join('')+'<button data-accgo="orders">All orders</button>'};
+  }
+
+  // add to basket
+  if(has(/\b(add|put|include|throw in|i want|i need|i'?ll take|buy|get me|give me)\b/)&&!has(/\bhow (do|can|to)\b/)){
+    const ps=findProducts(q).filter(p=>!p.items||has(/\b(combo|package|bundle)\b/)||findProducts(q).length===1);
+    if(ps.length){
+      const p=ps[0];
+      if(ps.length>1&&!q.includes(p.name.toLowerCase()))return {t:`Which one did you mean?`,btn:ps.slice(0,4).map(x=>chip(x.name,'add '+x.name)).join('')};
+      if(p.status==='out')return {t:`Sorry, <b>${esc(p.name)}</b> is sold out right now.`,btn:findProducts(p.cat||'').length?'':'<button data-cat="all-sale">See what’s in stock</button>'};
+      const m=q.match(/\b(\d{1,2})\s*(x|pcs|pieces|packs|tins|of)?\s*(?=[a-z])/)||q.match(/\bx\s*(\d{1,2})\b/);
+      const n=Math.max(1,Math.min(10,m?+m[1]:1));
+      for(let i=0;i<n;i++)addToCart(p.id);
+      const size=sizeOf(p);
+      return basketReply(`Done. I added <b>${n} × ${esc(p.name)}${size!=='Package'?' '+esc(size):''}</b> (${naira(priceOf(p,size).now)} each). Want a different size? Open the product to switch.<br><br>`);
+    }
+  }
+  if(has(/\b(my |the )?(basket|cart|trolley)\b/)&&!has(/\bhow\b/))return basketReply();
+
+  // delivery time
+  const z=zoneFor(q);
+  if(has(/\b(how long|how many days|how soon|when will|when would|when can|delivery time|delivery days|days|arrive|reach me|get to me|take to deliver|time frame|timeline|fast)\b/)&&!has(/\b(td-?\s?\d{5})\b/)){
+    if(z)return {t:`To <b>${esc(z.state||z.label.split(',')[0])}</b> it usually takes about <b>${etaText(z)}</b> after your order is packed and sent out. That’s an estimate, not a promise: traffic and our delivery partners can change it.<br><br>Delivery there starts from <b>${naira(z.fee)}</b>. You’ll get the rider or courier and a tracking number by email as soon as it leaves our hub.`};
+    return {t:'It depends on how far you are from our Ojota hub in Lagos. As a rough guide after dispatch:<br>Lagos: about <b>1–2 days</b><br>South-West: about <b>1–3 days</b><br>Most other states: about <b>2–5 days</b><br>Far North: up to about <b>7 days</b><br><br>These are estimates, not promises. Tell me your state or area and I’ll narrow it down.'};
+  }
+
+  // recommendations and budgets
+  const bud=q.match(/(?:under|below|less than|within|budget( of| is)?|have|only|for)\s*₦?\s*(\d[\d,.]*)\s*(k|thousand)?/);
+  if(bud||has(/\b(recommend|recommendation|suggest|suggestion|what should i (buy|get)|best ?sellers?|popular|fast selling|trending|what'?s good|what do people buy|ideas?)\b/)){
+    let max=bud?parseFloat(bud[2].replace(/,/g,''))*(bud[3]?1000:1):0;if(max&&max<100)max*=1000;
+    let list=ALL.filter(p=>!p.hidden&&p.status!=='out');
+    if(max)list=list.filter(p=>fromPrice(p)<=max).sort((a,b)=>fromPrice(b)-fromPrice(a));
+    else list=list.sort((a,b)=>(b.status==='fast')-(a.status==='fast')||(!!b.sale)-(!!a.sale));
+    if(has(/\b(breakfast|cereal|kids|children)\b/))list=list.filter(p=>['cereal','milk','grain','ccombo'].includes(p.cat)||(p.items&&CEREAL_COMBOS.includes(p)));
+    if(has(/\b(foodstuff|food|rice|student|hostel)\b/))list=list.filter(p=>FOOD_COMBOS.includes(p)||!['cereal','milk'].includes(p.cat));
+    list=list.slice(0,5);
+    if(!list.length)return {t:`I couldn’t find anything${max?` under ${naira(max)}`:''} in stock right now. Our <b>Emergency Combo</b> is usually the cheapest full pack.`,btn:'<button data-cat="fcombo">Foodstuff combos</button>'};
+    return {t:`${max?`Good picks within <b>${naira(max)}</b>`:'Popular with our customers right now'}:<br>${list.map(p=>`<b>${esc(p.name)}</b> from ${naira(fromPrice(p))}${p.status==='fast'?' · fast selling':''}${p.sale?' · on sale':''}`).join('<br>')}<br><br>Say <b>“add”</b> and a name and I’ll put it in your basket.`,
+      btn:list.slice(0,3).map(p=>`<button data-open="${p.id}">View ${esc(p.name)}</button>`).join('')};
+  }
+
+  // contact
+  if(has(/\b(whatsapp|phone number|your number|call (you|tiada)|contact|email address|your email|reach (you|tiada)|tiktok|instagram|social)\b/))
+    return {t:'You can reach Tiada on:<br>WhatsApp: <b>08075110000</b><br>Email: <b>care@tiadamarketplace.com</b><br>TikTok: <b>@tiadamarketplace</b><br>Hub: Ojota Logistics Hub, Ikorodu Road, Lagos<br><br>Or I can bring a team member into this chat.',btn:'<a href="https://wa.me/2348075110000" target="_blank" rel="noopener" class="cbtn-a">Open WhatsApp</a>'+PERSON_BTN};
+
+  // vouchers
+  if(has(/\b(voucher|coupon|promo code|discount code)\b/)&&has(/\b(use|apply|enter|where|how|work|not working|invalid)\b/))
+    return {t:'Enter your voucher code in the <b>basket</b>, under the items, and tap Apply. The discount shows before you pay. If it says the code isn’t valid, it may have expired or need a minimum spend.',btn:'<button data-go="cart">Open basket</button>'};
+  return null;
+}
+function botAnswer(raw){
+  const r=botSmart(raw);
+  if(r){if(r!=='HUMAN')botMiss=0;return r}
+  // the older answers (prices, combos, fees, payment…) without their over-eager "talk to a person" trigger
+  const soft=raw.replace(/\b(people|someone|somebody|staff|admin|rep|person)\b/gi,'');
+  let b=botAnswerBase(soft);
+  if(b==='HUMAN')b=null;
+  if(b&&!/not completely sure/.test(b.t)){botMiss=0;return b}
+  const q=raw.toLowerCase(),ps=findProducts(q);
+  if(ps.length){botMiss=0;const show=ps.slice(0,3);
+    return {t:(ps.length===1?'Here’s what I found:<br>':'Did you mean one of these?<br>')+show.map(pLine).join('<br><br>')+'<br><br>Say <b>“add '+esc(show[0].name)+'”</b> and I’ll put it in your basket.',
+      btn:show.filter(p=>p.status!=='out').slice(0,2).map(p=>`<button data-open="${p.id}">View ${esc(p.name)}</button>`).join('')+(show[0].status!=='out'?chip('Add '+show[0].name,'add '+show[0].name):'')}}
+  botMiss++;
+  if(botMiss>=2)return {t:'Sorry, I’m still not getting it. A person from our team can help with this one, or try one of these:',btn:PERSON_BTN+chip('Delivery fees')+chip('Track my order')+chip('My basket')};
+  return {t:'I didn’t quite catch that. Could you say it another way? I can help with:<br>• prices, sizes and combos<br>• delivery fees and how long it takes<br>• your basket (“add Milo”) and checkout<br>• tracking an order with its TD code<br>• payment, refunds and signing in',
+    btn:chip('Popular items','What do you recommend?')+chip('Delivery fees')+chip('Can’t sign in')+PERSON_BTN};
+}
 async function pollChat(){
   const s=chatSess();if(!s||CH.mode==='ended'||CH.mode==='bot')return;
   try{const r=await api(`/api/chat?id=${s.id}&token=${s.token}&after=${lastMsgId}`);
@@ -506,6 +649,11 @@ function urlFor(r){
   if(/[?&]test=1\b/.test(location.search))q.set('test','1');
   const qs=q.toString();return base+(qs?'?'+qs:'');
 }
+/* A page change goes straight to the real load: the overlay shows at once and the new page
+   appears the moment the browser has it. In-page views (no network) only flash the overlay briefly. */
+function go(r){const url=urlFor(r);if(url&&url!==location.pathname+location.search&&r!=='pay'&&r!=='success'){closeModal();hideTip();ldText(ROUTE_L[r]||'Loading','');goNow(r);return}goBase(r)}
+function withLoad(kind,fn,ms,label,sub){return withLoadBase(kind,fn,Math.min(ms||650,220),label,sub)}
+function loading(msg,sub,ms){return loadingBase(msg,sub,Math.min(ms||900,220))}
 let NAV_AWAY=false,hideT=null;
 function hideLoader(){const L=$('#loader');if(L.hidden||NAV_AWAY)return;L.classList.add('out');clearTimeout(hideT);hideT=setTimeout(()=>{if(NAV_AWAY)return;L.hidden=true;L.classList.remove('out')},200)}
 function goNow(r){
@@ -513,6 +661,8 @@ function goNow(r){
   if(url&&url!==location.pathname+location.search){
     NAV_AWAY=true;clearTimeout(hideT);save();
     const L=$('#loader');L.classList.remove('out');if(L.hidden){ldText(ROUTE_L[r]||'Loading','')}L.hidden=false;
+    // the next page picks up this same overlay, so it's one continuous loading screen, not two
+    try{sessionStorage.setItem('tiada_nav',JSON.stringify({m:$('#ld-msg').textContent,s:$('#ld-sub').textContent,t:Date.now()}))}catch(_){}
     window.__tiadaLeaving=true;if(window.__tiadaStopFrame)window.__tiadaStopFrame();
     setTimeout(()=>location.assign(url),0);return;
   }
@@ -533,7 +683,10 @@ function routeFromUrl(){
 
 /* ---------- start up ---------- */
 async function boot(){
-  const L=$('#loader');$('#ld-msg').textContent='Loading fresh stock';$('#ld-sub').textContent='Getting today’s prices';L.hidden=false;
+  const L=$('#loader');
+  if(!L.classList.contains('cont')){$('#ld-msg').textContent='Loading fresh stock';$('#ld-sub').textContent='Getting today’s prices'}
+  try{sessionStorage.removeItem('tiada_nav')}catch(_){}
+  L.hidden=false;
   try{
     await Promise.all([loadCatalog(),loadAccount().catch(()=>{})]);
     catalogStamp='';checkFresh();setInterval(checkFresh,120000);
@@ -544,7 +697,8 @@ async function boot(){
     if(h.startsWith('#track-')){S.track={code:h.slice(7),last4:'',res:null,err:''};S.route='track'}
     else if(h==='#account'||h==='#reviews'){S.route='account';if(h==='#reviews'&&S.user)S.accView='reviews'}
   }catch(e){toast('We couldn’t load the store. Check your connection and refresh.')}
-  hideLoader();render();netState();
+  render();netState();
+  requestAnimationFrame(()=>{hideLoader();setTimeout(()=>L.classList.remove('cont'),300)});
 }
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},go,render,save,openChat};
 boot();

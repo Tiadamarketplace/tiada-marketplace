@@ -127,6 +127,33 @@ with sync_playwright() as p:
     pg.evaluate("T.S.accView='inbox';T.render()"); pg.wait_for_timeout(800)
     assert 'Order confirmed' in pg.content()
 
+    # one continuous loading screen between pages
+    pg.evaluate("T.go('catalog')"); pg.wait_for_url('**/catalog**', timeout=8000); pg.wait_for_load_state('domcontentloaded')
+    msg = pg.text_content('#ld-msg'); print('loader on new page:', msg)
+    assert msg != 'Loading fresh stock', 'second loading screen appeared'
+    ready()
+
+    # the assistant helps on the page
+    pg.evaluate("T.S.cart=[];T.save();T.openChat()"); pg.wait_for_timeout(3500)
+    def ask(q, want, wait=6000):
+        n = pg.evaluate("T.S.chat.length")
+        pg.fill('#chat-text', q); pg.press('#chat-text', 'Enter')
+        pg.wait_for_function(f"T.S.chat.length>={n+2} && !document.querySelector('#chat .typing')", timeout=wait); pg.wait_for_timeout(1500)
+        last = pg.evaluate("T.S.chat[T.S.chat.length-1].t")
+        assert want.lower() in last.lower(), (q, last[:300])
+        print('Q:', q, '->', last[:90].replace('<br>', ' '))
+    ask('I forgot my password', 'no password')
+    ask('add 2 milo', 'added')
+    assert pg.evaluate("T.S.cart.reduce((a,c)=>a+c.qty,0)") == 2
+    ask('how many days to deliver to Abuja', 'day')
+    ask('what do you recommend under 5k', 'within')
+    ask('cornflaks', 'cornflakes')
+    ask('my email didnt come', 'inbox')
+    ask('blorptastic zzz', 'didn’t quite catch')
+    assert pg.evaluate("T.S.chat.every(m=>m.who!=='sys')"), 'should not hand over unless asked'
+    pg.screenshot(path=str(OUT / 't8a_bot.png'))
+    pg.evaluate("T.S.cart=[];T.save()")
+
     # chat hand-over
     pg.evaluate("T.openChat()"); pg.wait_for_timeout(1500)
     pg.wait_for_timeout(3500); pg.fill('#chat-text', 'person'); pg.press('#chat-text', 'Enter'); pg.wait_for_timeout(5000)

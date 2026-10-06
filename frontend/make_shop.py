@@ -57,6 +57,15 @@ HEAD = '''<!doctype html>
 .au2-code{height:60px!important;font-size:28px!important;font-weight:800!important;letter-spacing:.55em!important;text-align:center}
 .au2-c{text-align:center;margin:10px 0 0}
 .au2-switch{text-align:center;margin:16px 0 0;font-size:14px;color:var(--muted)}
+.au2-help{margin:14px 0 0;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff)}
+.au2-help summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:700;font-size:14px;color:var(--green,#0B3A23);display:flex;align-items:center;gap:8px}
+.au2-help summary::-webkit-details-marker{display:none}
+.au2-help summary::after{content:'+';margin-left:auto;font-weight:800;color:var(--muted)}
+.au2-help[open] summary::after{content:'–'}
+.au2-help ol{margin:0;padding:0 16px 4px 34px;font-size:13.5px;line-height:1.55;color:var(--ink,#26332B)}
+.au2-help ol li{margin:0 0 8px}
+.au2-help .au2-hbtns{display:flex;flex-wrap:wrap;gap:8px;padding:4px 14px 14px}
+.au2-help .au2-hbtns .btn{flex:1;min-width:140px;height:40px;font-size:13px}
 .au2-back{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--green);font:inherit;font-weight:700;font-size:13px;padding:0 0 12px;cursor:pointer}
 @media (max-width:760px){.au2{grid-template-columns:minmax(0,1fr);border-radius:20px;margin-top:0}
  .au2-side{padding:22px 20px;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px}
@@ -184,6 +193,16 @@ sub('<header class="hdr">', '<style>/* Halo loader: no card, logo floats on fros
 
 # real page loads: every page has its own address, so the browser's own loading shows on each change
 sub("function goNow(r){", "function goNowBase(r){")
+# page-to-page: the new page shows the same loading message straight away (no second overlay popping in)
+sub('<small id="ld-sub">Getting today’s prices</small></div></div>\n', '<small id="ld-sub">Getting today’s prices</small></div></div>\n<script>(function(){try{var n=JSON.parse(sessionStorage.getItem("tiada_nav")||"null");if(n&&Date.now()-n.t<20000){var L=document.getElementById("loader");L.classList.add("cont");document.getElementById("ld-msg").textContent=n.m||"Loading";document.getElementById("ld-sub").textContent=n.s||""}}catch(e){}})()</script>\n<style>.loader.cont,.loader.cont .ld-card,.loader.cont .ld-mark{animation-name:none!important}.loader.cont .ld-mark::before{animation-name:haloSpin!important}.loader.cont .ld-mark img{animation-name:haloBreathe!important}</style>\n')
+sub("function botAnswer(raw){", "function botAnswerBase(raw){")
+# no fixed waits: page changes start loading at once, in-page views only show the overlay briefly
+sub("function go(r){if(r===S.route", "function goBase(r){if(r===S.route")
+sub("function withLoad(kind,fn,ms,label,sub){", "function withLoadBase(kind,fn,ms,label,sub){")
+sub("function loading(msg,sub,ms){", "function loadingBase(msg,sub,ms){")
+sub("const QUICK=['Delivery fees','Combo prices','Track my order','How do I pay?','Refunds','Talk to a person'];",
+    "const QUICK=['Track my order','My basket','Delivery fees','How long is delivery?','Combo prices','Popular items','How do I pay?','Can’t sign in','Refunds','Talk to a person'];")
+sub(".cbtns button{", ".cbtns a{border:1px solid var(--green);background:#fff;color:var(--green);border-radius:999px;padding:6px 10px;font-weight:700;font-size:12px;text-decoration:none}\n.cbtns button{")
 sub("withLoad(v==='menu'?'menu':'list',()=>{S.accView=v;S.showData=false;render()}", "withLoad(v==='menu'?'menu':'list',()=>{S.accView=v;S.showData=false;goNow('account')}")
 
 # ---------- plug in the live layer ----------
@@ -197,5 +216,5 @@ for bad in ['__ICON__', '__FULL__', '__PHOTO', 'Prototype', 'Ruka', 'TD-84902']:
 s = s.rstrip() + '\n</html>\n' if '</html>' not in s else s
 out = here.parent / 'public' / 'shop.html'
 out.write_text(s)
-(here / 'check_shop.js').write_text(re.search(r'<script>(.*)</script>', s, re.S).group(1))
+(here / 'check_shop.js').write_text(max(re.findall(r'<script>(.*?)</script>', s, re.S), key=len))
 print('built', out, len(s) // 1024, 'KB')
