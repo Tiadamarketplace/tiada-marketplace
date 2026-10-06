@@ -1166,6 +1166,20 @@ html.sb-on::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#14532F,#0
 </style>
 
 
+<style>/* Halo loader: no card, logo floats on frosted glass with a gold arc circling it */
+.loader{background:rgba(251,249,244,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.3)!important;backdrop-filter:blur(14px) saturate(1.3)!important}
+.ld-card{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;gap:3px!important;animation:haloIn .3s ease-out}
+.ld-mark{width:104px!important;height:104px!important;margin-bottom:12px!important}
+.ld-mark img{width:52px!important;filter:drop-shadow(0 6px 14px rgba(11,58,35,.25));animation:haloBreathe 1.6s ease-in-out infinite!important}
+.ld-mark::before{border:0!important;background:conic-gradient(from 0deg,transparent 0 62%,#D49B41 92%,transparent 100%);-webkit-mask:radial-gradient(circle,transparent 48px,#000 49px);mask:radial-gradient(circle,transparent 48px,#000 49px);animation:haloSpin 1s linear infinite!important}
+.ld-card b{font-size:15.5px!important;color:#0B3A23!important;font-weight:700}
+.ld-card small{color:#4F6357!important}
+.loader.out .ld-card{transform:scale(.96)}
+@keyframes haloSpin{to{transform:rotate(360deg)}}
+@keyframes haloBreathe{50%{transform:scale(1.07)}}
+@keyframes haloIn{from{opacity:0;transform:translateY(6px) scale(.96)}}
+@media (prefers-reduced-motion:reduce){.loader *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
 <header class="hdr">
   <div class="hdr-in">
     <button class="brand" data-go="home" aria-label="Tiada Marketplace home" data-tip="Back to homepage">
