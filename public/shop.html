@@ -1377,7 +1377,7 @@ function card(p){
     <div class="pc-b">
       <h4>${esc(p.name)}</h4>
       <span class="pc-sub">${esc(sub)}</span>
-      <span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>
+      ${rt.n?`<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>`:`<span class="pc-rt num"><i>New</i></span>`}
       <div class="pc-pr num"><b>${naira(pr.now)}</b></div><span class="pc-was num">${pr.was?`<s>${naira(pr.was)}</s>`:'&nbsp;'}</span>
       ${p.stock<5&&!out?`<div class="pc-stock" aria-hidden="true"><i style="width:${p.stock*12}%"></i></div><span class="pc-left">Only ${p.stock} left</span>`:''}
     </div>
@@ -1653,7 +1653,7 @@ function wishRow(p,mode){
   return `<article class="wrow">
     <div class="wtop"><button class="wimg" data-open="${p.id}" aria-label="View ${esc(p.name)}" data-tip="View details">${art(p)}${out?'<div class="mask" style="border-radius:14px"><span style="font-size:10px">SOLD OUT</span></div>':''}</button>
       <div style="min-width:0"><h4>${esc(p.name)}</h4>
-        <div class="meta">${p.sizes.length>1?`${size==='1 paint'?'1 paint bucket':size} · `:''}<span class="stars">★</span> ${rt.avg.toFixed(1)} (${rt.n})</div>
+        <div class="meta">${p.sizes.length>1?`${size==='1 paint'?'1 paint bucket':size} · `:''}${rt.n?`<span class="stars">★</span> ${rt.avg.toFixed(1)} (${rt.n})`:'New'}</div>
         <div class="wprice num"><b>${naira(pr.now)}</b>${pr.was?`<span class="off">-${Math.round((1-pr.now/pr.was)*100)}%</span><s>${naira(pr.was)}</s>`:''}</div>
         ${p.stock<5&&!out?`<span class="urgent">Only ${p.stock} left!</span>`:''}
       </div></div>
@@ -2097,7 +2097,7 @@ function openProductSync(id){
     </div>
     ${rel.length?`<div class="sec-h"><h2>Customers also viewed</h2></div><div class="rail">${rel.map(r=>`<div class="mini"><button data-open="${r.id}" style="border:0;background:none;padding:0;width:100%;text-align:left"><div class="im">${art(r)}</div><b>${esc(r.name)}</b><span class="num">${naira(priceOf(r,sizeOf(r)).now)}</span></button>${r.status!=='out'?`<button class="plus" data-add="${r.id}" aria-label="Add ${esc(r.name)}" data-tip="Quick add">+</button>`:''}</div>`).join('')}</div>`:''}
     <div class="sec-h"><h2>Ratings &amp; reviews</h2><span class="hint">From verified buyers</span></div>
-    <div class="rev-sum" style="flex-wrap:wrap"><span class="big num">${rt.avg.toFixed(1)}</span><span style="flex:1;min-width:120px"><span class="stars">${starStr(rt.avg)}</span><br><span class="hint num">${rt.avg.toFixed(1)} / 5 from ${rt.n} reviews</span></span>
+    <div class="rev-sum" style="flex-wrap:wrap"><span class="big num">${rt.avg.toFixed(1)}</span><span style="flex:1;min-width:120px"><span class="stars">${starStr(rt.avg)}</span><br><span class="hint num">${rt.n?rt.avg.toFixed(1)+' / 5 from '+rt.n+' review'+(rt.n>1?'s':''):'No reviews yet'}</span></span>
       ${mine?'<span class="pill done">You reviewed this</span>':can?`<button class="btn" style="width:auto;margin:0;padding:0 18px;height:42px" data-review="${p.id}">★ Write a review</button>`:`<button class="btn ghost is-off" style="width:auto;margin:0;padding:0 16px;height:42px" data-act="needbuy" data-tip="Only customers who bought and received this item can review it">Write a review</button>`}</div>
     ${!can&&!mine?'<p class="hint" style="margin:6px 2px 0">Reviews come only from verified buyers, so you can trust what you read.</p>':''}
     ${revs.map(r=>`<div class="rev"><div class="who"><span>${esc(r.name)}${r.area?' · '+esc(r.area):''}${r.mine?'<span class="mine">Your review</span>':''}</span><span class="stars" aria-label="${r.stars} out of 5">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span></div><span class="ver">✓ Verified Purchaser</span>${r.date?` <span class="hint">· ${esc(r.date)}</span>`:''}<p>${esc(r.text)}</p>${r.mine?`<button class="del" data-delrev="${p.id}">Delete my review</button>`:''}</div>`).join('')}

@@ -119,6 +119,11 @@ sub('<p class="demo">A copy of this chat is in your Inbox.</p>', '<p class="demo
 
 sub("const code=(n.body.match(/TD-\\d{5}/)||[])[0]", "const code=(n.body.match(/TD-\\d{5,9}/)||[])[0]")
 
+# products with no reviews yet say "New" instead of 0.0 (0)
+sub('<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>', '${rt.n?`<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>`:`<span class="pc-rt num"><i>New</i></span>`}')
+sub("<span class=\"stars\">★</span> ${rt.avg.toFixed(1)} (${rt.n})</div>", "${rt.n?`<span class=\"stars\">★</span> ${rt.avg.toFixed(1)} (${rt.n})`:'New'}</div>")
+sub("${rt.avg.toFixed(1)} / 5 from ${rt.n} reviews", "${rt.n?rt.avg.toFixed(1)+' / 5 from '+rt.n+' review'+(rt.n>1?'s':''):'No reviews yet'}")
+
 # ---------- plug in the live layer ----------
 sub("render();netState();\nsetTimeout(hideLoader,900);\n})();", live.rstrip() + "\n})();")
 
