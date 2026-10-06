@@ -1,24 +1,20 @@
-/* ---------- native browser loading: whenever our loading overlay shows, the browser's own
-   loading indicator (tab spinner / progress bar) runs too, and stops when the overlay hides.
-   Uses the Navigation API (Chrome, Edge, Samsung Internet, Opera, newer Safari); other browsers just show our overlay. */
+/* ---------- native browser loading: while our loading overlay is on screen, a hidden frame keeps
+   loading, so the browser's own indicator (tab spinner, mobile progress bar, stop button) runs too.
+   It stops the moment the overlay hides. Works in Chrome, Edge, Safari, Firefox and Samsung Internet. */
 (function(){
-  const L=document.getElementById('loader');
-  if(!L||!window.navigation||typeof navigation.navigate!=='function')return;
-  let finish=null,running=false;
-  const shown=()=>!L.hidden;
-  navigation.addEventListener('navigate',e=>{
-    if(e.info!=='tiada-loading'||!e.canIntercept)return;
-    e.intercept({scroll:'manual',focusReset:'manual',handler:()=>new Promise(res=>{
-      finish=res;if(!shown())res();
-      setTimeout(res,20000); // never spin forever
-    })});
-  });
+  const L=document.getElementById('loader');if(!L)return;
+  let fr=null,guard=null;
+  const shown=()=>!L.hidden&&!L.classList.contains('out');
   function start(){
-    if(running)return;running=true;
-    try{const r=navigation.navigate(location.href,{history:'replace',info:'tiada-loading'});
-      Promise.resolve(r&&r.finished).catch(()=>{}).then(()=>{running=false;finish=null;if(shown())start()})}
-    catch(_){running=false}
+    if(fr)return;
+    fr=document.createElement('iframe');
+    fr.setAttribute('aria-hidden','true');fr.tabIndex=-1;fr.title='';
+    fr.style.cssText='position:fixed;left:-10px;top:-10px;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+    fr.src='/api/hold?t='+Date.now();
+    document.body.appendChild(fr);
+    clearTimeout(guard);guard=setTimeout(stop,24000);
   }
-  new MutationObserver(()=>{if(shown())start();else if(finish){finish();}}).observe(L,{attributes:true,attributeFilter:['hidden']});
+  function stop(){clearTimeout(guard);if(!fr)return;const f=fr;fr=null;try{f.src='about:blank'}catch(_){}f.remove()}
+  new MutationObserver(()=>{shown()?start():stop()}).observe(L,{attributes:true,attributeFilter:['hidden','class']});
   if(shown())start();
 })();

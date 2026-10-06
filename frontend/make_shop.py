@@ -125,7 +125,7 @@ resub(r"\nsetInterval\(\(\)=>\{if\(S\.user&&Date\.now\(\)-lastAct>15\*60\*1000\)
 # refresh pill: shown by the real "new stock" check (live layer), and it really reloads the catalogue
 resub(r"\nsetInterval\(\(\)=>\{const f=\$\('#fresh'\);if\(f\.classList\.contains\('show'\)\)return;\n[^\n]*", '')
 sub("function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing the store','Getting the latest stock and prices',1100).then(()=>{",
-    "function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing the store','Getting the latest stock and prices',300).then(()=>loadCatalog().catch(()=>{})).then(()=>{")
+    "function doRefresh(){hideFresh();lastFresh=Date.now();busy('Refreshing the store','Getting the latest stock and prices',()=>loadCatalog().catch(()=>{})).then(()=>{")
 
 # the map shows an estimate: delivery partners don't share live GPS
 sub("<span class=\"live\">Live ${inter?'courier':'rider'} location</span>", "<span class=\"live\">Route to you</span>")

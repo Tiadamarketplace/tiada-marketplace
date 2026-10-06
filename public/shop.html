@@ -2601,7 +2601,7 @@ window.addEventListener('scroll',()=>{const y=window.scrollY,t=$('#tabs');if(!t)
 
 /* swipe the refresh pill up to dismiss it; a plain tap refreshes */
 (function(){const f=$('#fresh');let y0=null,dy=0,moved=false;
-  function doRefresh(){hideFresh();lastFresh=Date.now();loading('Refreshing the store','Getting the latest stock and prices',300).then(()=>loadCatalog().catch(()=>{})).then(()=>{if(['home','catalog','land','seeall','search'].includes(S.route))render();window.scrollTo({top:0,behavior:'smooth'});toast('You’re seeing the latest stock')})}
+  function doRefresh(){hideFresh();lastFresh=Date.now();busy('Refreshing the store','Getting the latest stock and prices',()=>loadCatalog().catch(()=>{})).then(()=>{if(['home','catalog','land','seeall','search'].includes(S.route))render();window.scrollTo({top:0,behavior:'smooth'});toast('You’re seeing the latest stock')})}
   f.addEventListener('pointerdown',e=>{y0=e.clientY;dy=0;moved=false;f.classList.add('drag')});
   window.addEventListener('pointermove',e=>{if(y0==null)return;dy=Math.min(0,e.clientY-y0);if(dy<-6)moved=true;if(moved){f.style.transform=`translate(-50%,${dy}px)`;f.style.opacity=String(Math.max(0,1+dy/80))}});
   const up=()=>{if(y0==null)return;f.classList.remove('drag');f.style.transform='';f.style.opacity='';
@@ -2648,6 +2648,17 @@ const api=async(path,opts={})=>{
   return j;
 };
 const errMsg=e=>(e&&e.message)||'Something went wrong. Please try again.';
+/* one overlay for the whole task: it stays up until the server has answered, then the page eases in */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function ldText(m,sub){$('#ld-msg').textContent=m;$('#ld-sub').textContent=sub||''}
+async function busy(msg,sub,fn){
+  const L=$('#loader');hideTip();L.classList.remove('out');ldText(msg,sub);L.hidden=false;
+  const bar=$('#topbar');if(bar){bar.className='';void bar.offsetWidth;bar.classList.add('go')}
+  const t0=Date.now();
+  try{return await fn()}
+  finally{const w=550-(Date.now()-t0);if(w>0)await sleep(w);if(bar)bar.classList.add('done');hideLoader()}
+}
+function land(fn){if(fn)fn();const v=$('#view');if(v){v.classList.remove('enter');void v.offsetWidth;v.classList.add('enter')}window.scrollTo(0,0)}
 let FEES={min:10000,lagosKg:50,interKg:400,van:3000,same:2500,express:3500,eco:1000},LAYOUT=[],TILES={},AISLES={},STORE={whatsapp:'08075110000'};
 const SHAPES={milk:['bottle','#2E6FB5'],cereal:['box','#C8462C'],grain:['pouch','#C9B48A'],ccombo:['basket','#D49B41'],fcombo:['sack','#C9A46C']};
 const CUSTOM_SHAPE={milo:['tin','#2F7D3A'],chocomalt:['tin','#6B3E22'],custard:['tin','#E2B829'],frosties:['box','#2B6CB0'],cocopops:['box','#7A4A2A'],moonstar:['box','#24356B'],fruitfiber:['box','#B5651D'],goldenmorn:['box','#E3A01E'],granola:['pouch','#8A5A2B']};
@@ -2752,13 +2763,15 @@ async function sendCode(){
 }
 async function doVerify(code){
   if(auth.busy)return;auth.busy=true;
-  try{await loading('Checking your code','Signing you in securely',500);
-    const r=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.mode==='signup'&&auth.name||undefined,phone:auth.mode==='signup'&&auth.phone?auth.phone.replace(/\D/g,''):undefined,promo_ok:auth.mode==='signup'?auth.promo:undefined}});
-    await loading('Loading your account','',300);await loadAccount();
-    auth={step:'email',mode:'signin',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
-    toast(`Welcome${r.isNew?'':' back'}, ${S.user.name.split(' ')[0]}`);
-    if(authNext){const f=authNext;authNext=null;render();f()}else render();
-  }catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus()}
+  let r;
+  try{r=await busy('Checking your code','Signing you in securely',async()=>{
+    const res=await api('/api/auth/verify',{body:{email:auth.email,code,name:auth.mode==='signup'&&auth.name||undefined,phone:auth.mode==='signup'&&auth.phone?auth.phone.replace(/\D/g,''):undefined,promo_ok:auth.mode==='signup'?auth.promo:undefined}});
+    ldText('Opening your account','Getting your orders and messages');await loadAccount();return res})}
+  catch(e){auth.busy=false;auth.err=errMsg(e);render();const i=$('#au-code');i&&i.focus();return}
+  auth={step:'email',mode:'signin',name:'',email:'',phone:'',agree:false,promo:false,err:'',resendAt:0,busy:false};
+  const next=authNext;authNext=null;
+  land(()=>{if(next){render();next()}else{S.accView='menu';S.route='home';S.cat='all';S.q='';render()}});
+  toast(`Welcome${r.isNew?'':' back'}, ${S.user.name.split(' ')[0]}`);
 }
 
 /* ---------- My details: name, phone, default address, email preferences ---------- */
@@ -2796,9 +2809,9 @@ S.co.name=S.co.name||'';
 function canPay(){return (S.co.name||'').trim().length>=2&&validEmail(S.co.email)&&validPhone(S.co.phone)&&validAddr(S.co.addr)&&deliveryFee().total!=null}
 async function createPay(){
   try{
-    const r=await api('/api/checkout',{body:{items:S.cart.map(c=>({pid:c.pid,size:c.size,qty:c.qty,swaps:c.swaps||[]})),email:S.co.email.trim(),name:S.co.name.trim(),phone:S.co.phone,address:S.co.addr.trim(),landmark:S.co.landmark||null,zone_id:S.co.zone,speed:S.co.speed,voucher:S.promo||null,note:S.co.swap||null,save_address:!!(S.user&&!S.co.addrId&&S.co.saveAddr)}});
+    const r=await busy('Creating your secure transfer account','A one-time account just for this order',()=>api('/api/checkout',{body:{items:S.cart.map(c=>({pid:c.pid,size:c.size,qty:c.qty,swaps:c.swaps||[]})),email:S.co.email.trim(),name:S.co.name.trim(),phone:S.co.phone,address:S.co.addr.trim(),landmark:S.co.landmark||null,zone_id:S.co.zone,speed:S.co.speed,voucher:S.promo||null,note:S.co.swap||null,save_address:!!(S.user&&!S.co.addrId&&S.co.saveAddr)}}));
     S.pay={id:r.order.id,ref:r.ref,total:r.order.total,acct:r.account,expires:Date.parse(r.account.expires_at)||Date.now()+30*60000,speed:r.order.speed};
-    store.set('pay',S.pay);go('pay');
+    store.set('pay',S.pay);land(()=>goNow('pay'));
   }catch(e){toast(errMsg(e))}
 }
 function vPay(){
@@ -3022,19 +3035,19 @@ document.addEventListener('submit',async e=>{
     const eOk=validEmail(auth.email),nOk=!up||auth.name.length>=2,pOk=!up||!auth.phone||validPhone(auth.phone),aOk=!up||auth.agree;
     $('#f-email').classList.toggle('bad',!eOk);if(up){$('#f-name').classList.toggle('bad',!nOk);$('#f-phone').classList.toggle('bad',!pOk);$('#agree-err').hidden=aOk}
     if(!eOk||!nOk||!pOk||!aOk){f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return}
-    try{await loading('Sending your code',`To ${auth.email}`,400);await sendCode();auth.step='code';render();const i=$('#au-code');i&&i.focus()}
+    try{await busy('Sending your code',`To ${auth.email}`,sendCode);auth.step='code';land(render);const i=$('#au-code');i&&i.focus()}
     catch(err){auth.err=errMsg(err);render()}
     return}
   if(id==='auth-code'){const code=($('#au-code').value||'').replace(/\D/g,'');if(code.length!==6){auth.err='Enter all 6 digits.';render();return}doVerify(code);return}
   if(id==='rev-form'){if(!revOk())return;const pid=draft.pid;
-    try{await loading('Posting your review','',500);await api('/api/reviews',{body:{pid,stars:draft.stars,text:draft.text.trim(),anon:draft.anon}});await fetchReviews(pid,true);openProductSync(pid);toast('Thanks! Your review will appear after a quick check.')}
+    try{await busy('Posting your review','',async()=>{await api('/api/reviews',{body:{pid,stars:draft.stars,text:draft.text.trim(),anon:draft.anon}});await fetchReviews(pid,true)});openProductSync(pid);toast('Thanks! Your review will appear after a quick check.')}
     catch(err){toast(errMsg(err))}
     return}
   if(id==='profile-form'){
     const name=$('#pf-name').value.trim(),phone=$('#pf-phone').value.replace(/\D/g,'');
     const nOk=name.length>=2,pOk=!phone||/^0[789][01]\d{8}$/.test(phone);
     $('#fp-name').classList.toggle('bad',!nOk);$('#fp-phone').classList.toggle('bad',!pOk);if(!nOk||!pOk)return;
-    try{await loading('Saving your details','',300);const r=await api('/api/me',{method:'PATCH',body:{name,...(phone?{phone}:{})}});
+    try{const r=await busy('Saving your details','',()=>api('/api/me',{method:'PATCH',body:{name,...(phone?{phone}:{})}}));
       Object.assign(S.user,{name:r.user.name,phone:r.user.phone||''});S.co.name=r.user.name;if(r.user.phone)S.co.phone=r.user.phone;save();render();toast('Your details are saved')}
     catch(err){toast(errMsg(err))}
     return}
@@ -3042,16 +3055,16 @@ document.addEventListener('submit',async e=>{
     const street=$('#ad-street').value.trim(),zone=$('#ad-zone').value;
     $('#fa-street').classList.toggle('bad',street.length<=5);$('#fa-zone').classList.toggle('bad',!zone);
     if(street.length<=5||!zone)return;
-    try{const r=await api('/api/me/addresses',{body:{label:$('#ad-label').value,street,landmark:$('#ad-landmark').value.trim()||null,zone_id:zone}});
+    try{const body={label:$('#ad-label').value,street,landmark:$('#ad-landmark').value.trim()||null,zone_id:zone};const r=await busy('Saving your address','',()=>api('/api/me/addresses',{body}));
       S.addresses.push({id:r.address.id,label:r.address.label,street:r.address.street,landmark:r.address.landmark||'',zone:r.address.zone_id});save();render();toast('Address saved')}
     catch(err){toast(errMsg(err))}
     return}
   if(id==='track-form'){
     const code=S.track.code.trim().toUpperCase(),l4=S.track.last4;
     if(!/^TD-\d{5,9}$/.test(code)||l4.length!==4){S.track.err='Enter a code like TD-84920 and the last 4 digits of your phone.';S.track.res=null;render();return}
-    try{await loading('Finding your order','',400);const r=await api('/api/track',{body:{code,last4:l4}});const o=mapOrder(r.order);S.orders=[o,...S.orders.filter(x=>x.id!==o.id)];S.track.code=code;S.track.res=o.id;S.track.err=''}
+    try{const r=await busy('Finding your order','',()=>api('/api/track',{body:{code,last4:l4}}));const o=mapOrder(r.order);S.orders=[o,...S.orders.filter(x=>x.id!==o.id)];S.track.code=code;S.track.res=o.id;S.track.err=''}
     catch(err){S.track.res=null;S.track.err=errMsg(err)}
-    render();return}
+    land(render);return}
 },true);
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,a,[data-act]');if(!t)return;const d=t.dataset,a=d.act;
@@ -3059,12 +3072,12 @@ document.addEventListener('click',e=>{
   if(a==='authback'){stop();auth.step='email';auth.err='';render();return}
   if(d.authmode){stop();auth.mode=d.authmode;auth.err='';render();return}
   if(a==='resend'){stop();sendCode().then(()=>{tickResend();toast('New code sent')}).catch(err=>toast(errMsg(err)));return}
-  if(a==='pay'){stop();loading('Creating your secure transfer account','A one-time account just for this order',300).then(createPay);return}
+  if(a==='pay'){stop();createPay();return}
   if(a==='paid-check'){stop();const p=S.pay;if(!p)return;
-    loading('Checking your payment','Confirming your transfer with the bank',600).then(()=>api(`/api/orders/${encodeURIComponent(p.id)}/check`,{body:{ref:p.ref}})).then(r=>{if(PAID.includes(r.status)&&r.order)onPaid(r.order);else{const m=$('#pay-msg');if(m)m.textContent=r.message||'Not received yet.';toast('Not received yet. It can take a minute or two.')}}).catch(err=>toast(errMsg(err)));return}
+    busy('Checking your payment','Confirming your transfer with the bank',()=>api(`/api/orders/${encodeURIComponent(p.id)}/check`,{body:{ref:p.ref}})).then(r=>{if(PAID.includes(r.status)&&r.order)onPaid(r.order);else{const m=$('#pay-msg');if(m)m.textContent=r.message||'Not received yet.';toast('Not received yet. It can take a minute or two.')}}).catch(err=>toast(errMsg(err)));return}
   if(a==='cancelpay'&&t.dataset.armed){store.set('pay',null)}
   if(a==='signout'){api('/api/auth/logout',{body:{}}).catch(()=>{});S.orders=[];S.inbox=[];S.addresses=[];S.reviews={};store.set('pay',null)}
-  if(a==='deleteacct'){stop();loading('Deleting your account','Removing your profile, addresses and reviews',600).then(()=>api('/api/me',{method:'DELETE'})).then(()=>{S.user=null;S.accView='menu';S.inbox=[];S.addresses=[];S.reviews={};S.orders=[];save();go('home');toast('Your account has been deleted')}).catch(err=>toast(errMsg(err)));return}
+  if(a==='deleteacct'){stop();busy('Deleting your account','Removing your profile, addresses and reviews',()=>api('/api/me',{method:'DELETE'})).then(()=>{S.user=null;S.accView='menu';S.inbox=[];S.addresses=[];S.reviews={};S.orders=[];save();land(()=>{S.route='home';render()});toast('Your account has been deleted')}).catch(err=>toast(errMsg(err)));return}
   if(a==='readall'){api('/api/me/messages',{body:{all:true,read:true}}).catch(()=>{})}
   if(d.notif){const id=d.notif;if(/^[0-9a-f-]{36}$/.test(id))api('/api/me/messages',{body:{ids:[id],read:true}}).catch(()=>{})}
   if(d.unread){api('/api/me/messages',{body:{ids:[d.unread],read:false}}).catch(()=>{})}
@@ -3103,28 +3116,24 @@ async function boot(){
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},go,render,save,openChat};
 boot();
 
-/* ---------- native browser loading: whenever our loading overlay shows, the browser's own
-   loading indicator (tab spinner / progress bar) runs too, and stops when the overlay hides.
-   Uses the Navigation API (Chrome, Edge, Samsung Internet, Opera, newer Safari); other browsers just show our overlay. */
+/* ---------- native browser loading: while our loading overlay is on screen, a hidden frame keeps
+   loading, so the browser's own indicator (tab spinner, mobile progress bar, stop button) runs too.
+   It stops the moment the overlay hides. Works in Chrome, Edge, Safari, Firefox and Samsung Internet. */
 (function(){
-  const L=document.getElementById('loader');
-  if(!L||!window.navigation||typeof navigation.navigate!=='function')return;
-  let finish=null,running=false;
-  const shown=()=>!L.hidden;
-  navigation.addEventListener('navigate',e=>{
-    if(e.info!=='tiada-loading'||!e.canIntercept)return;
-    e.intercept({scroll:'manual',focusReset:'manual',handler:()=>new Promise(res=>{
-      finish=res;if(!shown())res();
-      setTimeout(res,20000); // never spin forever
-    })});
-  });
+  const L=document.getElementById('loader');if(!L)return;
+  let fr=null,guard=null;
+  const shown=()=>!L.hidden&&!L.classList.contains('out');
   function start(){
-    if(running)return;running=true;
-    try{const r=navigation.navigate(location.href,{history:'replace',info:'tiada-loading'});
-      Promise.resolve(r&&r.finished).catch(()=>{}).then(()=>{running=false;finish=null;if(shown())start()})}
-    catch(_){running=false}
+    if(fr)return;
+    fr=document.createElement('iframe');
+    fr.setAttribute('aria-hidden','true');fr.tabIndex=-1;fr.title='';
+    fr.style.cssText='position:fixed;left:-10px;top:-10px;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+    fr.src='/api/hold?t='+Date.now();
+    document.body.appendChild(fr);
+    clearTimeout(guard);guard=setTimeout(stop,24000);
   }
-  new MutationObserver(()=>{if(shown())start();else if(finish){finish();}}).observe(L,{attributes:true,attributeFilter:['hidden']});
+  function stop(){clearTimeout(guard);if(!fr)return;const f=fr;fr=null;try{f.src='about:blank'}catch(_){}f.remove()}
+  new MutationObserver(()=>{shown()?start():stop()}).observe(L,{attributes:true,attributeFilter:['hidden','class']});
   if(shown())start();
 })();
 })();
