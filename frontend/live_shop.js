@@ -489,11 +489,12 @@ function goNow(r){
   if(url&&url!==location.pathname+location.search){
     NAV_AWAY=true;clearTimeout(hideT);save();
     const L=$('#loader');L.classList.remove('out');if(L.hidden){ldText(ROUTE_L[r]||'Loading','')}L.hidden=false;
-    location.assign(url);return;
+    window.__tiadaLeaving=true;if(window.__tiadaStopFrame)window.__tiadaStopFrame();
+    setTimeout(()=>location.assign(url),0);return;
   }
   goNowBase(r);
 }
-window.addEventListener('pageshow',e=>{if(e.persisted&&NAV_AWAY){NAV_AWAY=false;hideLoader()}});
+window.addEventListener('pageshow',e=>{if(e.persisted){window.__tiadaLeaving=false;if(NAV_AWAY){NAV_AWAY=false;hideLoader()}}});
 function routeFromUrl(){
   const page=PATH_PAGE[location.pathname.replace(/\/+$/,'')||'/'];if(!page)return;
   const q=new URLSearchParams(location.search);
