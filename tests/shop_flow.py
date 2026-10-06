@@ -129,7 +129,7 @@ with sync_playwright() as p:
 
     # chat hand-over
     pg.evaluate("T.openChat()"); pg.wait_for_timeout(1500)
-    pg.fill('#chat-text', 'person'); pg.press('#chat-text', 'Enter'); pg.wait_for_timeout(1500)
+    pg.wait_for_timeout(3500); pg.fill('#chat-text', 'person'); pg.press('#chat-text', 'Enter'); pg.wait_for_timeout(5000)
     st['chat_status'] = 'open'
     st['chat'] = [{'id': 5, 'who': 'sys', 'text': 'Ada has joined the chat', 'created_at': now()}, {'id': 6, 'who': 'agent', 'text': 'Hi, I’m Ada. How can I help?', 'created_at': now()}]
     pg.wait_for_timeout(4000)

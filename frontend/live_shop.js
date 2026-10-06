@@ -241,8 +241,32 @@ const CHAT_KEY='tiada_chat';
 let chatPoll=null,lastMsgId=0;
 const chatSess=()=>{try{return JSON.parse(localStorage.getItem(CHAT_KEY)||'null')}catch(_){return null}};
 const setChatSess=v=>{try{localStorage.setItem(CHAT_KEY,JSON.stringify(v))}catch(_){}};
+/* the assistant replies like a person: it "types" for a moment (longer for longer answers),
+   then the message appears a few words at a time. Replies queue up so they never overlap. */
+let botQ=Promise.resolve();
+function botSay(html,extra,after){
+  botQ=botQ.then(()=>new Promise(done=>{
+    const words=plain(html).split(/\s+/).filter(Boolean).length;
+    const think=Math.min(2400,650+words*40)+Math.random()*350;
+    CH.typing=true;chatPaint();
+    setTimeout(()=>{
+      CH.typing=false;
+      const tokens=String(html).match(/<[^>]+>|[^<\s]+\s*|\s+/g)||[String(html)];
+      const m={who:'bot',t:'',at:chatTime()};S.chat.push(m);
+      if(!$('#chat')){CH.unread++;renderChatFab()}
+      let i=0;
+      (function step(){
+        let n=0;while(i<tokens.length&&n<2){const tk=tokens[i++];m.t+=tk;if(tk[0]!=='<'&&tk.trim())n++}
+        chatPaint();
+        if(i<tokens.length){setTimeout(step,30+Math.random()*50);return}
+        if(extra&&extra.btn){m.btn=extra.btn;chatPaint()}
+        if(after)after();done();
+      })();
+    },think);
+  }));
+}
 function chatStart(){clearTimeout(CH.idleT);clearTimeout(CH.warnT);S.chat=[];CH.mode='bot';CH.typing=false;CH.agent=null;lastMsgId=0;setChatSess(null);
-  cpush('bot',`Hi${firstName()?' '+firstName():''}! I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
+  botQ=Promise.resolve();botSay(`Hi${firstName()?' '+firstName():''}! I’m Tiada’s assistant. Ask me about prices, combos, delivery, payment or your order. Type <b>“person”</b> any time to chat with our team.`)}
 async function ensureChat(){let s=chatSess();if(s)return s;const r=await api('/api/chat',{body:{action:'start'}});s={id:r.id,token:r.token};setChatSess(s);return s}
 const plain=h=>String(h).replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').slice(0,1500);
 async function logChat(who,text){try{const s=await ensureChat();const r=await api('/api/chat',{body:{action:'send',id:s.id,token:s.token,who,text:plain(text)}});if(r&&r.id)lastMsgId=Math.max(lastMsgId,r.id)}catch(_){}}
@@ -253,13 +277,13 @@ function chatSend(q){
   if(CH.mode==='agent'||CH.mode==='waiting'){disarmIdle();armIdle();return}
   const r=botAnswer(q);
   if(r==='HUMAN'){escalate();return}
-  CH.typing=true;chatPaint();setTimeout(()=>{CH.typing=false;cpush('bot',r.t,{btn:r.btn});logChat('bot',r.t)},650);
+  botSay(r.t,{btn:r.btn});logChat('bot',r.t);
 }
 async function escalate(){
   CH.mode='waiting';
   const t='No problem. I’ve let our support team know, and someone will join this chat shortly. They’ll see everything we’ve talked about.';
-  cpush('bot',t);logChat('bot',t);
-  cpush('sys','<span class="pulse"></span> Waiting for a team member to join…',{kind:'wait'});
+  logChat('bot',t);
+  botSay(t,null,()=>{if(CH.mode==='waiting')cpush('sys','<span class="pulse"></span> Waiting for a team member to join…',{kind:'wait'})});
   try{const s=await ensureChat();await api('/api/chat',{body:{action:'escalate',id:s.id,token:s.token}})}catch(_){}
   startChatPoll();
 }
