@@ -198,6 +198,10 @@ sub("function goNow(r){", "function goNowBase(r){")
 # track map: destination name sits clear of the route line, with a halo so it stays readable
 sub('<text x="352" y="62" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10" font-weight="700" fill="#0B3A23">${esc(dest)}</text>',
     '<text x="344" y="28" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10.5" font-weight="800" fill="#0B3A23" stroke="#EEF0E6" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${esc(dest)}</text>')
+# real Google map on the tracking page (v2_shop.js wraps the drawn map)
+sub("function mapHTML(o){", "function mapHTMLBase(o){")
+sub("<li>Our payment provider, Paystack, processes your transfer.</li>",
+    "<li>Our payment provider, Paystack, processes your transfer.</li><li>If you open the Google map on the tracking page, Google receives your delivery area (not your street address) and may set its own cookies.</li>")
 # ===== 2026 redesign (Figma) =====
 sub("const NAV=[['home','Home','home'],['catalog','Catalog','grid'],['wishlist','Wishlist','heart'],['cart','Basket','cart'],['account','Account','user']];",
     "const NAV=[['home','Home','home'],['catalog','Shop','grid'],['cart','Basket','cart'],['track','Track','truck'],['account','Account','user']];")

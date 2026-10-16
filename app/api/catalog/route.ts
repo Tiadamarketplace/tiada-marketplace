@@ -16,7 +16,9 @@ export const GET = handle(async () => {
   return ok({
     products: products.map(p => ({ ...p, stock: p.stock < 5 ? p.stock : 99, rating: agg[p.id] ? { n: agg[p.id].n, avg: agg[p.id].sum / agg[p.id].n } : null })),
     zones, fees: { min: fees.min, lagosKg: fees.lagosKg, interKg: fees.interKg, van: fees.van, same: fees.same, express: fees.express, eco: fees.eco },
-    layout, tiles, aisles, store, promos: must(promos),
+    layout, tiles, aisles, promos: must(promos),
+    // Google Maps Embed key is public by design (it sits in the map URL); restrict it to this site in Google Cloud
+    store: Object.assign({}, store, { mapsKey: process.env.GOOGLE_MAPS_EMBED_KEY || '' }),
     // recent 4–5 star reviews for the homepage belt: first name + last initial only
     reviews: ((topReviews.data || []) as { name: string; stars: number; text: string; product_id: string; created_at: string }[]).map(r => ({ name: shortName(r.name), stars: r.stars, text: r.text.slice(0, 220), product_id: r.product_id, at: r.created_at })),
     now: Date.now(),

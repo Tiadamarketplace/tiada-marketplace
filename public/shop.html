@@ -1422,6 +1422,15 @@ footer.f2 li{color:#fff}
 main{max-width:1312px}
 @media (min-width:761px){main{padding-inline:24px}}
 body{margin:0}
+/* Google map on the tracking page */
+.tmap.g-on>svg{display:none}
+.tmap .gmap{position:relative;aspect-ratio:400/260;max-width:100%;background:#EEF0E6}
+.tmap .gmap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tmap.g-on .live{display:none}
+.tmap .gmap-on svg{width:16px;height:16px;flex:none}
+.tmap .gmap-on{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--green);color:#fff;font-weight:800;font-size:12.5px;padding:8px 14px;box-shadow:0 0 0 1.5px rgba(212,155,65,.7)}
+.tmap .gmap-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:#fff;border-top:1px solid var(--line);font-size:12.5px}
+.tmap .gmap-foot a{color:var(--green);font-weight:800}
 </style>
 <style>/* ---- homepage sections from the 2026 redesign (delivery areas, how it works, reviews belt, help strip) ---- */
 .h2-sec{margin-top:26px}
@@ -2156,7 +2165,7 @@ const maskEmail=e=>{if(!e||!e.includes('@'))return e||'';const [u,d]=e.split('@'
 const fmtPhone=p=>{p=(p||'').replace(/\D/g,'');return p.length===11?p.slice(0,4)+' '+p.slice(4,7)+' '+p.slice(7):p};
 const STATUS={paid:['Paid · packing','paid'],packed:['Packed','paid'],route:['On the way','route'],done:['Delivered','done']};
 const ROUTE_D='M44 196 C 92 186, 104 150, 150 142 S 214 120, 236 96 S 292 74, 318 62 S 352 44, 360 36';
-function mapHTML(o){
+function mapHTMLBase(o){
   const z=zoneById(o.zone)||ZONES[4],inter=!!z.state;
   const dest=inter?z.city:zoneShort(z);
   return `<div class="tmap" data-map="${o.id}" data-km="${z.km}" data-inter="${inter?1:0}">
@@ -2415,7 +2424,7 @@ function vPrivacy(){
   <h1 class="page">Privacy policy</h1><p class="sub">Tiada Marketplace, Ojota Logistics Hub, Ikorodu Road, Lagos. Last updated October 2026.</p>
   <h2>What we collect</h2><ul><li>Your name, phone number and email, so we can sign you in and send order updates.</li><li>Delivery addresses and landmarks, so riders can find you.</li><li>Your orders, wishlist and reviews.</li><li>Basic device data, such as browser type, only if you allow analytics cookies.</li></ul>
   <h2>What we never collect</h2><p>Your bank login, card number, PIN or BVN. Payments go straight to our licensed payment provider.</p>
-  <h2>Who sees it</h2><ul><li>Your rider sees your name, phone and address for that delivery only.</li><li>Our payment provider, Paystack, processes your transfer.</li><li>Our email provider sends your order emails.</li></ul><p>We never sell your data or share it with advertisers.</p>
+  <h2>Who sees it</h2><ul><li>Your rider sees your name, phone and address for that delivery only.</li><li>Our payment provider, Paystack, processes your transfer.</li><li>If you open the Google map on the tracking page, Google receives your delivery area (not your street address) and may set its own cookies.</li><li>Our email provider sends your order emails.</li></ul><p>We never sell your data or share it with advertisers.</p>
   <h2>How we protect it</h2><ul><li>The whole site runs over HTTPS.</li><li>Sign-in uses one-time email codes, with lockout after repeated wrong tries.</li><li>Staff access to the admin desk is limited and logged.</li><li>You can sign out of this device at any time from Privacy &amp; Security.</li></ul>
   <h2>How long we keep it</h2><p>Account details are kept until you delete your account. Order records are kept as long as Nigerian tax law requires, then deleted.</p>
   <h2>Your rights</h2><p>Under the Nigeria Data Protection Act 2023 you can see, correct, download or delete your data, and withdraw consent for marketing at any time from Account, then Privacy &amp; security.</p>
@@ -3821,6 +3830,26 @@ function vPay(){
 }
 /* countdown ring follows the clock text */
 setInterval(()=>{const arc=document.getElementById('va-arc');if(!arc||!S.pay||!S.pay.expires)return;const left=Math.max(0,S.pay.expires-Date.now());const f=Math.min(1,left/(30*60000));arc.style.strokeDashoffset=String(326.7*(1-f))},1000);
+
+/* ---------- real Google map on the tracking page ----------
+   Directions from the Ojota hub to the delivery AREA only (never the street address).
+   Google sets its own cookies, so it loads by itself only after "Accept all"; otherwise one tap loads it. */
+const HUB_Q='Ojota Bus Stop, Ikorodu Road, Lagos, Nigeria';
+const gDest=z=>z.state?`${z.city}, ${z.state==='FCT Abuja'?'FCT':z.state+' State'}, Nigeria`:`${z.label.split(',')[0].trim()}, Lagos, Nigeria`;
+function gmapSrc(z){const e=encodeURIComponent,k=STORE.mapsKey;
+  return k?`https://www.google.com/maps/embed/v1/directions?key=${e(k)}&origin=${e(HUB_Q)}&destination=${e(gDest(z))}&mode=driving`
+    :`https://maps.google.com/maps?saddr=${e(HUB_Q)}&daddr=${e(gDest(z))}&output=embed`}
+const gmapLink=z=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(HUB_Q)}&destination=${encodeURIComponent(gDest(z))}&travelmode=driving`;
+let GMAP_OK=false;
+function mapHTML(o){
+  const z=zoneById(o.zone)||ZONES[4],on=S.consent==='all'||GMAP_OK,dest=z.state?z.city:zoneShort(z);
+  let h=mapHTMLBase(o);
+  const g=on?`<div class="gmap"><iframe src="${gmapSrc(z)}" title="Google map: route from our Ojota hub to ${esc(dest)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>`
+    :'';
+  h=h.replace('<div class="tmap" ',`<div class="tmap${on?' g-on':''}" `).replace('<div class="eta">',g+'<div class="eta">');
+  return h.replace(/<\/div>\s*$/,`<div class="gmap-foot">${on?'':`<button class="gmap-on" data-act="gmap-on">${ic('pin',16)} Show Google map here</button>`}<a href="${gmapLink(z)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>${on?'':'<span class="hint" style="flex-basis:100%">The Google map may set its own cookies.</span>'}</div></div>`);
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act="gmap-on"]');if(!t)return;e.preventDefault();e.stopImmediatePropagation();GMAP_OK=true;render()},true);
 
 /* ---------- native browser loading for in-page actions ----------
    Moving between pages is a real page load, so the browser shows its own loading by itself.

@@ -104,3 +104,23 @@ function vPay(){
 }
 /* countdown ring follows the clock text */
 setInterval(()=>{const arc=document.getElementById('va-arc');if(!arc||!S.pay||!S.pay.expires)return;const left=Math.max(0,S.pay.expires-Date.now());const f=Math.min(1,left/(30*60000));arc.style.strokeDashoffset=String(326.7*(1-f))},1000);
+
+/* ---------- real Google map on the tracking page ----------
+   Directions from the Ojota hub to the delivery AREA only (never the street address).
+   Google sets its own cookies, so it loads by itself only after "Accept all"; otherwise one tap loads it. */
+const HUB_Q='Ojota Bus Stop, Ikorodu Road, Lagos, Nigeria';
+const gDest=z=>z.state?`${z.city}, ${z.state==='FCT Abuja'?'FCT':z.state+' State'}, Nigeria`:`${z.label.split(',')[0].trim()}, Lagos, Nigeria`;
+function gmapSrc(z){const e=encodeURIComponent,k=STORE.mapsKey;
+  return k?`https://www.google.com/maps/embed/v1/directions?key=${e(k)}&origin=${e(HUB_Q)}&destination=${e(gDest(z))}&mode=driving`
+    :`https://maps.google.com/maps?saddr=${e(HUB_Q)}&daddr=${e(gDest(z))}&output=embed`}
+const gmapLink=z=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(HUB_Q)}&destination=${encodeURIComponent(gDest(z))}&travelmode=driving`;
+let GMAP_OK=false;
+function mapHTML(o){
+  const z=zoneById(o.zone)||ZONES[4],on=S.consent==='all'||GMAP_OK,dest=z.state?z.city:zoneShort(z);
+  let h=mapHTMLBase(o);
+  const g=on?`<div class="gmap"><iframe src="${gmapSrc(z)}" title="Google map: route from our Ojota hub to ${esc(dest)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>`
+    :'';
+  h=h.replace('<div class="tmap" ',`<div class="tmap${on?' g-on':''}" `).replace('<div class="eta">',g+'<div class="eta">');
+  return h.replace(/<\/div>\s*$/,`<div class="gmap-foot">${on?'':`<button class="gmap-on" data-act="gmap-on">${ic('pin',16)} Show Google map here</button>`}<a href="${gmapLink(z)}" target="_blank" rel="noopener">Open in Google Maps ↗</a>${on?'':'<span class="hint" style="flex-basis:100%">The Google map may set its own cookies.</span>'}</div></div>`);
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act="gmap-on"]');if(!t)return;e.preventDefault();e.stopImmediatePropagation();GMAP_OK=true;render()},true);
