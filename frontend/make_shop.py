@@ -195,6 +195,9 @@ sub('<header class="hdr">', '<style>/* Halo loader: no card, logo floats on fros
 
 # real page loads: every page has its own address, so the browser's own loading shows on each change
 sub("function goNow(r){", "function goNowBase(r){")
+# track map: destination name sits clear of the route line, with a halo so it stays readable
+sub('<text x="352" y="62" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10" font-weight="700" fill="#0B3A23">${esc(dest)}</text>',
+    '<text x="344" y="28" text-anchor="end" font-family="Montserrat,sans-serif" font-size="10.5" font-weight="800" fill="#0B3A23" stroke="#EEF0E6" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${esc(dest)}</text>')
 # ===== 2026 redesign (Figma) =====
 sub("const NAV=[['home','Home','home'],['catalog','Catalog','grid'],['wishlist','Wishlist','heart'],['cart','Basket','cart'],['account','Account','user']];",
     "const NAV=[['home','Home','home'],['catalog','Shop','grid'],['cart','Basket','cart'],['track','Track','truck'],['account','Account','user']];")

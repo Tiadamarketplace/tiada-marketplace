@@ -404,6 +404,113 @@ table.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;mi
 @keyframes haloBreathe{50%{transform:scale(1.07)}}
 @keyframes haloIn{from{opacity:0;transform:translateY(6px) scale(.96)}}
 @media (prefers-reduced-motion:reduce){.loader *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+/* ===== 2026 redesign (Figma · 03 Admin) ===== */
+/* sidebar */
+.side{background:#0B3A23}
+.brand{border-bottom:0;margin-bottom:4px}
+.nav h6{color:rgba(214,227,218,.55)}
+.nav button{border-radius:12px;padding:10px 12px}
+.nav button.on{background:var(--gold);color:var(--green);box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.nav button.on svg{opacity:1}
+.nav button.on::before{display:none}
+.nav button.on .cnt{background:var(--green);color:#fff}
+.nav .cnt.red{background:#C2412D}
+.side .me{border-top:0;background:rgba(255,255,255,.07);border-radius:14px;padding:10px 12px;margin-top:auto}
+.side .me{gap:8px}
+.side .me b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .me>span:nth-child(2){min-width:0;flex:1}
+.side .me button{border:0;color:var(--gold);padding:6px 0;font-size:12px;white-space:nowrap;margin-left:0}
+@media (hover:hover){.side .me button:hover{text-decoration:underline}}
+
+/* top bar */
+.top{background:#fff;padding:18px 32px;-webkit-backdrop-filter:none;backdrop-filter:none}
+.top h1{font-size:26px;color:var(--ink);letter-spacing:-.02em}
+.top .sub{font-size:13px}
+.ibtn{border-radius:50%;width:42px;height:42px}
+.content{padding:28px 32px 64px}
+
+/* buttons: pills with a gold edge, like the shop */
+.btn{border-radius:999px;padding:11px 20px;background:var(--green);box-shadow:0 0 0 1.5px rgba(212,155,65,.7),0 6px 16px rgba(11,58,35,.16)}
+.btn.sm{border-radius:999px;padding:7px 14px}
+.btn.gold{box-shadow:0 6px 16px rgba(138,95,28,.22)}
+.btn.ghost,.btn.soft{box-shadow:none}
+.btn.red{background:#fff;color:var(--red);border:1.5px solid var(--red);box-shadow:none}
+@media (hover:hover){.btn.red:not(:disabled):hover{background:var(--red-soft);filter:none}}
+
+/* cards, fields */
+.card{border-radius:20px;box-shadow:none}
+.card.pad{padding:20px 22px}
+.card h3{color:var(--ink);font-size:16px}
+.field input,.field select,.field textarea{border-radius:14px;height:46px}
+.field textarea{height:auto}
+.search input{height:44px}
+.search svg{color:var(--muted)}
+
+/* filter chips instead of a segmented bar */
+.seg{background:none;border:0;padding:0;gap:8px;border-radius:0}
+.seg button{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--ink)}
+.seg button.on{background:var(--green);border-color:var(--green);color:#fff}
+@media (hover:hover){.seg button:not(.on):hover{border-color:#CFC6B2}}
+
+/* dashboard */
+.dash-alert{display:flex;align-items:center;gap:12px;background:var(--gold);color:var(--green);border-radius:18px;padding:12px 14px 12px 20px;margin-bottom:16px;font-weight:700;font-size:14px;box-shadow:0 10px 24px rgba(138,95,28,.18)}
+.dash-alert span{flex:1;min-width:0}
+.dash-alert .btn{background:var(--green);color:#fff;box-shadow:none;padding:9px 16px;font-size:13px}
+.kpis{gap:16px}
+.kpi{padding:20px 22px}
+.kpi small{text-transform:uppercase;letter-spacing:.1em;font-size:11px;font-weight:700}
+.kpi b{font-size:30px;margin-top:6px}
+.kpi.bad b{color:var(--red)}
+.kpi .d{color:var(--muted);font-weight:600}
+.kpi .d.warn{color:var(--red);font-weight:700}
+.dash{gap:16px;margin-top:16px}
+
+/* orders */
+.ocard{border-radius:16px;box-shadow:none}
+.ocard.on{background:#E4EFE7;border-color:var(--green);box-shadow:none}
+.detail.card{border-radius:22px}
+.dhead h2{color:var(--ink);font-size:24px}
+.tbl th{text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+
+/* switches use the brand green */
+.switch input:checked+span{background:var(--green)}
+
+/* sign in */
+.lart{background:#0B3A23;padding:56px}
+.lart::before{content:"";position:absolute;right:-90px;bottom:-110px;width:360px;height:360px;border-radius:50%;background:#14532F}
+.lart>*{position:relative;z-index:1}
+.lart img{width:64px!important;padding:6px;border-radius:16px}
+.lart .eyebrow{display:block;color:var(--gold);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+.lart h1{font-size:40px;line-height:1.15;max-width:15ch;letter-spacing:-.01em}
+.lart .hint{color:#CFE0D5!important}
+.lbox{background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px 28px;box-shadow:0 24px 60px rgba(11,58,35,.12);width:min(440px,100%)}
+.lbox h2{color:var(--ink);font-size:28px}
+.lbox .safe{font-weight:500}
+
+/* hidden alert bar must not peek over the page */
+.alertbar:not(.show){visibility:hidden;transition:transform .45s cubic-bezier(.3,1.4,.5,1),visibility 0s .45s}
+
+@media (max-width:900px){
+  .top{background:var(--green);border-bottom:0;padding:12px 16px}
+  .top h1{color:#fff;font-size:21px}
+  .top .sub{color:#CFE0D5}
+  .top .live{display:none}
+  .top .ibtn{background:rgba(255,255,255,.1);border:0;color:var(--gold)}
+  .top .ibtn.burger{background:none;color:#fff;width:36px}
+  .top .ibtn .dot{border-color:var(--green)}
+  .content{padding:16px 16px 60px}
+  .dash-alert{font-size:13px;padding:10px 10px 10px 16px}
+  .lart{padding:28px 20px}
+  .lart::before{display:none}
+  .lart h1{font-size:26px}
+  .lform{padding:24px 16px 40px}
+  .lbox{padding:24px 18px}
+}
+@media (max-width:560px){.kpi b{font-size:24px}.kpi{padding:16px}}
+.side .me{padding:10px}
+.side .me .av{width:32px;height:32px;font-size:12px}
+.side .me b{font-size:12.5px}
+.side .me button{font-size:11.5px}
 </style>
 
 <div id="root"></div>
@@ -1153,7 +1260,7 @@ function topSellers(){
 async function refresh(){applyData(await api('/api/admin/data'))}
 
 /* ---------- test mode: Paystack test accounts can't receive transfers, so the owner can mark a test order paid ---------- */
-function vDash(){
+function vDashLive(){
   if(!S.testMode)return vDashBase();
   return `<div class="note" style="margin-bottom:14px;flex-wrap:wrap">${ic('alert',16)}<span style="flex:1;min-width:220px"><b>Paystack is in test mode.</b> Test bank transfers can’t really be paid, so you can mark a waiting test order as paid here to try the rest (emails, packing, delivery). This box disappears when you switch to your live Paystack key.</span></div>
   ${S.testPending.length?`<div class="card pad" style="margin-bottom:14px"><h3>Test orders waiting for payment</h3><div class="list">${S.testPending.map(o=>`<div class="li"><span class="t"><b class="num">${esc(o.id)} · ${esc(o.name)}</b><small>${ago(Date.parse(o.created_at))}</small></span><span class="num" style="font-weight:800">${naira(o.total)}</span><button class="btn sm" data-testpay="${esc(o.id)}">Mark as paid (test)</button></div>`).join('')}</div></div>`:''}
@@ -1223,7 +1330,7 @@ function vLogin(){
       <button class="btn" type="submit" style="width:100%;height:46px">Verify and open desk</button>
       <div class="row" style="margin-top:10px"><span class="sp"></span><button type="button" class="btn ghost sm" data-act="lback">Back</button></div></form>`;
   return `<div class="login">
-   <section class="lart"><img src="${ICONSRC}" alt="Tiada Marketplace" style="width:64px"><div><h1>Tiada Admin Desk</h1><p>Run orders, stock, promotions and customer support for Tiada Marketplace from one place.</p></div><p class="hint" style="color:#9FBFAA">Staff access only. Every action is recorded in the activity log.</p></section>
+   <section class="lart"><img src="${ICONSRC}" alt="Tiada Marketplace" style="width:64px"><div><span class="eyebrow">Tiada Admin Desk</span><h1>Run orders, stock, promotions and support from one place.</h1></div><p class="hint" style="color:#9FBFAA">Staff access only. Every action is recorded in the activity log.</p></section>
    <section class="lform"><div class="lbox">${box}
     <div class="safe" style="margin-top:16px">${ic('shield',16)}<span>The desk locks after 15 minutes of inactivity. Customer card details and bank logins are never stored here.</span></div>
    </div></section></div>`;
@@ -1448,6 +1555,18 @@ async function bootAdmin(){
 }
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},render,refresh};
 bootAdmin();
+
+/* ===================== 2026 redesign layer for the admin desk (Figma · 03 Admin) ===================== */
+
+/* dashboard: gold strip for paid orders waiting to be packed, red low-stock number */
+function vDash(){
+  const fresh=S.orders.filter(o=>o.status==='new');
+  const ids=fresh.slice(0,3).map(o=>o.id).join(', ')+(fresh.length>3?'…':'');
+  const strip=fresh.length?`<div class="dash-alert" role="status">${ic('bell',18)}<span>${fresh.length} new paid order${fresh.length>1?'s':''} waiting to be packed — ${esc(ids)}</span><button class="btn sm" data-view="orders">Open orders</button></div>`:'';
+  let html=vDashLive();
+  if(lowStock().length+S.products.filter(p=>p.status==='out').length)html=html.replace('<div class="card kpi"><small>Low or sold out</small>','<div class="card kpi bad"><small>Low or sold out</small>');
+  return strip+html;
+}
 
 /* ---------- native browser loading for in-page actions ----------
    Moving between pages is a real page load, so the browser shows its own loading by itself.

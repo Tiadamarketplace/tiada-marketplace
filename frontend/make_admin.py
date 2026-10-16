@@ -5,7 +5,7 @@ import pathlib, re, sys
 here = pathlib.Path(__file__).parent
 s = (here / 'admin_src.html').read_text()
 live = (here / 'live_admin.js').read_text()
-live = live + '\n' + (here / 'native_loading.js').read_text()
+live = live + '\n' + (here / 'admin_v2.js').read_text() + '\n' + (here / 'native_loading.js').read_text()
 
 def sub(old, new, count=1):
     global s
@@ -89,8 +89,15 @@ sub("   ['note','Combo note',", "   ['help','Assistant help strip','Chat with us
 # Halo loading screen (chosen by the owner)
 sub("</style>", '/* Halo loader: no card, logo floats on frosted glass with a gold arc circling it */\n.loader{background:rgba(251,249,244,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.3)!important;backdrop-filter:blur(14px) saturate(1.3)!important}\n.ldc{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-width:0!important;animation:haloIn .3s ease-out}\n.ldm{width:96px!important;height:96px!important;margin:0 auto 12px!important}\n.ldm img{width:48px!important;filter:drop-shadow(0 6px 14px rgba(11,58,35,.25));animation:haloBreathe 1.6s ease-in-out infinite!important}\n.ldm::before{border:0!important;background:conic-gradient(from 0deg,transparent 0 62%,#D49B41 92%,transparent 100%);-webkit-mask:radial-gradient(circle,transparent 44px,#000 45px);mask:radial-gradient(circle,transparent 44px,#000 45px);animation:haloSpin 1s linear infinite!important}\n.ldc b{font-size:15px;color:#0B3A23}\n@keyframes haloSpin{to{transform:rotate(360deg)}}\n@keyframes haloBreathe{50%{transform:scale(1.07)}}\n@keyframes haloIn{from{opacity:0;transform:translateY(6px) scale(.96)}}\n@media (prefers-reduced-motion:reduce){.loader *{animation-duration:.01ms!important;animation-iteration-count:1!important}}\n</style>', 1)
 
+# 2026 redesign (Figma · 03 Admin)
+sub("</style>", (here / 'admin_v2.css').read_text() + "</style>")
+
 # plug in the live layer
 sub("\nrender();\n})();\n</script>", "\n" + live.rstrip() + "\n})();\n</script>")
+
+sub("function vDash(){\n  if(!S.testMode)", "function vDashLive(){\n  if(!S.testMode)")
+sub('<div><h1>Tiada Admin Desk</h1><p>Run orders, stock, promotions and customer support for Tiada Marketplace from one place.</p></div>',
+    '<div><span class="eyebrow">Tiada Admin Desk</span><h1>Run orders, stock, promotions and support from one place.</h1></div>')
 
 for bad in ['__ICON__', '__PHOTO', 'Prototype', 'prototype', 'Ruka', 'ruka', '246810', 'example.com']:
     if bad in s:
