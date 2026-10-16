@@ -47,7 +47,10 @@ def catalog():
         p['ends_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() + 7 * 86400))
         p['img'] = None
     return {'products': prods, 'zones': rows('zones'), 'fees': sets['fees'], 'layout': sets['layout'], 'tiles': sets['tiles'],
-            'aisles': sets['aisles'], 'store': sets['store'], 'promos': promos, 'now': int(time.time() * 1000)}
+            'aisles': sets['aisles'], 'store': sets['store'], 'promos': promos, 'now': int(time.time() * 1000),
+            'reviews': [{'name': n, 'stars': st, 'text': t, 'product_id': pid, 'at': '2026-10-01T10:00:00Z'} for n, st, t, pid in [
+                ('Test A.', 5, 'Sample review text one for the test server.', 'milo'), ('Test B.', 4, 'Sample review text two for the test server, a little longer.', 'cornflakes'),
+                ('Test C.', 5, 'Sample review text three.', 'goldenmorn'), ('Test D.', 5, 'Sample review text four for the belt.', 'cocopops')]]}
 
 if __name__ == '__main__':
     c = catalog()

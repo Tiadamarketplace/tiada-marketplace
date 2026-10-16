@@ -19,6 +19,7 @@ async function busy(msg,sub,fn){
   finally{const w=550-(Date.now()-t0);if(w>0)await sleep(w);if(bar)bar.classList.add('done');hideLoader()}
 }
 function land(fn){if(fn)fn();const v=$('#view');if(v){v.classList.remove('enter');void v.offsetWidth;v.classList.add('enter')}window.scrollTo(0,0)}
+let HOME_REVIEWS=[];
 let FEES={min:10000,lagosKg:50,interKg:400,van:3000,same:2500,express:3500,eco:1000},LAYOUT=[],TILES={},AISLES={},STORE={whatsapp:'08075110000'};
 const SHAPES={milk:['bottle','#2E6FB5'],cereal:['box','#C8462C'],grain:['pouch','#C9B48A'],ccombo:['basket','#D49B41'],fcombo:['sack','#C9A46C']};
 const CUSTOM_SHAPE={milo:['tin','#2F7D3A'],chocomalt:['tin','#6B3E22'],custard:['tin','#E2B829'],frosties:['box','#2B6CB0'],cocopops:['box','#7A4A2A'],moonstar:['box','#24356B'],fruitfiber:['box','#B5651D'],goldenmorn:['box','#E3A01E'],granola:['pouch','#8A5A2B']};
@@ -39,7 +40,7 @@ function applyCatalog(d){
   FOOD_COMBOS.forEach(c=>c.n=c.id==='fcE'?'E':(c.id.replace(/\D/g,'')||'•'));
   ALL.push(...P,...CEREAL_COMBOS,...FOOD_COMBOS);
   ZONES.length=0;d.zones.forEach(z=>ZONES.push({id:z.id,label:z.label,km:z.km,fee:z.fee,day:z.day,state:z.state,city:z.city,region:z.region,days:z.days}));
-  FEES=Object.assign(FEES,d.fees||{});LAYOUT=d.layout||[];TILES=d.tiles||{};AISLES=d.aisles||{};STORE=Object.assign(STORE,d.store||{});
+  FEES=Object.assign(FEES,d.fees||{});LAYOUT=d.layout||[];HOME_REVIEWS=Array.isArray(d.reviews)?d.reviews:[];TILES=d.tiles||{};AISLES=d.aisles||{};STORE=Object.assign(STORE,d.store||{});
   SLIDES.length=0;
   (d.promos||[]).forEach(pr=>{const prod=byId(pr.product_id);SLIDES.push({land:'promo:'+pr.id,promo:pr,cls:pr.cls||'s1',eyebrow:esc(pr.eyebrow||''),title:esc(pr.title),text:esc(pr.text||''),cta:'Shop now',go:pr.product_id,end:Date.parse(pr.ends_at),art:pr.img?{id:'promo-'+pr.id,img:pr.img,shape:'box',c1:'#D49B41',short:''}:(prod||P[0])})});
   // forget basket and wishlist items that no longer exist
@@ -386,6 +387,9 @@ function botSmart(raw){
   // delivery time
   const z=zoneFor(q);
   if(has(/\b(how long|how many days|how soon|when will|when would|when can|delivery time|delivery days|days|arrive|reach me|get to me|take to deliver|time frame|timeline|fast)\b/)&&!has(/\b(td-?\s?\d{5})\b/)){
+    const lz=ZONES.filter(x=>!x.state);
+    if(has(/\blagos\b/)&&(!z||!z.state)&&!has(/\b(island|ikeja|yaba|lekki|ajah|ikorodu|epe|surulere|ojota|ketu|gbagada|maryland|vi|ikoyi|badagry|ibeju|agric|ogba|akoka|unilag|sangotedo|mile 12|anthony|ogolonto)\b/)&&lz.length)
+      return {t:`Within <b>Lagos</b> our riders usually deliver in about <b>${etaRange(lz,false)}</b> after your order is packed and sent out. That’s an estimate, not a promise.<br><br>Delivery starts from <b>${naira(Math.min(...lz.map(x=>x.fee)))}</b> depending on your area. Tell me your area for the exact fee.`};
     if(z)return {t:`To <b>${esc(z.state||z.label.split(',')[0])}</b> it usually takes about <b>${etaText(z)}</b> after your order is packed and sent out. That’s an estimate, not a promise: traffic and our delivery partners can change it.<br><br>Delivery there starts from <b>${naira(z.fee)}</b>. You’ll get the rider or courier and a tracking number by email as soon as it leaves our hub.`};
     return {t:'It depends on how far you are from our Ojota hub in Lagos. As a rough guide after dispatch:<br>Lagos: about <b>1–2 days</b><br>South-West: about <b>1–3 days</b><br>Most other states: about <b>2–5 days</b><br>Far North: up to about <b>7 days</b><br><br>These are estimates, not promises. Tell me your state or area and I’ll narrow it down.'};
   }
@@ -514,6 +518,38 @@ function landFor(id){
 }
 const secOn=k=>{const x=LAYOUT.find(l=>l[0]===k);return !x||x[1]!==false};
 const tileOn=k=>TILES[k]!==false, aisleOn=k=>AISLES[k]!==false;
+/* ---------- homepage sections from the redesign ---------- */
+const REGION_NAME={sw:'South-West',ss:'South-South & East',nc:'North-Central & Abuja',nw:'The North'};
+function etaRange(zs,inter){if(!zs.length)return '';const a=etaDays(Math.min(...zs.map(z=>z.km||0)),inter),b=etaDays(Math.max(...zs.map(z=>z.km||0)),inter);const lo=a[0],hi=b[1];return lo===hi?`${lo} day${lo>1?'s':''}`:`${lo}–${hi} days`}
+function homeAreas(){
+  const lagos=ZONES.filter(z=>!z.state),sw=ZONES.filter(z=>z.state&&z.region==='sw'),rest=ZONES.filter(z=>z.state&&z.region!=='sw');
+  const cards=[];
+  if(lagos.length)cards.push({t:'Lagos',b:'Our riders',d:lagos.slice(0,6).map(z=>z.label.split(',')[0].trim()).join(', ')+(lagos.length>6?' and more':''),fee:Math.min(...lagos.map(z=>z.fee)),eta:etaRange(lagos,false),hot:1});
+  if(sw.length)cards.push({t:'South-West',b:'Courier',d:sw.map(z=>z.state).slice(0,6).join(', '),fee:Math.min(...sw.map(z=>z.fee)),eta:etaRange(sw,true)});
+  if(rest.length)cards.push({t:'Rest of Nigeria',b:'Courier',d:'All other states and Abuja, sent from our Lagos hub',fee:Math.min(...rest.map(z=>z.fee)),eta:etaRange(rest,true)});
+  if(!cards.length)return '';
+  return `<section class="h2-sec"><div class="h2-head"><div><h2>Where should we deliver?</h2><p>Fees and how long it usually takes. Times are estimates, not promises.</p></div></div>
+   <div class="h2-areas">${cards.map(c=>`<button class="h2-area${c.hot?' hot':''}" data-chatq="${esc('How long is delivery to '+c.t+'?')}" data-areachat="1">
+     <span class="h2-area-top"><b>${esc(c.t)}</b><span class="h2-badge">${esc(c.b)}</span></span>
+     <span class="h2-area-d">${esc(c.d)}</span>
+     <span class="h2-area-stats"><span><small>Delivery from</small><b class="num">${naira(c.fee)}</b></span><span><small>Usually</small><b>${esc(c.eta)}</b></span></span></button>`).join('')}</div></section>`;
+}
+function homeHow(){
+  const steps=[['cart','Fill your basket',`Single items or combos. The minimum for delivery is ${naira(MIN)}.`],['card','Pay by transfer','We create a bank account just for your order. It confirms by itself, with no receipt to upload.'],['truck','Track it home','See packing, dispatch and the rider’s number, with an estimate based on distance.']];
+  return `<section class="h2-sec"><div class="h2-how">${steps.map((s,i)=>`<div class="h2-step"><span class="h2-step-i">${ic(s[0],22)}</span><span><b>${i+1}. ${s[1]}</b><small>${s[2]}</small></span></div>`).join('')}</div></section>`;
+}
+function homeReviews(){
+  const rs=HOME_REVIEWS.filter(r=>r&&r.text);if(rs.length<3)return '';
+  const card=r=>{const p=byId(r.product_id);return `<figure class="h2-rev"><span class="h2-stars" aria-label="${r.stars} out of 5">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span><blockquote>“${esc(r.text)}”</blockquote><figcaption>${p?`<span class="h2-rev-p">${art(p)}</span>`:''}<span><b>${esc(r.name)}</b><small>${p?'Bought '+esc(p.name):'Verified buyer'}</small></span></figcaption></figure>`};
+  const row=rs.map(card).join('');
+  return `<section class="h2-sec h2-revs"><div class="h2-head"><div><h2>What our customers say</h2><p>Real reviews from people who bought from us</p></div></div>
+   <div class="h2-belt" aria-label="Customer reviews"><div class="h2-track">${row}<span aria-hidden="true" style="display:contents">${row}</span></div></div></section>`;
+}
+function homeHelp(){
+  const wa=(STORE.whatsapp||'08075110000').replace(/\D/g,'').replace(/^0/,'234');
+  return `<section class="h2-sec"><div class="h2-help"><span class="h2-help-i">${ic('chat',24)}</span><span class="h2-help-t"><b>Questions? Our assistant answers instantly.</b><small>Prices, delivery days, your basket or an order. Want a person? Just ask, or WhatsApp ${esc(STORE.whatsapp||'08075110000')}.</small></span>
+   <span class="h2-help-b"><button class="btn" data-go="__chat">Chat with us</button><a class="btn ghost" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a></span></div></section>`;
+}
 function vHome(){
   const list=filtered();
   const home=!S.q&&S.cat==='all';
@@ -544,9 +580,15 @@ function vHome(){
     fcombos:()=>FOOD_COMBOS.length?blockRail('','Foodstuff combos','Rice, spaghetti, garri, beans and more','data-cat="fcombo"',FOOD_COMBOS):'',
     recent:()=>S.recent.length?plainRail('Recently viewed','data-accgo="recent"',S.recent.slice(0,10).map(byId).filter(Boolean)):'',
     recs:()=>`<div class="sec-h"><h2>Recommended for you</h2></div><div class="pgrid" id="grid">${[...P].sort((a,b)=>(b.status==='fast')-(a.status==='fast')).map(card).join('')}</div>`,
+    areas:()=>homeAreas(),
+    how:()=>homeHow(),
+    reviewsbelt:()=>homeReviews(),
+    help:()=>homeHelp(),
     note:()=>`<div class="note">Combo quantities differ by package and delivery is added at checkout. You can swap anything in a combo for something else worth the same amount.</div>`,
   };
-  const order=LAYOUT.length?LAYOUT.map(l=>l[0]):Object.keys(S_);
+  // saved layouts from before a section existed still get the new section, placed where it belongs by default
+  const DEF=['slider','tiles','flash','aisles','cereals','ccombos','milk','fcombos','areas','how','reviewsbelt','recent','recs','help','note'].filter(k=>S_[k]).concat(Object.keys(S_).filter(k=>!['slider','tiles','flash','aisles','cereals','ccombos','milk','fcombos','areas','how','reviewsbelt','recent','recs','help','note'].includes(k)));let order=LAYOUT.length?LAYOUT.map(l=>l[0]):DEF.slice();
+  DEF.forEach((k,i)=>{if(order.includes(k))return;const prev=DEF.slice(0,i).reverse().find(x=>order.includes(x));order.splice(prev?order.indexOf(prev)+1:order.length,0,k)});
   return order.filter(k=>S_[k]&&secOn(k)).map(k=>S_[k]()).join('\n');
 }
 
@@ -700,5 +742,7 @@ async function boot(){
   render();netState();
   requestAnimationFrame(()=>{hideLoader();setTimeout(()=>L.classList.remove('cont'),300)});
 }
+/* delivery area cards open the assistant and ask about that area */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-areachat]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const q=b.dataset.chatq;openChat();botQ.then(()=>setTimeout(()=>chatSend(q),250))},true);
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},go,render,save,openChat};
 boot();

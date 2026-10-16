@@ -194,6 +194,8 @@ sub('<header class="hdr">', '<style>/* Halo loader: no card, logo floats on fros
 
 # real page loads: every page has its own address, so the browser's own loading shows on each change
 sub("function goNow(r){", "function goNowBase(r){")
+# homepage sections from the redesign
+sub('<header class="hdr">', '<style>' + (here / 'home_v2.css').read_text() + '</style>\n<header class="hdr">')
 # page-to-page: the new page shows the same loading message straight away (no second overlay popping in)
 sub('<small id="ld-sub">Getting today’s prices</small></div></div>\n', '<small id="ld-sub">Getting today’s prices</small></div></div>\n<script>(function(){try{var n=JSON.parse(sessionStorage.getItem("tiada_nav")||"null");if(n&&Date.now()-n.t<20000){var L=document.getElementById("loader");L.classList.add("cont");document.getElementById("ld-msg").textContent=n.m||"Loading";document.getElementById("ld-sub").textContent=n.s||""}}catch(e){}})()</script>\n<style>.loader.cont,.loader.cont .ld-card,.loader.cont .ld-mark{animation-name:none!important}.loader.cont .ld-mark::before{animation-name:haloSpin!important}.loader.cont .ld-mark img{animation-name:haloBreathe!important}</style>\n')
 sub("function botAnswer(raw){", "function botAnswerBase(raw){")

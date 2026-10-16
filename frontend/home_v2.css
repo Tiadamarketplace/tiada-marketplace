@@ -1,0 +1,51 @@
+/* ---- homepage sections from the 2026 redesign (delivery areas, how it works, reviews belt, help strip) ---- */
+.h2-sec{margin-top:26px}
+.h2-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.h2-head h2{margin:0;font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.h2-head p{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+.h2-areas{display:grid;grid-template-columns:1fr;gap:12px}
+.h2-area{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:20px;background:#fff;border:1.5px solid var(--line);box-shadow:0 10px 26px rgba(11,58,35,.07);transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s,border-color .25s}
+.h2-area.hot{border-color:var(--gold);border-width:2px}
+.h2-area-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.h2-area-top b{font-size:20px;font-weight:800;color:var(--green)}
+.h2-badge{font-size:11px;font-weight:700;color:var(--green);background:#E4EFE7;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.h2-area-d{font-size:13px;color:var(--muted);line-height:1.45;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.h2-area-stats{display:flex;gap:26px}
+.h2-area-stats small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.h2-area-stats b{font-size:17px;font-weight:800;color:var(--ink)}
+.h2-area:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.h2-how{display:grid;grid-template-columns:1fr;gap:14px;padding:18px;border-radius:22px;background:#fff;border:1px solid var(--line)}
+.h2-step{display:flex;gap:14px;align-items:center}
+.h2-step-i{flex:none;width:44px;height:44px;border-radius:50%;background:var(--green);color:var(--gold);display:grid;place-items:center}
+.h2-step b{display:block;font-size:14.5px;font-weight:800;color:var(--ink)}
+.h2-step small{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:2px}
+.h2-revs{margin-left:-16px;margin-right:-16px;padding:22px 16px;background:#F6E9CF;border-radius:0}
+.h2-belt{overflow:hidden;margin:0 -16px;mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
+.h2-track{display:flex;gap:12px;width:max-content;padding:4px 16px 10px;animation:h2belt 60s linear infinite}
+.h2-belt:hover .h2-track,.h2-belt:active .h2-track{animation-play-state:paused}
+@keyframes h2belt{to{transform:translateX(-50%)}}
+.h2-rev{margin:0;width:280px;flex:none;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:20px;background:#fff;box-shadow:0 10px 26px rgba(11,58,35,.08)}
+.h2-stars{color:var(--gold);font-size:15px;letter-spacing:2px}
+.h2-rev blockquote{margin:0;font-size:14px;line-height:1.5;color:var(--ink);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.h2-rev figcaption{display:flex;align-items:center;gap:10px;margin-top:auto}
+.h2-rev-p{width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--cream,#FBF9F4);flex:none;display:grid;place-items:center}
+.h2-rev-p img,.h2-rev-p svg{width:100%;height:100%;object-fit:cover}
+.h2-rev figcaption b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.h2-rev figcaption small{display:block;font-size:12px;color:var(--muted)}
+.h2-help{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;padding:20px;border-radius:22px;background:#E4EFE7}
+.h2-help-i{flex:none;width:52px;height:52px;border-radius:16px;background:var(--green);color:var(--gold);display:grid;place-items:center}
+.h2-help-t{flex:1;min-width:200px}
+.h2-help-t b{display:block;font-size:16px;font-weight:800;color:var(--ink)}
+.h2-help-t small{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:3px}
+.h2-help-b{display:flex;gap:10px;width:100%}
+.h2-help-b .btn{margin:0;height:44px;border-radius:999px;flex:1;text-decoration:none}
+@media (hover:hover){.h2-area:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(11,58,35,.14);border-color:var(--gold)}}
+@media (min-width:700px){
+  .h2-areas{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .h2-how{grid-template-columns:repeat(3,minmax(0,1fr));padding:24px 28px}
+  .h2-revs{margin-left:0;margin-right:0;border-radius:24px;padding:26px 24px}
+  .h2-belt{margin:0 -24px}
+  .h2-help-b{width:auto}
+  .h2-head h2{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){.h2-track{animation:none}.h2-belt{overflow-x:auto}.h2-area{transition:none}}

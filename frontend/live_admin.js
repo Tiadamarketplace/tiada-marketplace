@@ -46,7 +46,8 @@ function applyData(d){
     regions:Object.keys(REGION_NAME).map(k=>{const zs=d.zones.filter(z=>z.region===k),r=(fees.regions||{})[k]||{};return [REGION_NAME[k],r.fee!=null?r.fee:(zs[0]?zs[0].fee:0),r.days||(zs[0]&&zs[0].days)||'',k]})};
   const lay=st.layout&&st.layout.length?st.layout:Object.keys(LAYOUT_META).map(k=>[k,true]);
   S.layout=lay.filter(l=>LAYOUT_META[l[0]]).map(([k,on])=>{const m=LAYOUT_META[k].slice();m[3]=on!==false;return m});
-  Object.keys(LAYOUT_META).forEach(k=>{if(!S.layout.some(x=>x[0]===k)){const m=LAYOUT_META[k].slice();m[3]=true;S.layout.push(m)}});
+  // sections added after the owner saved a layout go in their default spot, not at the very end
+  const MK=Object.keys(LAYOUT_META);MK.forEach((k,i)=>{if(S.layout.some(x=>x[0]===k))return;const m=LAYOUT_META[k].slice();m[3]=true;const prev=MK.slice(0,i).reverse().find(x=>S.layout.some(y=>y[0]===x));const at=prev?S.layout.findIndex(y=>y[0]===prev)+1:S.layout.length;S.layout.splice(at,0,m)});
   S.tiles=TILE_META.map(t=>[t[0],t[1],(st.tiles||{})[t[0]]!==false]);
   S.aisles=AISLE_META.map(t=>[t[0],t[1],(st.aisles||{})[t[0]]!==false]);
   S.staff=d.staff||[];S.customers=d.customers||[];S.testMode=!!d.testMode;S.testPending=d.testPending||[];
