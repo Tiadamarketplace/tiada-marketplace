@@ -6,6 +6,7 @@ import pathlib, re, sys
 here = pathlib.Path(__file__).parent
 s = (here / 'shop_src.html').read_text()
 live = (here / 'live_shop.js').read_text()
+live = live + '\n' + (here / 'v2_shop.js').read_text()
 live = live + '\n' + (here / 'native_loading.js').read_text()
 
 def sub(old, new, count=1):
@@ -194,6 +195,23 @@ sub('<header class="hdr">', '<style>/* Halo loader: no card, logo floats on fros
 
 # real page loads: every page has its own address, so the browser's own loading shows on each change
 sub("function goNow(r){", "function goNowBase(r){")
+# ===== 2026 redesign (Figma) =====
+sub("const NAV=[['home','Home','home'],['catalog','Catalog','grid'],['wishlist','Wishlist','heart'],['cart','Basket','cart'],['account','Account','user']];",
+    "const NAV=[['home','Home','home'],['catalog','Shop','grid'],['cart','Basket','cart'],['track','Track','truck'],['account','Account','user']];")
+sub("function vAccount(){", "function vAccountBase(){")
+sub('<span><b>TIADA</b><small>MARKETPLACE</small></span>', '<span><b>TIADA</b><small>Marketplace</small></span>')
+resub(r'(<button class="m-search-btn" id="m-search-btn"[^>]*>\s*<svg.*?</svg>\s*</button>)', r'\1\n    <button class="m-bag" id="m-bag" data-go="cart" aria-label="Basket"></button>')
+resub(r'<footer>.*?</footer>', '''<footer class="f2">
+  <div class="f2-in">
+    <div class="f2-brand"><b>TIADA</b><em>Marketplace</em><p>Foodstuffs and cereals delivered anywhere in Nigeria from the Ojota Logistics Hub, Ikorodu Road, Lagos.</p>
+      <button class="f2-join" data-go="account">Get new stock &amp; deals by email<span>Create account</span></button></div>
+    <div><h5>Shop</h5><ul><li><button class="flink" data-land="cat:cereal">Cereals</button></li><li><button class="flink" data-land="cat:milk">Milk &amp; drinks</button></li><li><button class="flink" data-land="cat:ccombo">Cereal combos</button></li><li><button class="flink" data-land="cat:fcombo">Foodstuff combos</button></li><li><button class="flink" data-land="deals">Deals</button></li></ul></div>
+    <div><h5>Help</h5><ul><li><button class="flink" data-go="track">Track an order</button></li><li><button class="flink" data-go="guide">How to use Tiada</button></li><li><button class="flink" data-help="1">Help &amp; FAQs</button></li><li><button class="flink" data-go="__chat">Chat with us</button></li></ul></div>
+    <div><h5>Company</h5><ul><li><button class="flink" data-go="privacy">Privacy policy</button></li><li><button class="flink" data-act="consent-change">Cookie settings</button></li><li>care@tiadamarketplace.com</li><li><a href="https://wa.me/2348075110000" target="_blank" rel="noopener">WhatsApp 08075110000</a></li><li><a href="https://www.tiktok.com/@tiadamarketplace" target="_blank" rel="noopener">TikTok @tiadamarketplace</a></li></ul></div>
+  </div>
+  <div class="f2-bot"><span>© 2026 Tiada Marketplace · Ojota Logistics Hub, Ikorodu Road, Lagos</span><span>Payments by bank transfer, secured by Paystack</span></div>
+</footer>''')
+sub('<header class="hdr">', '<style>' + (here / 'v2.css').read_text() + '</style>\n<header class="hdr">')
 # homepage sections from the redesign
 sub('<header class="hdr">', '<style>' + (here / 'home_v2.css').read_text() + '</style>\n<header class="hdr">')
 # page-to-page: the new page shows the same loading message straight away (no second overlay popping in)

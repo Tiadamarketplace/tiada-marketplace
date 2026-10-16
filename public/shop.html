@@ -1192,6 +1192,237 @@ html.sb-on::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#14532F,#0
 @keyframes haloIn{from{opacity:0;transform:translateY(6px) scale(.96)}}
 @media (prefers-reduced-motion:reduce){.loader *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
+<style>/* ===================== 2026 redesign (Figma) — loaded last, so it wins ===================== */
+:root{--r:20px;--r-lg:24px;--sh-card:0 10px 28px rgba(11,58,35,.07);--sh-raise:0 16px 36px rgba(11,58,35,.14);--mint:#E4EFE7;--gold-soft:#F6E9CF}
+
+/* ---- buttons: round pills, primary has a gold edge ---- */
+.btn{border-radius:999px!important;height:50px;background:var(--green)!important;border:2px solid var(--gold)!important;box-shadow:0 8px 20px rgba(11,58,35,.2)!important;font-size:14.5px;letter-spacing:.005em;transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s,background .2s}
+.btn.ghost{background:transparent!important;border:1.5px solid var(--green)!important;box-shadow:none!important;color:var(--green)}
+.btn.gold{background:var(--gold)!important;border-color:var(--gold)!important;color:var(--green)!important;box-shadow:0 8px 20px rgba(212,155,65,.3)!important}
+.btn.red{background:var(--red)!important;border-color:var(--red)!important;box-shadow:none!important}
+.btn:disabled{background:#D9DDD8!important;border-color:#D9DDD8!important;color:#6B7A70!important;box-shadow:none!important}
+@media (hover:hover){.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(11,58,35,.26)!important}.btn.ghost:not(:disabled):hover{background:var(--mint)!important}}
+.btn:not(:disabled):active{transform:scale(.98)}
+.copy{border-radius:999px!important}
+.copy.strong{background:var(--green)!important;color:#fff!important;border-color:var(--green)!important}
+
+/* ---- inputs ---- */
+.field input,.field select,.field textarea{height:50px;border-radius:14px;border-width:1.5px}
+.field label{font-size:11.5px;letter-spacing:.06em}
+.field input:focus,.field select:focus{box-shadow:0 0 0 4px rgba(11,58,35,.08)}
+
+/* ---- panels & headings ---- */
+.panel{border-radius:22px;padding:20px;box-shadow:none}
+.panel h3{font-size:17px;color:var(--ink)}
+h1.page{font-size:28px;color:var(--ink);letter-spacing:-.02em}
+.sec-h h2{color:var(--ink);font-size:22px;letter-spacing:-.02em}
+.sec-h .link{color:var(--green)}
+
+/* ---- header ---- */
+.hdr{background:rgba(255,255,255,.92)}
+.hdr-in{max-width:1312px;height:84px;gap:28px}
+.brand img{height:46px}
+.brand b{font-size:20px;letter-spacing:.18em}
+.brand small{font-family:var(--f-tag);font-style:italic;font-weight:700;font-size:14px;letter-spacing:0;text-transform:none;color:var(--gold);margin-top:-1px}
+.hdr-in .search{flex:1;max-width:none;background:var(--cream);border:1.5px solid var(--line);border-radius:999px;height:50px;padding-left:18px}
+.hdr-in .search input{background:transparent}
+.hdr-in .search .s-go{background:var(--green);color:#fff;border-radius:999px;width:auto;padding:0 18px;height:38px;margin-right:6px}
+.hdr-in .search .s-go::after{content:"Search";font-weight:700;font-size:13px;margin-left:6px}
+.dnav{gap:6px}
+.dnav .dn-l{font-weight:600;font-size:14px;color:var(--ink);padding:8px 10px;border-radius:999px;background:none;border:0}
+.dnav .dn-l.on{color:var(--green);background:var(--mint)}
+.dnav .dn-gap{width:6px}
+.dnav .dn-ic{position:relative;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--green);display:grid;place-items:center;padding:0}
+.dnav .dn-ic .bubble{top:-4px;right:-4px}
+.dnav .dn-acc{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px 0 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--green);font-weight:700;font-size:13px}
+.dnav .dn-acc.on{border-color:var(--green)}
+.dnav .dn-bag{display:flex;align-items:center;gap:8px;height:42px;padding:0 6px 0 14px;border-radius:999px;border:0;background:var(--green);color:#fff;font-weight:700;font-size:13px}
+.dnav .dn-bag i,.m-bag i{font-style:normal;background:var(--gold);color:var(--green);font-weight:800;font-size:12px;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;padding:0 6px}
+.m-bag{display:none}
+@media (max-width:1180px){.dnav .dn-l{padding:8px 6px;font-size:13px}.hdr-in{gap:16px}}
+@media (max-width:1000px){.dnav .dn-l{display:none}}
+
+/* ---- footer ---- */
+footer.f2{background:var(--green);color:var(--gold-soft);border:0;margin-top:56px}
+.f2-in{max-width:1312px;margin:0 auto;padding:48px 24px 28px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1.2fr;gap:40px}
+.f2-brand b{display:block;color:#fff;font-weight:800;font-size:22px;letter-spacing:.18em}
+.f2-brand em{display:block;font-family:var(--f-tag);font-weight:700;color:var(--gold);font-size:16px;margin-top:-2px}
+.f2-brand p{font-size:14px;line-height:1.6;margin:14px 0 18px;max-width:380px;color:var(--gold-soft)}
+.f2-join{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:400px;border:1px solid rgba(212,155,65,.5);background:#14532F;color:var(--gold-soft);border-radius:999px;padding:6px 6px 6px 18px;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.f2-join span{background:var(--gold);color:var(--green);font-weight:800;border-radius:999px;padding:9px 16px;white-space:nowrap}
+footer.f2 h5{margin:0 0 14px;color:var(--gold);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+footer.f2 ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;font-size:14px}
+footer.f2 .flink,footer.f2 a{color:#fff;background:none;border:0;padding:0;font:inherit;font-weight:500;text-decoration:none;text-align:left;cursor:pointer}
+footer.f2 li{color:#fff}
+.f2-bot{max-width:1312px;margin:0 auto;padding:18px 24px calc(22px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(251,249,244,.15);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:12px;color:var(--gold-soft)}
+@media (max-width:900px){.f2-in{grid-template-columns:1fr 1fr;gap:28px}.f2-brand{grid-column:1/-1}}
+@media (max-width:760px){footer.f2{margin-top:32px}.f2-in{padding:32px 16px 20px}.f2-bot{padding-inline:16px;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}}
+
+/* ---- product cards ---- */
+.pc{border-radius:20px;border:1px solid var(--line);box-shadow:var(--sh-card);padding:10px;overflow:visible;background:#fff;transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s}
+.pc-media{position:relative;border-radius:14px;overflow:hidden;background:var(--cream)}
+.pc-img{background:var(--cream)!important;border-radius:14px;aspect-ratio:1/1}
+.pc-img img,.pc-img svg{transition:transform .35s cubic-bezier(.3,.7,.2,1)}
+.pc-tag{top:8px;left:8px;border-radius:999px;padding:4px 10px;font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:800}
+.pc .heart{top:8px;right:8px;width:32px;height:32px;background:#fff;border-radius:50%;box-shadow:0 4px 10px rgba(11,58,35,.12)}
+.pc-b{padding:12px 4px 4px;gap:4px}
+.pc h4{font-size:15px;font-weight:700;min-height:0;-webkit-line-clamp:2}
+.pc-sub{font-size:12px}
+.pc-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px}
+.pc-prices{display:flex;flex-direction:column;min-width:0}
+.pc-now{font-size:18px;font-weight:800;color:var(--green);line-height:1.15}
+.pc-was{font-size:12px;color:var(--muted)}
+.pc-add{position:static!important;flex:none;width:auto!important;height:36px!important;padding:0 14px;border-radius:999px!important;font-size:13px!important;font-weight:800;background:var(--green);color:#fff;box-shadow:none!important;display:flex!important;align-items:center;gap:2px}
+.pc-add:not(.done)::after{content:" Add";font-size:13px;font-weight:800;white-space:pre}
+.pc-add.done{background:var(--gold)!important;color:var(--green)!important}
+.pc-out{font-size:12px;font-weight:800;color:var(--red)}
+@media (hover:hover){.pc:hover{transform:translateY(-4px);box-shadow:var(--sh-raise)}.pc:hover .pc-img img,.pc:hover .pc-img svg{transform:scale(1.04)}}
+.pgrid{gap:20px}
+@media (max-width:760px){
+  .pgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+  .prail{grid-auto-columns:46%!important;gap:12px}
+  .pc{padding:8px;border-radius:18px}
+  .pc h4{font-size:13.5px}
+  .pc-now{font-size:16px}
+  .pc-add{width:34px!important;height:34px!important;padding:0;justify-content:center;font-size:18px!important}
+  .pc-add::after{content:none!important}
+  .pc .pc-rt{display:flex}
+}
+
+/* ---- home blocks & rails ---- */
+.block{border-radius:24px;padding:18px}
+.block-h h2{font-size:19px}
+.slider .slide,.slide{border-radius:24px}
+@media (min-width:761px){.block{padding:24px 24px 26px;border-radius:28px}.block-h h2{font-size:24px}.sec-h h2{font-size:26px}}
+
+/* ---- mobile header & tab bar ---- */
+@media (max-width:760px){
+  .hdr-in{height:62px;justify-content:space-between;padding-inline:16px}
+  .brand img{height:36px}
+  .brand b{font-size:16px;letter-spacing:.16em}
+  .brand small{font-size:11.5px;letter-spacing:0}
+  .m-bell{display:none!important}
+  .m-search-btn{position:static!important;transform:none!important;margin-left:auto;width:40px;height:40px;border-radius:50%;background:var(--cream)!important}
+  .m-bag{display:flex;align-items:center;gap:6px;height:36px;padding:0 6px 0 12px;border:0;border-radius:999px;background:var(--green);color:#fff;margin-left:8px}
+  .tabs,.tabs.mini{display:flex!important;height:calc(74px + env(safe-area-inset-bottom,0px))!important;background:#fff!important;border-radius:22px 22px 0 0!important;box-shadow:0 -6px 22px rgba(11,58,35,.08)!important;border:0!important;padding:8px 6px env(safe-area-inset-bottom,0px)!important;justify-content:space-around;align-items:flex-start}
+  .tabs button,.tabs.mini button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none!important;border:0;color:var(--muted)!important;font-size:11px!important;font-weight:600;padding:0!important;height:auto!important;box-shadow:none!important;border-radius:0!important}
+  .tabs button::before,.tabs button::after{display:none!important}
+  .tabs .tb-i{position:relative;display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background .25s}
+  .tabs .tb-i .bubble{top:-3px;right:6px}
+  .tabs button.on{color:var(--green)!important;font-weight:800}
+  .tabs button.on .tb-i{background:var(--mint)}
+  .tabs .tb-l{font-size:11px!important;line-height:1}
+}
+
+/* ---- section heads in content ---- */
+.subhead h1{font-size:22px;color:var(--ink)}
+.subhead .back{background:var(--cream);border-radius:50%}
+
+/* ---- basket & checkout ---- */
+.rows .row{border-radius:20px;border:1px solid var(--line);background:#fff;padding:14px;box-shadow:none}
+.rows .row .thumb{border-radius:14px;background:var(--cream)}
+.qty{border-radius:999px;border:1.5px solid var(--line);background:#fff;padding:3px}
+.qty button{border-radius:50%!important;background:var(--cream)!important;color:var(--green)!important}
+.layout2>.panel{border-radius:24px;box-shadow:var(--sh-card)}
+.layout2>div:first-child{counter-reset:co}
+.layout2>div:first-child>.panel>h3::before{counter-increment:co;content:counter(co);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--green);color:var(--gold);font-size:13px;font-weight:800;margin-right:10px;vertical-align:1px}
+.speed{border-radius:16px!important;border-width:1.5px!important}
+.speed.on{background:var(--mint)!important;border-color:var(--green)!important;border-width:2px!important}
+.promo input{border-radius:999px!important}
+.promo button{border-radius:999px!important}
+
+/* ---- pay by transfer ---- */
+.pay2{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start;max-width:1040px;margin:0 auto}
+.pay2-main h1.page{margin-top:0}
+.va2{border-radius:24px;overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:0 16px 40px rgba(11,58,35,.1)}
+.va2-top{display:flex;align-items:center;gap:18px;padding:24px 26px;background:var(--green)}
+.va2-amt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.va2-amt small{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.va2-amt b{color:#fff;font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.va2-amt em{font-style:normal;color:var(--gold-soft);font-size:12.5px}
+.va2-ring{position:relative;width:118px;height:118px;flex:none}
+.va2-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.va2-ring circle{fill:none;stroke-width:8}
+.va2-ring .tr{stroke:#14532F}
+.va2-ring .ar{stroke:var(--gold);stroke-linecap:round;stroke-dasharray:326.7;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
+.va2-ring>span{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.va2-ring b{color:#fff;font-size:24px;font-weight:800}
+.va2-ring small{color:var(--gold-soft);font-size:11px}
+.va2-rows{padding:6px 26px}
+.va2-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.va2-row:last-child{border-bottom:0}
+.va2-row>span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.va2-row small{font-size:12px;color:var(--muted);font-weight:600}
+.va2-row b{font-size:15px;color:var(--ink);font-weight:700;word-break:break-word}
+.va2-row b.big{font-size:26px;font-weight:800;letter-spacing:.06em}
+.va2-wait{display:flex;align-items:center;gap:12px;padding:16px 26px;background:var(--gold-soft);color:var(--green);font-weight:700;font-size:13px;line-height:1.45}
+.va2-wait .dots{display:flex;gap:5px;flex:none}
+.va2-wait .dots i{width:8px;height:8px;border-radius:50%;background:var(--green);animation:v2dot 1.2s ease-in-out infinite}
+.va2-wait .dots i:nth-child(2){animation-delay:.2s}.va2-wait .dots i:nth-child(3){animation-delay:.4s}
+@keyframes v2dot{0%,100%{opacity:.25}50%{opacity:1}}
+.pay2-btns{display:flex;gap:12px;margin-top:18px}
+.pay2-btns .btn{margin:0;width:auto;padding:0 26px;flex:none}
+.pay2-side h3{margin-bottom:14px}
+.pay-step{display:flex;gap:14px;margin-bottom:16px}
+.pay-step .ps-i{flex:none;width:40px;height:40px;border-radius:50%;background:var(--green);color:var(--gold);display:grid;place-items:center}
+.pay-step b{display:block;font-size:14px;color:var(--ink)}
+.pay-step small{display:block;font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:2px}
+.pay2-side .note-row{margin-top:10px}
+@media (max-width:900px){
+  .pay2{grid-template-columns:1fr;gap:16px}
+  .va2-top{padding:18px}
+  .va2-amt b{font-size:32px}
+  .va2-ring{width:96px;height:96px}
+  .va2-ring b{font-size:20px}
+  .va2-rows{padding:4px 18px}
+  .va2-row b.big{font-size:22px}
+  .va2-wait{padding:14px 18px}
+  .pay2-btns{flex-direction:column}
+  .pay2-btns .btn{width:100%}
+}
+
+/* ---- account: desktop sidebar + overview ---- */
+.acc2{display:grid;grid-template-columns:360px minmax(0,1fr);gap:32px;align-items:start}
+.acc2-side{position:sticky;top:100px}
+.acc2-side .acc-quick{display:none}
+.acc2-main .subhead .back{display:none}
+.mrow.on{background:var(--mint)!important;border-radius:14px}
+.mrow.on>span:nth-child(2){color:var(--green);font-weight:800}
+.ov-live{display:flex;align-items:center;gap:18px;padding:20px 22px;border-radius:22px;background:#fff;border:2px solid var(--gold);box-shadow:var(--sh-card);margin:6px 0 16px}
+.ov-li{width:52px;height:52px;border-radius:14px;background:var(--gold-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.ov-lt{flex:1;min-width:0}.ov-lt b{display:block;font-size:17px;color:var(--ink)}.ov-lt small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.ov-live .btn{margin:0;width:auto;padding:0 22px}
+.ov-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.ov-tile{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:20px;border-radius:20px;background:#fff;border:1px solid var(--line);text-align:left;font:inherit;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.ov-tile b{font-size:16px;color:var(--ink)}.ov-tile small{font-size:12.5px;color:var(--muted)}
+.ov-i{width:38px;height:38px;border-radius:12px;background:var(--mint);color:var(--green);display:grid;place-items:center}
+@media (hover:hover){.ov-tile:hover{transform:translateY(-3px);box-shadow:var(--sh-raise)}}
+.ov-quick{display:flex;gap:12px;margin-top:16px}.ov-quick .btn{margin:0;text-decoration:none}
+
+/* ---- account menu look ---- */
+.acc-head{border-radius:24px!important}
+.menu{border-radius:20px!important;border:1px solid var(--line)}
+
+/* ---- chat sheet header ---- */
+.chat-head{background:var(--green)!important;color:#fff}
+.chat-head b{color:#fff!important}
+.chat-head .cstat{color:var(--gold-soft)!important}
+.chat-head .x{background:#14532F!important;color:#fff!important}
+.chat-head .cav{background:var(--cream)}
+.bub.me{border-bottom-right-radius:6px}
+.bub.them{border-bottom-left-radius:6px}
+
+/* ---- track ---- */
+.tmap{border-radius:18px;overflow:hidden}
+.timeline li.now span b{color:var(--green)}
+
+@media (prefers-reduced-motion:reduce){.pc,.btn,.ov-tile{transition:none}.va2-wait .dots i{animation:none;opacity:.8}}
+.hdr-in .search .s-go{display:flex!important;align-items:center;gap:0}
+.hdr-in .search .s-go svg{display:none}
+main{max-width:1312px}
+@media (min-width:761px){main{padding-inline:24px}}
+body{margin:0}
+</style>
 <style>/* ---- homepage sections from the 2026 redesign (delivery areas, how it works, reviews belt, help strip) ---- */
 .h2-sec{margin-top:26px}
 .h2-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -1248,7 +1479,7 @@ html.sb-on::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#14532F,#0
   <div class="hdr-in">
     <button class="brand" data-go="home" aria-label="Tiada Marketplace home" data-tip="Back to homepage">
       <img src="/icon-sm.png" alt="">
-      <span><b>TIADA</b><small>MARKETPLACE</small></span>
+      <span><b>TIADA</b><small>Marketplace</small></span>
     </button>
     <form class="search" role="search" data-sform>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1260,6 +1491,7 @@ html.sb-on::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#14532F,#0
     <button class="m-search-btn" id="m-search-btn" aria-label="Search" data-tip="Search products">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     </button>
+    <button class="m-bag" id="m-bag" data-go="cart" aria-label="Basket"></button>
   </div>
   <div class="m-search" id="m-search">
     <form class="search" role="search" data-sform>
@@ -1274,18 +1506,15 @@ html.sb-on::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#14532F,#0
 
 <main id="view"></main>
 
-<footer>
-  <div class="foot-in">
-    <div>
-      <img src="/logo-sm.png" alt="Tiada Marketplace" style="width:120px;background:#FBF9F4;border-radius:12px;padding:8px">
-      <p class="tag" style="margin-top:10px">Foodstuffs and cereals</p>
-      <p>Your trusted plug for foodstuff &amp; everyday essentials.</p>
-    </div>
-    <div><h5>Warehouse</h5><p>Ojota Logistics Hub<br>Ikorodu Road, Lagos, Nigeria</p></div>
-    <div><h5>Customer care</h5><ul><li>care@tiadamarketplace.com</li><li>WhatsApp: <a href="https://wa.me/2348075110000" target="_blank" rel="noopener">08075110000</a></li></ul><h5 style="margin-top:16px">Follow us</h5><div class="social"><a href="https://www.tiktok.com/@tiadamarketplace" target="_blank" rel="noopener" aria-label="Tiada on TikTok" data-tip="TikTok"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 3c.3 2.2 1.6 3.7 3.9 3.9v3.1c-1.4.1-2.6-.3-3.9-1.1v5.6c0 3.6-2.6 6.1-6.1 6.1A6 6 0 0 1 4.4 14.5c0-3.7 3.2-6.4 6.9-5.9v3.3c-1.7-.4-3.6.6-3.6 2.6 0 1.6 1.3 2.8 2.8 2.8 1.7 0 2.9-1.1 2.9-3.2V3z"/></svg></a><a href="https://wa.me/2348075110000" target="_blank" rel="noopener" aria-label="Chat with Tiada on WhatsApp" data-tip="WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2A9.7 9.7 0 0 0 3.6 16.8L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5 5 0 0 0 1.1 2.7 11.4 11.4 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.6-.2z"/></svg></a></div></div>
-    <div><h5>Help &amp; privacy</h5><ul><li><button class="flink" data-go="track">Track an order</button></li><li><button class="flink" data-go="guide">How to use Tiada</button></li><li><button class="flink" data-help="1">Help &amp; FAQs</button></li><li><button class="flink" data-go="privacy">Privacy policy</button></li><li><button class="flink" data-act="consent-change">Cookie settings</button></li></ul></div>
+<footer class="f2">
+  <div class="f2-in">
+    <div class="f2-brand"><b>TIADA</b><em>Marketplace</em><p>Foodstuffs and cereals delivered anywhere in Nigeria from the Ojota Logistics Hub, Ikorodu Road, Lagos.</p>
+      <button class="f2-join" data-go="account">Get new stock &amp; deals by email<span>Create account</span></button></div>
+    <div><h5>Shop</h5><ul><li><button class="flink" data-land="cat:cereal">Cereals</button></li><li><button class="flink" data-land="cat:milk">Milk &amp; drinks</button></li><li><button class="flink" data-land="cat:ccombo">Cereal combos</button></li><li><button class="flink" data-land="cat:fcombo">Foodstuff combos</button></li><li><button class="flink" data-land="deals">Deals</button></li></ul></div>
+    <div><h5>Help</h5><ul><li><button class="flink" data-go="track">Track an order</button></li><li><button class="flink" data-go="guide">How to use Tiada</button></li><li><button class="flink" data-help="1">Help &amp; FAQs</button></li><li><button class="flink" data-go="__chat">Chat with us</button></li></ul></div>
+    <div><h5>Company</h5><ul><li><button class="flink" data-go="privacy">Privacy policy</button></li><li><button class="flink" data-act="consent-change">Cookie settings</button></li><li>care@tiadamarketplace.com</li><li><a href="https://wa.me/2348075110000" target="_blank" rel="noopener">WhatsApp 08075110000</a></li><li><a href="https://www.tiktok.com/@tiadamarketplace" target="_blank" rel="noopener">TikTok @tiadamarketplace</a></li></ul></div>
   </div>
-  <div class="copyr">© 2026 Tiada Marketplace. All Rights Reserved. · Secure payments by licensed providers</div>
+  <div class="f2-bot"><span>© 2026 Tiada Marketplace · Ojota Logistics Hub, Ikorodu Road, Lagos</span><span>Payments by bank transfer, secured by Paystack</span></div>
 </footer>
 
 <nav class="tabs" id="tabs"></nav>
@@ -1479,7 +1708,7 @@ const ici=(n,s)=>ic(n,s||16).replace('<svg','<svg style="vertical-align:-3px;mar
 const ic=(n,s,fill)=>`<svg width="${s||22}" height="${s||22}" viewBox="0 0 24 24" fill="${fill?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
 /* ---------- nav ---------- */
-const NAV=[['home','Home','home'],['catalog','Catalog','grid'],['wishlist','Wishlist','heart'],['cart','Basket','cart'],['account','Account','user']];
+const NAV=[['home','Home','home'],['catalog','Shop','grid'],['cart','Basket','cart'],['track','Track','truck'],['account','Account','user']];
 function renderNav(){
   const mb=$('#m-bell');if(mb)mb.innerHTML=ic('bell',21)+(S.user&&unread()?`<span class="bubble num" style="top:0;right:0">${unread()}</span>`:'');
   const r=S.route==='checkout'||S.route==='pay'||S.route==='success'?'cart':S.route==='track'||S.route==='privacy'||S.route==='guide'?'account':S.route==='search'||S.route==='land'||S.route==='seeall'?'home':S.route;
@@ -2004,7 +2233,7 @@ function tickResend(){const el=$('#resend');if(!el)return;const s=Math.ceil((aut
 setInterval(()=>{if(S.route==='account'&&auth.step==='otp'){const wasLocked=$('#otp0')&&$('#otp0').disabled;tickResend();if(wasLocked&&auth.lockUntil<=Date.now()){auth.err='';render()}}},1000);
 /* ---- account ---- */
 const SUB={msg:'Message',orders:'Orders',inbox:'Inbox',reviews:'Ratings & Reviews',vouchers:'Vouchers',recent:'Recently Viewed',addresses:'Address Book',privacy:'Privacy & Security',help:'Help & Support',profile:'My details'};
-function vAccount(){
+function vAccountBase(){
   if(!S.user)return vAuth();
   if(S.accView!=='menu'){
     const body={msg:accMsg,orders:accOrders,inbox:accInbox,reviews:accReviews,vouchers:accVouchers,recent:accRecent,addresses:accAddr,privacy:accPrivacy,help:accHelp,profile:accProfile}[S.accView]();
@@ -3485,6 +3714,113 @@ async function boot(){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-areachat]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();const q=b.dataset.chatq;openChat();botQ.then(()=>setTimeout(()=>chatSend(q),250))},true);
 if(/[?&]test=1\b/.test(location.search))window.T={get S(){return S},go,render,save,openChat};
 boot();
+
+/* ===================== 2026 redesign layer (matches the Figma file) =====================
+   Loaded after the live layer. Function declarations here replace the older ones. */
+
+Object.assign(ICON,{copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',check:'<path d="M20 6 9 17l-5-5"/>'});
+
+/* ---------- header (desktop + phone) and the bottom tab bar ---------- */
+function renderNav(){
+  const r=S.route==='checkout'||S.route==='pay'||S.route==='success'?'cart':S.route==='privacy'||S.route==='guide'?'account':S.route==='search'||S.route==='land'||S.route==='seeall'?(S.land&&String(S.land).startsWith('cat:ccombo')?'combos':S.land==='deals'?'deals':'catalog'):S.route==='home'?'home':S.route;
+  const n=cartCount(),first=S.user?esc(S.user.name.split(' ')[0]):'',un=S.user?unread():0;
+  const link=(attr,label,key)=>`<button ${attr} class="dn-l ${r===key?'on':''}">${label}</button>`;
+  $('#dnav').innerHTML=
+    link('data-go="catalog"','Shop','catalog')+link('data-land="cat:ccombo"','Combos','combos')+link('data-land="deals"','Deals','deals')+link('data-go="track"','Track order','track')+
+    `<span class="dn-gap"></span>`+
+    `<button class="dn-ic" data-go="wishlist" aria-label="Wishlist, ${S.wish.length} saved" data-tip="Wishlist">${ic('heart',19)}${S.wish.length?`<span class="bubble num">${S.wish.length}</span>`:''}</button>`+
+    (S.user?`<button class="dn-ic" data-inbox="1" aria-label="Inbox, ${un} unread" data-tip="Inbox${un?` · ${un} new`:''}">${ic('bell',19)}${un?`<span class="bubble num">${un}</span>`:''}</button>`:'')+
+    `<button class="dn-acc ${r==='account'?'on':''}" data-go="account">${ic('user',17)}<span>${S.user?first:'Sign in'}</span></button>`+
+    `<button class="dn-bag" data-go="cart" aria-label="Basket, ${n} items" data-tip="${n?`View basket · ${naira(subtotal())}`:'Your basket is empty'}">${ic('bag',17)}<span>Basket</span><i class="num">${n}</i></button>`;
+  const mb=$('#m-bag');if(mb)mb.innerHTML=`${ic('bag',16)}<i class="num">${n}</i>`;
+  const bell=$('#m-bell');if(bell)bell.innerHTML='';
+  $('#tabs').innerHTML=NAV.map(t=>{const on=r===t[0],b=t[0]==='cart'?n:t[0]==='account'&&S.user?un:0;
+    return `<button data-go="${t[0]}" class="${on?'on':''}" aria-label="${t[1]}${b?`, ${b}`:''}"><span class="tb-i">${ic(t[2],22)}${b?`<span class="bubble num">${b}</span>`:''}</span><span class="tb-l">${t[1]}</span></button>`}).join('');
+}
+
+/* ---------- product card ---------- */
+function card(p){
+  const size=sizeOf(p),pr=priceOf(p,size),wished=S.wish.includes(p.id),out=p.status==='out',rt=ratingFor(p.id);
+  const off=pr.was?Math.round((1-pr.now/pr.was)*100):0;
+  const nSizes=p.sizes.filter(x=>!x.na).length;
+  const sub=p.items?`${p.items.length} items · ${p.items.slice(0,3).join(', ')}`:nSizes>1?`${size==='1 paint'?'1 paint':size} · ${nSizes} sizes`:size;
+  const tag=off?`<span class="pc-tag off">-${off}%</span>`:p.status==='fast'?'<span class="pc-tag">Fast selling</span>':p.items?'<span class="pc-tag">Combo</span>':'';
+  return `<article class="pc">
+    <div class="pc-media">
+      <button class="pc-img" data-open="${p.id}" aria-label="View ${esc(p.name)}" data-tip="View sizes, details &amp; reviews">${art(p)}${out?'<div class="mask"><span>SOLD OUT</span></div>':''}</button>
+      ${tag}
+      <button class="heart ${wished?'on':''}" data-wish="${p.id}" aria-label="${wished?'Remove from':'Save to'} wishlist" data-tip="${wished?'Remove from wishlist':'Save to wishlist'}">${ic('heart',15,wished)}</button>
+    </div>
+    <div class="pc-b">
+      <h4>${esc(p.name)}</h4>
+      <span class="pc-sub">${esc(sub)}</span>
+      ${rt.n?`<span class="pc-rt num"><span class="stars">★</span>${rt.avg.toFixed(1)} <i>(${rt.n})</i></span>`:''}
+      <div class="pc-foot">
+        <div class="pc-prices"><b class="pc-now num">${naira(pr.now)}</b>${pr.was?`<s class="pc-was num">${naira(pr.was)}</s>`:''}</div>
+        ${out?'<span class="pc-out">Sold out</span>':`<button class="pc-add" data-add="${p.id}" aria-label="Add ${esc(p.name)} ${size!=='Package'?size:''} to basket" data-tip="Add ${size!=='Package'?(size==='1 paint'?'1 paint bucket':size):'package'} to basket">+</button>`}
+      </div>
+      ${p.stock<5&&!out?`<div class="pc-stock" aria-hidden="true"><i style="width:${p.stock*12}%"></i></div><span class="pc-left">Only ${p.stock} left</span>`:''}
+    </div>
+  </article>`;
+}
+
+/* ---------- account: on wide screens the menu stays on the left ---------- */
+const ACC_WIDE=()=>innerWidth>=1000;
+function accOverview(){
+  const live=S.orders.find(o=>['paid','packed','route','issue'].includes(o.status));
+  const vc=S.vouchers.filter(v=>!v.used).length,un=unread();
+  const tile=(v,icon,t,d)=>`<button class="ov-tile" data-accv="${v}"><span class="ov-i">${ic(icon,18)}</span><b>${t}</b><small>${d}</small></button>`;
+  return `<h1 class="page">Overview</h1>
+   ${live?`<div class="ov-live"><span class="ov-li">${ic('box',24)}</span><span class="ov-lt"><b>${live.id} is ${esc(STATUS[live.status]?STATUS[live.status][0].toLowerCase():'on its way')}</b><small>${live.items.length} item${live.items.length>1?'s':''} · ${naira(live.total)}</small></span><button class="btn" data-track="${live.id}">Track order</button></div>`:''}
+   <div class="ov-grid">${tile('inbox','mail',un?`${un} new message${un>1?'s':''}`:'Inbox','Order updates and receipts')}${tile('orders','box',`${S.orders.length} order${S.orders.length===1?'':'s'}`,'Track, rate and buy again')}${tile('vouchers','ticket',vc?`${vc} voucher${vc>1?'s':''}`:'Vouchers','Discounts you can use')}</div>
+   <div class="ov-quick"><button class="btn" data-act="chat">${ic('chat',18)} Live chat</button><a class="btn gold" href="https://wa.me/2348075110000" target="_blank" rel="noopener">${ic('chat',18)} WhatsApp</a></div>`;
+}
+function vAccount(){
+  if(!S.user||!ACC_WIDE())return vAccountBase();
+  const keep=S.accView;S.accView='menu';let menu=vAccountBase();S.accView=keep;
+  const main=keep==='menu'?accOverview():vAccountBase();
+  const act=keep==='msg'?'inbox':keep;
+  menu=menu.replace(new RegExp(`class="mrow" data-accv="${act}"`),`class="mrow on" data-accv="${act}"`);
+  return `<div class="acc2"><aside class="acc2-side">${menu}</aside><section class="acc2-main">${main}</section></div>`;
+}
+let accWideWas=ACC_WIDE();
+addEventListener('resize',()=>{const w=ACC_WIDE();if(w!==accWideWas){accWideWas=w;if(S.route==='account')render()}});
+
+/* ---------- pay by transfer ---------- */
+function vPay(){
+  const p=S.pay;if(!p)return vCart();const a=p.acct||{};
+  const step=(i,icon,t,d)=>`<div class="pay-step"><span class="ps-i">${ic(icon,18)}</span><span><b>${i}. ${t}</b><small>${d}</small></span></div>`;
+  return `<div class="pay2">
+   <div class="pay2-main">
+    <h1 class="page">Almost done${S.user?', '+esc(S.user.name.split(' ')[0]):''}</h1>
+    <p class="sub">Transfer from any bank app. This account was made just for order ${esc(p.id)} and expires in 30 minutes.</p>
+    <div class="va2">
+     <div class="va2-top">
+      <span class="va2-amt"><small>Transfer exactly</small><b class="num">${naira(p.total)}</b><em>Order ${esc(p.id)} · one-time account</em></span>
+      <span class="va2-ring" aria-hidden="true"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="tr"/><circle cx="60" cy="60" r="52" class="ar" id="va-arc"/></svg><span><b class="num" id="va-clock">--:--</b><small>left</small></span></span>
+     </div>
+     <div class="va2-rows">
+      <div class="va2-row"><span><small>Bank</small><b>${esc(a.bank||'Bank')}</b></span></div>
+      <div class="va2-row"><span><small>Account number</small><b class="num big" id="acct">${esc(a.number||'')}</b></span><button class="copy strong" data-copy="${esc(a.number||'')}" data-tip="Copy account number">${ic('copy',14)} Copy number</button></div>
+      <div class="va2-row"><span><small>Account name</small><b>${esc(a.name||'Tiada Marketplace')}</b></span></div>
+      <div class="va2-row"><span><small>Amount</small><b class="num">${naira(p.total)}</b></span><button class="copy" data-copy="${p.total}" data-tip="Copy exact amount">${ic('copy',14)} Copy</button></div>
+     </div>
+     <div class="va2-wait"><span class="dots"><i></i><i></i><i></i></span>Waiting for your transfer. This page updates by itself the moment it lands — no receipt to upload.</div>
+    </div>
+    <div class="pay2-btns"><button class="btn" data-act="paid-check">I’ve sent it — check now</button><button class="btn ghost" data-act="cancelpay">Back to basket</button></div>
+    <p class="demo" id="pay-msg">Tap after sending the transfer. We’ll confirm it with the bank.</p>
+   </div>
+   <aside class="pay2-side panel">
+    <h3>How to pay</h3>
+    ${step(1,'phone','Open your bank app','Any Nigerian bank works — GTBank, Opay, Kuda, Access and more.')}
+    ${step(2,'card','Transfer the exact amount','To the account on this page. Check the account name in your bank app matches before you send.')}
+    ${step(3,'check','We confirm it automatically','You’ll see “Payment received” here and in your email.')}
+    <div class="note-row warn">${ic('alert',16)}<span>If your bank shows a different account name, stop and message us on WhatsApp ${esc(STORE.whatsapp||'08075110000')}.</span></div>
+    <div class="note-row safe">${ic('shield',16)}<span>Tiada will never ask for your PIN, OTP or password.</span></div>
+   </aside></div>`;
+}
+/* countdown ring follows the clock text */
+setInterval(()=>{const arc=document.getElementById('va-arc');if(!arc||!S.pay||!S.pay.expires)return;const left=Math.max(0,S.pay.expires-Date.now());const f=Math.min(1,left/(30*60000));arc.style.strokeDashoffset=String(326.7*(1-f))},1000);
 
 /* ---------- native browser loading for in-page actions ----------
    Moving between pages is a real page load, so the browser shows its own loading by itself.
