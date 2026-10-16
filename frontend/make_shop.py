@@ -128,6 +128,7 @@ sub("Check that the account name reads <b>Tiada Marketplace / Order …</b> befo
 sub("'<b>Sign in</b> with your phone number and a 6-digit code. There’s no password to remember.',", "'<b>Sign in</b> with your email and a 6-digit code we email you. There’s no password to remember.',")
 sub("Sign in from <b>Account</b> with your phone number. We text you a 6-digit code,", "Sign in from <b>Account</b> with your email. We email you a 6-digit code,")
 sub("Sign-in uses one-time phone codes, with lockout after repeated wrong tries.", "Sign-in uses one-time email codes, with lockout after repeated wrong tries.")
+sub("Our payment provider (Paystack or Monnify) processes your transfer.", "Our payment provider, Paystack, processes your transfer.")
 sub("<li>Sessions end after 15 minutes of inactivity.</li>", "<li>You can sign out of this device at any time from Privacy &amp; Security.</li>")
 sub("You’re signed out after 15 minutes of inactivity.", "Sign out from Privacy & Security when you use a shared phone.")
 sub("signs out after 15 minutes of inactivity", "stays signed in until you sign out")
