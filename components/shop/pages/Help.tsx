@@ -5,6 +5,7 @@ import { api, naira, waLink } from '@/lib/shop-client';
 import { H1, btnSolid, field, labelStyle } from '../ui';
 
 const FAQ: [string, string][] = [
+  ['Why does my order come in a Tiada bag?', 'We buy in large original cartons and bags, then measure each product into smaller, sealed, food-grade bags at our hub. That lets you buy 250g, 500g, 1kg or a paint instead of a whole carton, for less. The brand pictures show what’s inside; it’s the same product, repacked by us. Anything sold sealed in its original pack says so in its size, like “400g tin”.'],
   ['How do I order?', 'Pick a product, choose its size and tap Add to cart. Combos go in as one package. When you’re ready, open your cart and check out. You don’t need an account.'],
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
   ['How do I pay?', 'At checkout, tap Pay securely and Paystack’s window opens. Pay by card, bank transfer or USSD, and your order confirms on its own. Tiada never sees your card details.'],

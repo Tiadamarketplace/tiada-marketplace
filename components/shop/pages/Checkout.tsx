@@ -287,6 +287,7 @@ export default function Checkout() {
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 8, borderTop: '1px solid #E4DFD3' }}><span style={{ fontSize: 16, fontWeight: 600 }}>Total</span><span style={{ fontSize: 24, fontWeight: 600 }}>{naira(total)}</span></div>
+          <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: '#66736B' }}>Items arrive repacked in sealed Tiada bags, unless the size says tin or sealed pack.</p>
           {step === 'details' && !codeApplied && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
               {!codeOpen ? <button type="button" className="ub" onClick={() => setCodeOpen(true)} style={{ alignSelf: 'flex-start', fontSize: 13.5, fontWeight: 600, color: '#0B3A23', textDecoration: 'underline', textUnderlineOffset: 4, minHeight: 32 }}>Have a discount code?</button> : (
