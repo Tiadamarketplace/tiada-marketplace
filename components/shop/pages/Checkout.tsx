@@ -179,7 +179,7 @@ export default function Checkout() {
                   <>
                     {oyoGroups.length > 0 ? (
                       <>
-                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Pick your area. The fee depends on how far it is from us in Oyo.</p>
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Pick your area. The fee depends on how far it is from our Iseyin branch.</p>
                         <label style={labelStyle}>Your area in Oyo State
                           <select id="co-zone" value={f.zone.startsWith('oyo:') ? f.zone : ''} onChange={e => set('zone', e.target.value)} aria-invalid={err?.field === 'zone'} style={{ ...inp('zone'), cursor: 'pointer' }}>
                             <option value="">Choose your area</option>

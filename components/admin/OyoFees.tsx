@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import type { Ctx } from './Desk';
-import { DEFAULT_OYO, OyoConfig, oyoAreas, parseSpot } from '@/lib/oyo';
+import { DEFAULT_OYO, OYO_GROUPS, OyoConfig, oyoAreas, parseSpot } from '@/lib/oyo';
 import { Section, Btn, Switch, call, useToast, input, lab, naira } from './ui';
 
 /** Oyo fees by distance. The spot is only stored here and never shown to customers. */
@@ -28,7 +28,7 @@ export default function OyoFees({ c }: { c: Ctx }) {
     catch (e) { toast('err', 'That didn’t save.', (e as Error).message); } finally { setBusy(false); }
   };
   const setFee = (id: string, v: string) => setCfg(x => { const fees = { ...x.fees }; if (v === '') delete fees[id]; else fees[id] = n(v); return { ...x, fees }; });
-  const list = showAll ? areas : areas.filter(a => a.group === 'Ibadan');
+  const list = showAll ? areas : areas.filter(a => a.group === OYO_GROUPS[0]);
 
   return (
     <Section title="Oyo State fees" sub="Customers pick their area. The fee is worked out from how far it is from your Oyo spot. Your spot is never shown to customers.">
@@ -36,27 +36,27 @@ export default function OyoFees({ c }: { c: Ctx }) {
         <div style={{ ...lab, gridColumn: '1 / -1' }}>
           Your spot in Oyo
           {!editSpot && cfg.hub ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 400 }}><span style={{ fontSize: 13.5, color: '#0B3A23' }}>Saved. Customers can’t see it.</span>{owner && <Btn kind="text" small onClick={() => setEditSpot(true)}>Change</Btn>}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 400 }}><span style={{ fontSize: 13.5, color: '#0B3A23' }}>Your Iseyin pin is saved. Customers can’t see it.</span>{owner && <Btn kind="text" small onClick={() => setEditSpot(true)}>Change</Btn>}</span>
           ) : <>
-            <input value={spot} onChange={e => setSpot(e.target.value)} disabled={!owner} placeholder="Paste from Google Maps, e.g. 7.4290, 3.9110" style={{ ...input, borderColor: spot.trim() && !parsed ? '#B8402B' : '#DCD6CA' }} />
+            <input value={spot} onChange={e => setSpot(e.target.value)} disabled={!owner} placeholder="Paste from Google Maps, e.g. 7.9671, 3.6012" style={{ ...input, borderColor: spot.trim() && !parsed ? '#B8402B' : '#DCD6CA' }} />
             <span style={{ fontWeight: 400, fontSize: 12.5, color: spot.trim() && !parsed ? '#9E3522' : '#66736B', lineHeight: 1.5 }}>{spot.trim() ? (parsed ? 'Got it. Press Save to use it.' : 'That doesn’t look like a spot in Oyo State.') : 'In Google Maps, press and hold on your building. The numbers appear at the top: copy them and paste here. A Google Maps link works too.'}</span>
           </>}
         </div>
         <label style={lab}>Starting fee (₦)<input value={cfg.start} onChange={e => setCfg(x => ({ ...x, start: n(e.target.value) }))} inputMode="numeric" disabled={!owner} style={input} /></label>
         <label style={lab}>Plus, for every km (₦)<input value={cfg.perKm} onChange={e => setCfg(x => ({ ...x, perKm: n(e.target.value) }))} inputMode="numeric" disabled={!owner} style={input} /></label>
       </div>
-      {!cfg.hub && !parsed && <p style={{ margin: '12px 0 0', padding: '10px 12px', borderRadius: 8, background: '#FBF2DE', color: '#5C430F', fontSize: 13 }}>Until you add your spot, every Oyo area pays the flat Oyo fee of {naira(fallback)}.</p>}
+      {!cfg.hub && !parsed && <p style={{ margin: '12px 0 0', padding: '10px 12px', borderRadius: 8, background: '#FBF2DE', color: '#5C430F', fontSize: 13 }}>For now, distances are measured from the middle of Iseyin town. Paste your branch’s exact pin above for exact fees.</p>}
       <div style={{ marginTop: 14 }}>
         {list.map(a => (
           <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #F0ECE3', opacity: a.on ? 1 : 0.5 }}>
-            <span style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{a.name}</span><span style={{ fontSize: 12, color: '#66736B' }}>{a.km != null ? `About ${a.km} km by road · works out at ${naira(a.auto)}` : a.group}</span></span>
+            <span style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{a.name}</span><span style={{ fontSize: 12, color: '#66736B' }}>{a.group} · about {a.km} km by road · works out at {naira(a.auto)}</span></span>
             <input value={cfg.fees[a.id.slice(4)] ?? ''} onChange={e => setFee(a.id.slice(4), e.target.value)} placeholder={String(a.auto)} inputMode="numeric" aria-label={`Fee for ${a.name}`} title="Leave empty to use the worked-out fee" disabled={!owner} style={{ ...input, width: 96, height: 36 }} />
             <Switch on={a.on} label={`Deliver to ${a.name}`} onChange={v => owner && setCfg(x => ({ ...x, off: v ? x.off.filter(o => o !== a.id.slice(4)) : x.off.concat(a.id.slice(4)) }))} />
           </div>
         ))}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10 }}>
-        <Btn kind="text" small onClick={() => setShowAll(!showAll)}>{showAll ? 'Show Ibadan only' : 'Show other Oyo towns too'}</Btn>
+        <Btn kind="text" small onClick={() => setShowAll(!showAll)}>{showAll ? 'Show Iseyin and nearby only' : 'Show Ibadan and other towns too'}</Btn>
         {owner && <Btn disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save Oyo fees'}</Btn>}
       </div>
       <p style={{ margin: '10px 0 0', fontSize: 12, color: '#66736B' }}>Type a fee in an area’s box to set it yourself. Leave it empty to use the worked-out fee. Switch an area off to stop deliveries there.</p>

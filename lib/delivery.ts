@@ -1,5 +1,5 @@
 import { getZones, getSetting, Zone } from './catalog';
-import { DEFAULT_OYO, OyoConfig, oyoAreas } from './oyo';
+import { DEFAULT_OYO, OYO_DAYS, OyoConfig, oyoAreas } from './oyo';
 
 export type ShopZone = Zone & { area?: string };
 /**
@@ -12,7 +12,7 @@ export async function deliveryZones(): Promise<ShopZone[]> {
   const out: ShopZone[] = [];
   for (const z of zones) {
     if (z.id !== 'st:Oyo') { out.push(z); continue; }
-    for (const a of oyoAreas({ ...DEFAULT_OYO, ...cfg }, z.fee)) if (a.on) out.push({ ...z, id: a.id, label: a.name, fee: a.fee, city: a.group, days: a.group === 'Ibadan' ? '1–2 days' : '2–3 days', area: a.name });
+    for (const a of oyoAreas({ ...DEFAULT_OYO, ...cfg }, z.fee)) if (a.on) out.push({ ...z, id: a.id, label: a.name, fee: a.fee, city: a.group, days: OYO_DAYS[a.group], area: a.name });
   }
   return out;
 }
