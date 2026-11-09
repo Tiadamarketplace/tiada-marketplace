@@ -35,7 +35,7 @@ export default function Home() {
         <div className="hero-shade" aria-hidden="true" style={{ position: 'absolute', inset: 0 }} />
         <div className="hero-box" style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '0 clamp(16px, 3vw, 28px)', minHeight: 'clamp(460px, 44vw, 600px)', display: 'flex', alignItems: 'center' }}>
           <div className="fade" style={{ maxWidth: 540, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 18, padding: '48px 0' }}>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D49B41' }}>Tiada Marketplace · Lagos</span>
+            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D49B41' }}>Tiada Marketplace · Lagos &amp; Oyo</span>
             <h1 className="serif" style={{ margin: 0, fontSize: 'clamp(40px, 5.6vw, 68px)', lineHeight: 1.02, letterSpacing: '-0.01em', color: '#FFFFFF', textShadow: '0 2px 24px rgba(0,0,0,0.25)' }}>Foodstuffs and cereals, packed for your home.</h1>
             <p style={{ margin: 0, maxWidth: 470, fontSize: 16, lineHeight: 1.7, color: 'rgba(255,255,255,0.88)' }}>Breakfast cereals by weight, ready-made combos and pantry staples, packed at our hub and brought to your door on your area’s delivery day.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 24px', marginTop: 6 }}>
