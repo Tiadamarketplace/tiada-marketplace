@@ -9,7 +9,7 @@ const FAQ: [string, string][] = [
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
   ['How do I pay?', 'At checkout, tap Pay securely and Paystack’s window opens. Pay by card, bank transfer or USSD, and your order confirms on its own. Tiada never sees your card details.'],
   ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Every Lagos area has a delivery day, shown below and at checkout before you pay. Oyo orders go by courier and we email you the tracking number.'],
-  ['How do I track my order?', 'Use the TD code from your confirmation email on the Track page, with the last 4 digits of your phone. If you have an account, your orders are under My account.'],
+  ['How do I track my order?', 'Type the TD code from your confirmation email on the Track page. If you have an account, your orders are under My account.'],
   ['Something is wrong with my order', 'Message us within 24 hours with a photo and your TD code. We’ll replace the item or refund you.'],
 ];
 export default function Help() {

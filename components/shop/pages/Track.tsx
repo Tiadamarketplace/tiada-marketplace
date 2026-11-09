@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import OrderSteps from '../OrderSteps';
 import { api, naira, waLink } from '@/lib/shop-client';
@@ -11,11 +11,10 @@ const WORD: Record<string, string> = { new: 'Being packed', packed: 'Packed and 
 const small: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#66736B' };
 const link: React.CSSProperties = { color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4, textDecorationColor: '#B9B3A5' };
 
-/** Track an order without signing in: order code + last 4 digits of the phone used at checkout. */
+/** Track an order without signing in, with just the order code. */
 export default function Track({ initial }: { initial: string }) {
   const { data, user } = useShop();
   const [code, setCode] = useState(initial);
-  const [last4, setLast4] = useState('');
   const [o, setO] = useState<T | null>(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -23,11 +22,12 @@ export default function Track({ initial }: { initial: string }) {
     setErr('');
     let c = code.trim().toUpperCase().replace(/\s/g, ''); if (/^\d+$/.test(c)) c = 'TD-' + c;
     if (!/^TD-\d{5,9}$/.test(c)) return setErr('Enter the order code from your email. It looks like TD-48213.');
-    if (!/^\d{4}$/.test(last4)) return setErr('Enter the last 4 digits of the phone number you used at checkout.');
     setBusy(true);
-    try { const r = await api<{ order: T }>('/api/track', { json: { code: c, last4 } }); setO(r.order); }
+    try { const r = await api<{ order: T }>('/api/track', { json: { code: c } }); setO(r.order); }
     catch (e) { setErr((e as Error).message); setO(null); } finally { setBusy(false); }
   };
+  // opened from the button in an order email: show the order straight away
+  useEffect(() => { if (initial) go(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const zone = o ? data.zones.find(z => (z.state || z.label.split(',')[0]) === o.area_label) : null;
   const next = o && ({
     new: `We’re packing it now. It goes out ${zone?.state ? 'by courier' : `on ${zone?.day || 'your area’s delivery day'}`}.`,
@@ -42,10 +42,9 @@ export default function Track({ initial }: { initial: string }) {
         <div style={{ flex: '1 1 380px', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <span style={small}>No account needed</span>
           <H1>Track an order</H1>
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#4D5A52' }}>Enter the order code from your confirmation email and the last 4 digits of the phone number you used at checkout.</p>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#4D5A52' }}>Enter the order code from your confirmation email. It starts with TD-.</p>
           <form onSubmit={e => { e.preventDefault(); go(); }} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <label style={labelStyle}>Order code<input value={code} onChange={e => { setCode(e.target.value); setErr(''); }} placeholder="TD-48213" autoCapitalize="characters" autoFocus={!initial} style={{ ...field, textTransform: 'uppercase', letterSpacing: '0.05em' }} /></label>
-            <label style={labelStyle}>Last 4 digits of your phone<input value={last4} onChange={e => { setLast4(e.target.value.replace(/\D/g, '').slice(0, 4)); setErr(''); }} inputMode="numeric" placeholder="4567" autoFocus={!!initial} style={{ ...field, letterSpacing: '0.2em' }} /></label>
+            <label style={labelStyle}>Order code<input value={code} onChange={e => { setCode(e.target.value); setErr(''); }} placeholder="TD-48213" autoCapitalize="characters" autoFocus style={{ ...field, textTransform: 'uppercase', letterSpacing: '0.05em' }} /></label>
             {err && <p role="alert" className="shake" style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522', lineHeight: 1.5 }}>{err}</p>}
             <button type="submit" disabled={busy} className="ub btn-solid press" style={{ ...btnSolid, opacity: busy ? 0.7 : 1 }}>{busy ? 'Looking it up…' : 'Track order'}</button>
           </form>

@@ -125,7 +125,7 @@ Do these once, in this order, before the new version goes live:
   - Staff sign in with a password plus an authenticator code. They are locked out for 15 minutes after 5 wrong tries, and the desk locks after 15 idle minutes.
   - Every staff action goes in the activity log.
   - The database is only reachable from the server.
-- **Tracking:** tracking without signing in needs the order code plus the last 4 digits of the phone, and is locked after 10 wrong tries. The courier's tracking number or the rider's name is shown once it's on the way.
+- **Tracking:** anyone with the order code can see its progress, area and items, but never the name, phone, email or street address. Lookups are limited to 20 per 10 minutes per connection. The courier's tracking number or the rider's name is shown once it's on the way.
 
 ## Changing the design
 
