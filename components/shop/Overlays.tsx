@@ -1,6 +1,10 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+/** Pop-ups render into <body> so an animated page can't trap them. */
+function Portal({ children }: { children: React.ReactNode }) { const [ok, setOk] = useState(false); useEffect(() => setOk(true), []); return ok ? createPortal(children, document.body) : null; }
 import { useShop } from './ShopProvider';
 import { naira, nowPrice, inStock, defaultSize, api, waLink } from '@/lib/shop-client';
 import { IClose, ICheck } from './Icons';
@@ -168,7 +172,7 @@ export function Toasts() {
 
 export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger, onNo, onYes }: { title: string; text: string; list?: { name: string; note: string }[]; noLabel?: string; yesLabel: string; danger?: boolean; onNo: () => void; onYes: () => void }) {
   useEscape(true, onNo);
-  return (
+  return (<Portal>
     <div role="alertdialog" aria-modal="true" aria-label={title} style={{ position: 'fixed', inset: 0, zIndex: 86, background: 'rgba(17,32,23,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div className="pop" style={{ width: 'min(420px, 100%)', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 24px 60px rgba(0,0,0,0.22)', padding: '28px 26px 22px' }}>
         <h2 style={{ margin: 0, fontWeight: 600, fontSize: 20, letterSpacing: '-0.01em' }}>{title}</h2>
@@ -180,19 +184,19 @@ export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger
         </div>
       </div>
     </div>
-  );
+  </Portal>);
 }
 
 export function Lightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
   useEscape(true, onClose);
-  return (
+  return (<Portal>
     <div role="dialog" aria-label={`${name} picture`} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(12,20,15,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 20px 40px', animation: 'fadeIn .2s' }}>
       <button type="button" className="ub" aria-label="Close picture" onClick={onClose} style={{ position: 'absolute', inset: 0, width: '100%' }} />
       <img className="pop" src={src} alt={name} style={{ position: 'relative', width: 'min(500px, 92vw, 78vh)', height: 'auto', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 6, boxShadow: '0 30px 80px rgba(0,0,0,0.45)', pointerEvents: 'none' }} />
       <span style={{ position: 'absolute', left: 0, right: 0, bottom: 16, textAlign: 'center', color: 'rgba(255,255,255,0.8)', fontSize: 13.5, pointerEvents: 'none' }}>{name}</span>
       <button type="button" className="ub" aria-label="Close picture" onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IClose size={22} color="#FFFFFF" /></button>
     </div>
-  );
+  </Portal>);
 }
 
 /** Thin gold bar at the top while a new page loads. */

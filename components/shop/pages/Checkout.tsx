@@ -70,7 +70,10 @@ export default function Checkout() {
 
   const zone = data.zones.find(z => z.id === f.zone);
   const sub = priced.reduce((a, l) => a + l.line, 0);
-  const total = q?.total ?? sub;
+  // the server's quote is the real figure; until it arrives, show the area's base fee
+  const estFee = zone ? zone.fee + (f.speed === 'same' ? (zone.state ? data.fees.express : data.fees.same) : 0) : null;
+  const fee = q ? q.fee : estFee;
+  const total = q ? q.total : sub + (estFee || 0);
   const arrive = zone ? (zone.state ? (zone.days || '2–5 working days') : f.speed === 'same' ? 'today or next morning' : `on ${zone.day || 'your area’s day'}`) : '';
 
   const applyCode = async () => {
@@ -195,8 +198,8 @@ export default function Checkout() {
                   </div>
                 )}
                 <label style={labelStyle}>Street address<input id="co-address" type="text" autoComplete="street-address" placeholder="House number, street, estate" value={f.address} onChange={e => set('address', e.target.value)} aria-invalid={err?.field === 'address'} style={inp('address')} /></label>
-                <label style={labelStyle}>Nearest landmark <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span><input type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} placeholder="e.g. opposite the filling station" style={field} /></label>
-                <label style={labelStyle}>Note for us <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span><textarea rows={2} value={f.note} onChange={e => set('note', e.target.value)} maxLength={300} placeholder="Gate code, best time to call…" style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical' }} /></label>
+                <label style={labelStyle}><span>Nearest landmark <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span></span><input type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} placeholder="e.g. opposite the filling station" style={field} /></label>
+                <label style={labelStyle}><span>Note for us <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span></span><textarea rows={2} value={f.note} onChange={e => set('note', e.target.value)} maxLength={300} placeholder="Gate code, best time to call…" style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical' }} /></label>
                 {user && <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5 }}><input type="checkbox" checked={f.save} onChange={e => set('save', e.target.checked)} style={{ width: 18, height: 18, accentColor: '#0B3A23' }} />Save this address to my account</label>}
               </section>
               {err && <p role="alert" className="shake" style={{ margin: 0, padding: '12px 14px', borderRadius: 6, background: '#F8E6E1', color: '#7A2A1B', fontSize: 14, fontWeight: 500 }}>{err.text}</p>}
@@ -257,7 +260,7 @@ export default function Checkout() {
           ))}
           <div style={{ height: 1, background: '#E4DFD3' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Subtotal</span><span>{naira(q?.subtotal ?? sub)}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#66736B' }}> · {q.speed}</span> : null}</span><span>{q?.fee != null ? naira(q.fee) : <span style={{ color: '#66736B', fontSize: 13 }}>Choose your area</span>}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#66736B' }}> · {q.speed}</span> : null}</span><span>{fee != null ? naira(fee) : <span style={{ color: '#66736B', fontSize: 13 }}>Choose your area</span>}</span></div>
           {!!q?.discount && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14.5, color: '#0B3A23' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Discount <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 4, border: '1px dashed #D49B41', background: '#FFFFFF' }}>{q.voucher}</span>

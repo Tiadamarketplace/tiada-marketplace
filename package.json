@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
-    "pages": "python3 frontend/make_shop.py && python3 frontend/make_admin.py",
-    "test:ui": "python3 tests/shop_flow.py && python3 tests/admin_flow.py"
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=18.18"

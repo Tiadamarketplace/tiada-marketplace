@@ -4,8 +4,8 @@ The live shop (`/`) and the staff admin desk (`/admin`) for Tiada Marketplace, L
 
 - **Website:** Next.js on Vercel
 - **Database and photos:** Supabase
-- **Bank-transfer payments:** Paystack "Pay with Transfer". Each order gets its own one-time account, and payment confirms automatically.
-- **Emails:** Resend sends sign-in codes and the order placed / on the way / delivered / refund emails.
+- **Payments:** Paystack's own secure window (card, bank transfer, USSD). Payment confirms automatically.
+- **Emails:** Resend sends sign-in codes, order emails (confirmed, packed, on the way, delivered, problems, refunds), back-in-stock and newsletter emails, and owner alerts.
 
 You need four free accounts: **GitHub, Vercel, Supabase, Paystack, Resend** (five, counting GitHub). Setup takes about 45 minutes.
 
@@ -33,7 +33,7 @@ You need four free accounts: **GitHub, Vercel, Supabase, Paystack, Resend** (fiv
 4. Once Paystack verifies your business:
    - Switch to the **Live Secret Key** (`sk_live_…`).
    - Set the **Live Webhook URL** to the same address.
-5. **"Pay with Transfer" must be switched on for your account.** If checkout says "We couldn't create your payment account", email support@paystack.com and ask them to enable Pay with Transfer through the Charge API.
+5. Under **Settings → Preferences**, make sure **Card, Bank Transfer and USSD** are switched on. Customers choose one of these in Paystack's window.
 
 > **Refunds:** refunds go out from the admin desk through Paystack. For bank-transfer payments, Paystack sometimes needs the customer's account number. If so, it shows the refund as "Needs attention" in your Paystack dashboard.
 
@@ -86,12 +86,12 @@ You need four free accounts: **GitHub, Vercel, Supabase, Paystack, Resend** (fiv
 ## 6. Test it end to end (test mode)
 
 1. Open the shop and sign in with **your own** email (Resend test mode only emails you).
-2. Add items to the basket, check out, and you'll see a one-time account.
-3. In test mode, simulate the transfer. Paystack's test docs ("Pay with Transfer → testing") explain how; you can also mark the test charge as successful from your Paystack test dashboard. The page then turns to "Payment confirmed" by itself.
-4. In `/admin`, the order appears with a blinking light. Then:
+2. Add items to the cart and check out. Paystack's window opens.
+3. In test mode, pay with Paystack's test card (shown in Paystack's test docs). The page then turns to "Thank you" by itself.
+4. In `/admin`, the order appears with a chime. Then:
    - Mark it **Packed**.
-   - Mark it **On the way**: choose the partner (Kwik, GIG Go, Gokada, GIG Logistics…) and add the booking number.
-   - Mark it **Delivered**: say how you confirmed it.
+   - **Send it out**: the rider's name and phone, or the courier and tracking number.
+   - **Mark delivered**: say how it was delivered.
 
    Each step emails the customer.
 
@@ -99,29 +99,42 @@ When everything works, switch Paystack to live keys, add your email domain in Re
 
 ---
 
+## Upgrading to the November 2026 redesign
+
+Do these once, in this order, before the new version goes live:
+
+1. **Database:** Supabase → SQL Editor → New query → paste all of `supabase/migrations/2026-11-redesign.sql` → Run. It adds stock for each size, discount codes, "tell me when it's back", the newsletter list, website messages, and the new banner settings. It's safe to run twice.
+2. **Vercel → Settings → Environment Variables**, add:
+   - `CRON_SECRET`: any long random string. Vercel uses it to run the 8pm summary email (`vercel.json`).
+   - Check `SITE_URL` is your real address, e.g. `https://tiadamarketplace.com` (payment and email links use it).
+   - Check `ADMIN_ALERT_EMAIL`, or set "Send alerts to" in Admin → Shop settings.
+3. **Paystack → Settings → Preferences:** switch on Card, Bank Transfer and USSD. The webhook URL stays `https://YOUR-SITE/api/paystack/webhook`.
+4. Open `/admin`, check **Products** (stock for each size), **Delivery** and **Shop settings**, then place one test order.
+
 ## How things work
 
-- **Prices are checked on the server.** The basket only sends product, size and quantity. The total, delivery fee (area plus kg) and vouchers are worked out on the server, so nobody can change a price in their browser.
+- **Prices are checked on the server.** The cart only sends product, size and quantity. The total, delivery fee (area plus kg), stock and discount codes are worked out on the server, so nobody can change a price in their browser.
 - **Payments:**
-  - Paystack calls `/api/paystack/webhook` the moment a transfer lands. The site checks Paystack's signature, then double-checks the payment with Paystack before marking the order paid.
-  - "I've made the payment" asks Paystack directly, in case the webhook is slow.
-- **Stock:** stock comes off when an order is packed, and goes back if an order is cancelled before it leaves.
+  - Checkout makes a pending order, then opens Paystack's window for exactly that total. If the window can't load, the customer is sent to Paystack's own payment page instead.
+  - Paystack calls `/api/paystack/webhook` when a payment succeeds. The site checks Paystack's signature, then double-checks the payment with Paystack before marking the order paid.
+  - The order page also asks Paystack directly every few seconds, in case the webhook is slow.
+  - Orders left unpaid for an hour are closed by the evening job, and the customer gets one "your basket is still here" email.
+- **Stock:** each size has its own stock. It comes off when an order is packed and goes back if an order is cancelled before it leaves. Adding stock to a sold-out size emails everyone who asked to be told.
 - **Security:**
   - Customers sign in with a 6-digit email code.
   - Staff sign in with a password plus an authenticator code. They are locked out for 15 minutes after 5 wrong tries, and the desk locks after 15 idle minutes.
   - Every staff action goes in the activity log.
   - The database is only reachable from the server.
-- **Tracking:**
-  - The map shows an *estimated* position, because Kwik, GIG and the other partners don't share live GPS. The partner's tracking number is shown to the customer.
-  - Tracking without signing in needs the order code plus the last 4 digits of the phone, and is locked after 10 wrong tries.
+- **Tracking:** tracking without signing in needs the order code plus the last 4 digits of the phone, and is locked after 10 wrong tries. The courier's tracking number or the rider's name is shown once it's on the way.
 
 ## Changing the design
 
-The screens are built from `frontend/shop_src.html` and `frontend/admin_src.html`. `frontend/live_shop.js` and `frontend/live_admin.js` connect them to the server. After editing them, run:
+- Shop pages: `app/(shop)/` and `components/shop/`. Admin desk: `app/admin/` and `components/admin/`. Emails: `lib/email.ts` (the style) and `lib/notify.ts` (the words).
+- Colours: green `#0B3A23`, gold `#D49B41`, cream `#FBF9F4`. Fonts (Montserrat and Playfair Display italic) are bundled in `app/fonts/`.
+
+Local development: copy `.env.example` to `.env.local`, fill it in, then run `npm install` and `npm run dev`. To look at the shop without a database, point `TIADA_MOCK` at a JSON file shaped like `lib/storefront.ts`'s `Storefront`.
 
 ```
-npm run pages      # rebuilds public/shop.html and public/admin.html
 npm run typecheck
+npm run build
 ```
-
-Local development: copy `.env.example` to `.env.local`, fill it in, then run `npm install` and `npm run dev`.

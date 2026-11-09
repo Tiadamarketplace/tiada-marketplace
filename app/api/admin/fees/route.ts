@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { handle, ok } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { requireStaff, logAct } from '@/lib/staff';
+import { refreshShop } from '@/lib/refresh';
 import { getSetting, setSetting, DEFAULT_FEES, Fees } from '@/lib/catalog';
 
 export const dynamic = 'force-dynamic';
@@ -23,5 +24,6 @@ export const POST = handle(async (req: Request) => {
   for (const a of b.areas) must(await db().from('zones').update({ fee: a.fee }).eq('id', a.id).is('state', null));
   for (const [k, fee] of Object.entries(b.regions)) must(await db().from('zones').update({ fee }).eq('region', k));
   await logAct(me.name, 'Updated delivery fees');
+  refreshShop();
   return ok({ ok: true });
 });

@@ -1,0 +1,31 @@
+/* Admin desk only */
+.adm{min-height:100vh;background:#F6F4EF;font-family:var(--font-sans),system-ui,sans-serif;font-size:14px;color:#1F2A23}
+.adm input,.adm select,.adm textarea{font-family:inherit;min-width:0;max-width:100%}
+.adm textarea{padding:10px 12px;border-radius:8px;border:1px solid #DCD6CA;font-size:14px;line-height:1.55;resize:vertical;width:100%}
+.adm a{color:#0B3A23}
+.navi{transition:background .15s,color .15s}.navi:hover{background:rgba(255,255,255,.07)!important;color:#FFFFFF!important}
+.btn-soft{transition:background .15s}.btn-soft:hover{background:#E8E3D8!important}
+.qbtn{transition:background .15s,border-color .15s}.qbtn:hover{background:#F6F4EF!important}
+.tdrow{transition:background .15s}.tdrow:hover{background:#FBF9F4}
+.lift{transition:box-shadow .2s,border-color .2s}.lift:hover{box-shadow:0 12px 30px rgba(17,32,23,.08);border-color:#E2DCCF!important}
+.knob{transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.toast{animation:up .3s cubic-bezier(.2,.8,.2,1)}
+.slide{animation:slideR .3s cubic-bezier(.2,.8,.2,1)}
+.scrim{animation:fadeIn .2s ease}
+.menu-in{animation:pop .18s cubic-bezier(.2,.8,.2,1);transform-origin:top right}
+.pulse{animation:apulse 1.6s ease-in-out infinite}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes apulse{0%,100%{box-shadow:0 0 0 0 rgba(212,155,65,.55)}50%{box-shadow:0 0 0 8px rgba(212,155,65,0)}}
+.anav{transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.amob{display:none!important}
+.grid-o{display:grid;grid-template-columns:28px 110px minmax(0,1.4fr) minmax(0,1fr) 70px 110px 100px;align-items:center;gap:12px}
+.grid-p{display:grid;grid-template-columns:minmax(0,2fr) 140px minmax(0,1.6fr) 110px 54px;align-items:center;gap:14px}
+@media (max-width:1000px){
+  .anav{position:fixed!important;left:0;top:0;bottom:0;z-index:90;transform:translateX(-105%);box-shadow:20px 0 60px rgba(0,0,0,.25)}.anav.open{transform:none}
+  .amob{display:flex!important}.adesk{display:none!important}
+  .grid-o{grid-template-columns:28px 1fr auto;grid-template-areas:"ck who st" "ck meta tot";row-gap:4px}
+  .grid-o .c-ck{grid-area:ck}.grid-o .c-who{grid-area:who}.grid-o .c-st{grid-area:st;justify-self:end}.grid-o .c-tot{grid-area:tot;justify-self:end}.grid-o .c-area{grid-area:meta;font-size:12.5px}.grid-o .c-code,.grid-o .c-kg{display:none}.grid-o.ohead{display:none}
+  .grid-p{grid-template-columns:1fr auto;grid-template-areas:"p sw" "stock stock"}.grid-p .c-p{grid-area:p}.grid-p .c-sw{grid-area:sw}.grid-p .c-stock{grid-area:stock}.grid-p .c-aisle,.grid-p .c-stat{display:none}
+}
+@media (max-width:640px){.kgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.hello{font-size:30px!important}}
+@media print{.anav,.topbar,.noprint{display:none!important}.adm{background:#fff}.printable{box-shadow:none!important;border:0!important}}

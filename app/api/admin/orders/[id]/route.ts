@@ -5,6 +5,7 @@ import { requireStaff, logAct } from '@/lib/staff';
 import { notifyOrder, Order } from '@/lib/notify';
 import { refund as paystackRefund } from '@/lib/paystack';
 import { naira } from '@/lib/email';
+import { refreshShop } from '@/lib/refresh';
 
 export const dynamic = 'force-dynamic';
 const txt = (max: number) => z.string().trim().max(max);
@@ -20,8 +21,14 @@ const Body = z.discriminatedUnion('action', [
 ]);
 type O = Order & { stock_taken: boolean; customer_id: string | null; updated_at: string };
 
+/** Take stock off (or put it back on) the exact size that was ordered. */
 async function stock(o: O, dir: -1 | 1) {
-  for (const it of o.items as { pid?: string; qty: number }[]) if (it.pid) must(await db().rpc('adjust_stock', { p_id: it.pid, delta: dir * it.qty }));
+  for (const it of o.items as { pid?: string; size?: string; qty: number }[]) {
+    if (!it.pid) continue;
+    if (it.size) must(await db().rpc('adjust_size_stock', { p_id: it.pid, p_size: it.size, delta: dir * it.qty }));
+    else must(await db().rpc('adjust_stock', { p_id: it.pid, delta: dir * it.qty }));
+  }
+  refreshShop();
 }
 
 export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: string }> }) => {

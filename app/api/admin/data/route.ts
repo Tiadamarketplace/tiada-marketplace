@@ -20,7 +20,7 @@ export const GET = handle(async (req: Request) => {
   const part = new URL(req.url).searchParams.get('part') || 'all';
   const seesOrders = me.role !== 'support'; // support staff handle chat and reviews only
   if (part === 'chats') return ok({ chats: await chats() });
-  const [orders, products, promos, settings, zones, reviews, activity, customers, chatList, messages] = await Promise.all([
+  const [orders, products, promos, settings, zones, reviews, activity, customers, chatList, messages, vouchers, contact, alerts, subs] = await Promise.all([
     db().from('orders').select('*').neq('status', 'pending').neq('status', 'expired').order('created_at', { ascending: false }).limit(500),
     db().from('products').select('*').order('sort'),
     db().from('promos').select('*').order('created_at', { ascending: false }),
@@ -31,7 +31,13 @@ export const GET = handle(async (req: Request) => {
     db().from('customers').select('id,email,name,phone,promo_ok,created_at'),
     chats(),
     db().from('messages').select('id,order_id,kind,email_to,email_ok,data,created_at').not('order_id', 'is', null).order('created_at', { ascending: false }).limit(3000),
+    db().from('vouchers').select('*').order('created_at', { ascending: false }),
+    db().from('contact_messages').select('*').order('created_at', { ascending: false }).limit(200),
+    db().from('stock_alerts').select('product_id,size').is('notified_at', null),
+    db().from('subscribers').select('email', { count: 'exact', head: true }).is('left_at', null),
   ]);
+  const waiting: Record<string, number> = {};
+  for (const a of (alerts.data || []) as { product_id: string; size: string }[]) waiting[a.product_id + '|' + a.size] = (waiting[a.product_id + '|' + a.size] || 0) + 1;
   const set = Object.fromEntries((must(settings) as { key: string; value: unknown }[]).map(s => [s.key, s.value]));
   const cust = must(customers) as { phone: string | null }[];
   return ok({
@@ -39,7 +45,8 @@ export const GET = handle(async (req: Request) => {
     orders: seesOrders ? must(orders) : [], products: must(products), promos: must(promos), zones: must(zones), reviews: must(reviews), activity: must(activity),
     customers: !seesOrders ? [] : me.role === 'owner' ? cust : cust.map(c => ({ ...c, phone: c.phone ? c.phone.slice(0, 4) + '•••' + c.phone.slice(-4) : null })),
     chats: chatList, messages: seesOrders ? must(messages) : [],
-    settings: { layout: set.layout || [], tiles: set.tiles || {}, aisles: set.aisles || {}, fees: set.fees || DEFAULT_FEES, store: set.store || {}, vouchers: set.vouchers || { TIADACARE: 500 } },
+    settings: { fees: set.fees || DEFAULT_FEES, business: set.business || {}, hours: set.hours || [], alerts: set.alerts || {}, policies: set.policies || {}, slider: set.slider || { on: true, seconds: 6 } },
+    vouchers: vouchers.data || [], contact: contact.data || [], waiting, subscribers: subs.count || 0,
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
     testMode: env.paystackKey.startsWith('sk_test_'),
     testPending: me.role === 'owner' && env.paystackKey.startsWith('sk_test_')

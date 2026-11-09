@@ -113,3 +113,4 @@ body{overflow-x:hidden}
 @media (max-width:900px){.hsearch-wrap{flex:1 1 0!important;margin:0 4px!important}.hsearch-wrap .hsearch{margin:0!important}}
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:900px){body:has(.buybar) .chat-fab{bottom:88px!important}body:has(.buybar) footer{padding-bottom:76px}}
+@media (max-width:640px){.hsearch{padding:0 4px 0 10px!important}.hs-btn{width:36px!important}}

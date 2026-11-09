@@ -42,7 +42,7 @@ function slideHref(t: string | null, to: string | null): string {
 export const getStorefront = cache(loadStorefront);
 async function loadStorefront(): Promise<Storefront> {
   // Local preview without a database: TIADA_MOCK points at a JSON file shaped like Storefront.
-  if (process.env.TIADA_MOCK && process.env.NODE_ENV !== 'production') {
+  if (process.env.TIADA_MOCK && (process.env.NODE_ENV !== 'production' || process.env.TIADA_MOCK_BUILD === '1')) {
     const fs = await import('fs');
     return JSON.parse(fs.readFileSync(process.env.TIADA_MOCK, 'utf8')) as Storefront;
   }

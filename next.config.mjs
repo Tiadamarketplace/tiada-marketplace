@@ -8,11 +8,6 @@ const securityHeaders = [
 ];
 const nextConfig = {
   poweredByHeader: false,
-  async rewrites() {
-    return [
-      { source: '/admin', destination: '/admin.html' },
-    ];
-  },
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
