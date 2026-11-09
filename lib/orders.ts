@@ -1,6 +1,6 @@
 import { db, must } from './db';
-import { notifyOrder, alertAdmin, Order } from './notify';
-import { naira, esc } from './email';
+import { notifyOrder, ownerNewOrder, Order } from './notify';
+import { countVoucherUse } from './vouchers';
 
 /** Called by the webhook and by "I've made the payment". Safe to call twice. */
 export async function markPaid(orderId: string, amountKobo: number, paidAt?: string) {
@@ -12,9 +12,9 @@ export async function markPaid(orderId: string, amountKobo: number, paidAt?: str
     .eq('id', orderId).in('status', ['pending', 'expired']).select('*')) as Order[];
   if (!upd.length) return { ok: true, already: true };
   const paid = upd[0];
+  await countVoucherUse(paid.voucher).catch(e => console.error('voucher count', e));
   await notifyOrder(paid, 'placed');
-  await alertAdmin(`New paid order ${paid.id} · ${naira(paid.total)}`,
-    `<p><b>${esc(paid.name)}</b> · ${esc(paid.area_label || '')}<br>${paid.items.map(i => `${esc(i.name)} ${i.size !== 'Package' ? esc(i.size) : ''} × ${i.qty}`).join('<br>')}</p>`);
+  await ownerNewOrder(paid).catch(e => console.error('owner order email', e));
   return { ok: true };
 }
 

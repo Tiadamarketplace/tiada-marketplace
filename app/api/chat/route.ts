@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { handle, ok, fail, limit, clientIp } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { currentCustomer } from '@/lib/customer';
-import { alertAdmin } from '@/lib/notify';
+import { ownerChat } from '@/lib/notify';
 import { esc } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -47,7 +47,8 @@ export const POST = handle(async (req: Request) => {
   if (b.action === 'escalate') {
     if (c.status === 'bot') {
       await db().from('chats').update({ status: 'waiting', updated_at: new Date().toISOString() }).eq('id', c.id);
-      await alertAdmin(`${c.name || 'A customer'} wants to chat with a person`, `<p>Open <b>Live chat</b> in the admin desk to join.</p><p style="color:#6B7A70">Chat ${esc(c.id.slice(0, 8))}</p>`);
+      const last = (await db().from('chat_messages').select('text').eq('chat_id', c.id).eq('who', 'me').order('id', { ascending: false }).limit(1)).data as { text: string }[] | null;
+      await ownerChat({ id: c.id, name: c.name, text: last?.[0]?.text }).catch(e => console.error('chat email', e));
     }
     return ok({ status: 'waiting' });
   }

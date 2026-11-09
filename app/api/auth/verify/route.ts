@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { handle, ok, fail, limit, clientIp } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { setSession } from '@/lib/session';
+import { welcomeAccount } from '@/lib/notify';
 
 const Body = z.object({
   email: z.string().trim().toLowerCase().email().max(120),
@@ -35,5 +36,7 @@ export const POST = handle(async (req: Request) => {
   await db().from('messages').update({ customer_id: c.id }).eq('email_to', b.email).is('customer_id', null); // emails sent before they had an account
   await db().from('messages').insert({ customer_id: c.id, kind: 'security', title: 'New sign-in to your account', body: 'You signed in just now. If this wasn’t you, message us on WhatsApp right away.' });
   await setSession('c', { cid: c.id });
+  if (isNew) await welcomeAccount(c.email, c.name).catch(e => console.error('welcome email', e));
+  if (c.promo_ok) await db().from('subscribers').upsert({ email: c.email, left_at: null }, { onConflict: 'email' });
   return ok({ user: { id: c.id, email: c.email, name: c.name, phone: c.phone, promo_ok: c.promo_ok }, isNew });
 });

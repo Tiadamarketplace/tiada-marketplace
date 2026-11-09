@@ -10,8 +10,6 @@ const nextConfig = {
   poweredByHeader: false,
   async rewrites() {
     return [
-      { source: '/', destination: '/shop.html' },
-      { source: '/:page(catalog|wishlist|basket|account|track|guide|privacy|checkout|pay|success|search|aisle)', destination: '/shop.html' },
       { source: '/admin', destination: '/admin.html' },
     ];
   },

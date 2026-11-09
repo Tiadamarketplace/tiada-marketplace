@@ -9,15 +9,14 @@ async function call(path: string, init?: RequestInit) {
   return j.data;
 }
 
-/** "Pay with Transfer": Paystack creates a one-time bank account for this exact amount. */
-export async function createTransferAccount(o: { email: string; amountNaira: number; reference: string; orderId: string; minutes?: number }) {
-  const expires = new Date(Date.now() + (o.minutes || 30) * 60000).toISOString();
-  const d = await call('/charge', { method: 'POST', body: JSON.stringify({
-    email: o.email, amount: o.amountNaira * 100, reference: o.reference,
-    bank_transfer: { account_expires_at: expires },
-    metadata: { order_id: o.orderId },
+/** Start a payment. The shop opens Paystack's own secure window with the access code it returns. */
+export async function initialize(o: { email: string; amountNaira: number; reference: string; orderId: string; callbackUrl: string }) {
+  const d = await call('/transaction/initialize', { method: 'POST', body: JSON.stringify({
+    email: o.email, amount: o.amountNaira * 100, reference: o.reference, currency: 'NGN', callback_url: o.callbackUrl,
+    channels: ['card', 'bank_transfer', 'ussd', 'bank'],
+    metadata: { order_id: o.orderId, cancel_action: o.callbackUrl + '&cancelled=1' },
   }) });
-  return { bank: d.bank?.name || d.bank_name || 'Bank', number: d.account_number, name: d.account_name || 'Tiada Marketplace', expires_at: d.account_expires_at || expires, display: d.display_text || '' };
+  return { access_code: d.access_code as string, authorization_url: d.authorization_url as string };
 }
 export async function verify(reference: string) {
   return call(`/transaction/verify/${encodeURIComponent(reference)}`) as Promise<{ status: string; amount: number; reference: string; paid_at: string; channel: string; authorization?: { bank?: string } }>;

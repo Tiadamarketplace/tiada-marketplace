@@ -42,7 +42,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
 
   switch (b.action) {
     case 'packed':
-      await takeStock(); upd.status = 'packed'; log = `Packed ${o.id} for ${o.name}`; break;
+      await takeStock(); upd.status = 'packed'; kind = 'packed'; log = `Packed ${o.id} for ${o.name}`; break;
     case 'route':
       await takeStock(); upd.status = 'route';
       upd.rider = { partner: b.partner, tracking: b.tracking, driver: b.driver || '', phone: (b.phone || '').replace(/\D/g, ''), cost: b.cost || 0 };

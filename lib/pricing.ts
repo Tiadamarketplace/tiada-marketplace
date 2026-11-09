@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { getProducts, getZones, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
 import { HttpError } from './http';
+import { applyVoucher } from './vouchers';
 
 export const CartItem = z.object({
   pid: z.string().max(40),
@@ -13,11 +14,9 @@ export type CartItemT = z.infer<typeof CartItem>;
 export type PricedLine = { pid: string; name: string; size: string; qty: number; price: number; was: number | null; kg: number; swaps: { from: string; to: string }[]; img: string | null };
 
 /** Work out the order from scratch on the server. Prices from the browser are never trusted. */
-export async function priceCart(items: CartItemT[], opts: { zoneId: string; speed: string; voucher?: string | null }) {
+export async function priceCart(items: CartItemT[], opts: { zoneId?: string | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
   if (!items.length) throw new HttpError(400, 'Your basket is empty.');
-  const [products, zones, fees, vouchers] = await Promise.all([
-    getProducts(), getZones(), getSetting<Fees>('fees', DEFAULT_FEES), getSetting<Record<string, number>>('vouchers', { TIADACARE: 500 }),
-  ]);
+  const [products, zones, fees] = await Promise.all([getProducts(), getZones(), getSetting<Fees>('fees', DEFAULT_FEES)]);
   const lines: PricedLine[] = [];
   for (const it of items) {
     const p = products.find(x => x.id === it.pid);
@@ -25,6 +24,10 @@ export async function priceCart(items: CartItemT[], opts: { zoneId: string; spee
     if (p.status === 'out' || p.status === 'na') throw new HttpError(400, `${p.name} is sold out right now. Please remove it from your basket.`);
     const s = p.sizes.find(x => x.label === it.size && !x.na);
     if (!s || s.price == null) throw new HttpError(400, `${p.name} isn’t sold in ${it.size}.`);
+    const left = (s as { stock?: number | null }).stock;
+    const label = it.size === 'Package' ? p.name : `${p.name} ${it.size}`;
+    if (left != null && left <= 0) throw new HttpError(409, `${label} has just sold out. Please remove it from your cart.`);
+    if (left != null && it.qty > left) throw new HttpError(409, `Only ${left} ${label} left. Please lower the quantity in your cart.`);
     let swaps: { from: string; to: string }[] = [];
     if (p.items && it.swaps?.length) {
       const allowed = p.cat === 'ccombo' ? SWAP_CEREAL : SWAP_FOOD;
@@ -35,12 +38,15 @@ export async function priceCart(items: CartItemT[], opts: { zoneId: string; spee
   }
   const subtotal = lines.reduce((a, l) => a + l.price * l.qty, 0);
   const kg = Math.round(lines.reduce((a, l) => a + l.kg * l.qty, 0) * 100) / 100;
-  const code = (opts.voucher || '').trim().toUpperCase();
-  const discount = code && vouchers[code] ? Math.min(vouchers[code], subtotal) : 0;
-  if (subtotal < fees.min) throw new HttpError(400, `The minimum order for delivery is ₦${fees.min.toLocaleString()}.`);
+  const v = opts.voucher?.trim() ? await applyVoucher(opts.voucher, subtotal, opts.email) : null;
+  const discount = v?.discount || 0;
+  if (!opts.quote && subtotal < fees.min) throw new HttpError(400, `The minimum order for delivery is ₦${fees.min.toLocaleString()}. Add ₦${(fees.min - subtotal).toLocaleString()} more.`);
 
   const zone = zones.find(z => z.id === opts.zoneId);
-  if (!zone) throw new HttpError(400, 'Choose your delivery area or state.');
+  if (!zone) {
+    if (opts.quote) return { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zone: null, speedLabel: null, min: fees.min };
+    throw new HttpError(400, 'Choose your delivery area or state.');
+  }
   let fee: number, speedLabel: string;
   if (zone.state) {
     const extra = kg > 5 ? Math.ceil(kg - 5) * fees.interKg : 0;
@@ -54,5 +60,5 @@ export async function priceCart(items: CartItemT[], opts: { zoneId: string; spee
     else { fee = zone.fee + weight + van + (opts.speed === 'same' ? fees.same : 0); speedLabel = opts.speed === 'same' ? 'Priority delivery' : 'Standard delivery'; }
   }
   const total = subtotal - discount + fee;
-  return { lines, subtotal, discount, voucher: discount ? code : null, fee, total, kg, zone, speedLabel };
+  return { lines, subtotal, discount, voucher: v?.code || null, fee, total, kg, zone, speedLabel, min: fees.min };
 }

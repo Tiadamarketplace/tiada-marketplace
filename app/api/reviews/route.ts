@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { handle, ok, fail } from '@/lib/http';
 import { db, must } from '@/lib/db';
+import { ownerReview } from '@/lib/notify';
 import { requireCustomer, currentCustomer } from '@/lib/customer';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,8 @@ export const POST = handle(async (req: Request) => {
   if (existing) return fail('You’ve already reviewed this item.');
   const nm = b.anon ? 'Verified buyer' : ((c.name || 'Customer').split(' ')[0] + ((c.name || '').split(' ')[1] ? ' ' + (c.name || '').split(' ')[1][0] + '.' : ''));
   must(await db().from('reviews').insert({ product_id: b.pid, order_id: order.id, customer_id: c.id, name: nm, stars: b.stars, text: b.text }));
+  const prod = (await db().from('products').select('name').eq('id', b.pid).maybeSingle()).data as { name: string } | null;
+  await ownerReview({ name: c.name || nm, stars: b.stars, product: prod?.name || b.pid, text: b.text }).catch(e => console.error('review email', e));
   return ok({ ok: true, pending: true });
 });
 export const DELETE = handle(async (req: Request) => {
