@@ -6,10 +6,11 @@ import { useShop } from './ShopProvider';
 import { AISLES, naira, minPrice, aisleLabel, waLink, isCombo, whereWeDeliver } from '@/lib/shop-client';
 import { IBag, IChevron, IClose, IMenu, ISearch, IUser, IWhatsApp } from './Icons';
 
+export const initials = (name: string | null | undefined, email = '') => { const p = (name || '').trim().split(/\s+/).filter(Boolean); return (p.length ? (p[0][0] + (p[1]?.[0] || '')) : email[0] || '?').toUpperCase(); };
 const MEGA = [...AISLES.map(a => ({ id: a.id, label: a.label, lower: a.lower })), { id: 'deals', label: 'Deals', lower: 'deals' }];
 
 export default function Header() {
-  const { data, count, setCartOpen } = useShop();
+  const { data, count, setCartOpen, user } = useShop();
   const router = useRouter();
   const [menu, setMenu] = useState(false);
   const [sub, setSub] = useState<string | null>(null);
@@ -76,7 +77,11 @@ export default function Header() {
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}><span style={{ fontSize: 11.5, color: '#66736B' }}>Order or ask on WhatsApp</span><span style={{ fontSize: 14, fontWeight: 600 }}>{biz.phone}</span></span>
           </a>
           <nav aria-label="Shortcuts" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, flex: 'none' }}>
-            <Link href="/account" className="ub icn" aria-label="Account" style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IUser size={23} /></Link>
+            {user ? (
+              <Link href="/account" className="ub icn" aria-label={`Your account, ${user.name || user.email}`} title={user.name || user.email} style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#0B3A23', color: '#F6E9CF', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #FFFFFF, 0 0 0 3.5px #D49B41' }}>{initials(user.name, user.email)}</span>
+              </Link>
+            ) : <Link href="/account" className="ub icn" aria-label="Sign in or create an account" style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IUser size={23} /></Link>}
             <button type="button" className="ub icn" aria-label={`Cart, ${count} items`} onClick={() => setCartOpen(true)} style={{ position: 'relative', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}>
               <IBag size={23} />
               {count > 0 && <span key={count} className="pop" style={{ position: 'absolute', top: 3, right: 1, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: '#0B3A23', color: '#FFFFFF', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>}
@@ -117,7 +122,7 @@ export default function Header() {
                   </button>
                 ))}
                 <div style={{ height: 1, background: '#ECE8DF', margin: '8px 20px' }} />
-                {[['/account', 'My account'], ['/track', 'Track an order'], ['/help', 'Help and delivery days']].map(([h, l]) => (
+                {[['/account', user ? `My account · ${user.name?.split(' ')[0] || 'signed in'}` : 'Sign in or create an account'], ['/track', 'Track an order'], ['/help', 'Help and delivery days']].map(([h, l]) => (
                   <button key={h} type="button" className="ub drop-row" onClick={() => go(h)} style={{ width: '100%', padding: '13px 20px', fontSize: 14.5 }}>{l}</button>
                 ))}
                 <a href={waLink(biz.whatsapp)} target="_blank" rel="noopener" style={{ margin: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 6, background: '#F1F5F1', textDecoration: 'none', color: '#0B3A23', fontWeight: 600, fontSize: 14 }}><IWhatsApp size={18} /> WhatsApp {biz.phone}</a>

@@ -21,7 +21,7 @@ const loadPaystack = () => new Promise<void>((res, rej) => {
 });
 
 export default function Checkout() {
-  const { priced, data, user, addresses, notify, setCartOpen } = useShop();
+  const { priced, data, user, userReady, addresses, notify, setCartOpen } = useShop();
   const router = useRouter();
   const lagos = useMemo(() => data.zones.filter(z => !z.state), [data.zones]);
   const states = useMemo(() => data.zones.filter(z => z.state), [data.zones]);
@@ -46,7 +46,7 @@ export default function Checkout() {
   }, [states]);
   useEffect(() => {
     if (!user) return;
-    setF(v => ({ ...v, email: v.email || user.email, name: v.name || user.name || '', phone: v.phone || user.phone || '' }));
+    setF(v => ({ ...v, email: user.email, name: v.name || user.name || '', phone: v.phone || user.phone || '' }));
     if (addresses[0]) setF(v => (v.address ? v : { ...v, address: addresses[0].street, landmark: addresses[0].landmark || '', zone: v.zone || addresses[0].zone_id || '' }));
   }, [user, addresses]);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setF(x => ({ ...x, [k]: v })); if (err?.field === k) setErr(null); };
@@ -146,13 +146,14 @@ export default function Checkout() {
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                   <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Contact</h2>
-                  {!user && <span style={{ fontSize: 13, color: '#66736B' }}>Have an account? <Link href="/account?next=/checkout" className="lnk" style={{ color: '#0B3A23' }}>Sign in</Link></span>}
+                  {userReady && !user && <span style={{ fontSize: 13, color: '#66736B' }}>Have an account? <Link href="/account?next=/checkout" className="lnk" style={{ color: '#0B3A23' }}>Sign in</Link></span>}
+                  {user && <span style={{ fontSize: 13, color: '#0B3A23', display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: '#2E9E5B' }} />Signed in as {user.email}</span>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                   <label style={labelStyle}>Full name<input id="co-name" type="text" autoComplete="name" value={f.name} onChange={e => set('name', e.target.value)} aria-invalid={err?.field === 'name'} style={inp('name')} /></label>
                   <label style={labelStyle}>Phone number<input id="co-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0803 000 0000" value={f.phone} onChange={e => set('phone', e.target.value)} aria-invalid={err?.field === 'phone'} style={inp('phone')} /></label>
                 </div>
-                <label style={labelStyle}>Email for your receipt<input id="co-email" type="email" autoComplete="email" value={f.email} onChange={e => set('email', e.target.value)} aria-invalid={err?.field === 'email'} style={inp('email')} /></label>
+                <label style={labelStyle}>Email for your receipt<input id="co-email" type="email" autoComplete="email" value={f.email} onChange={e => set('email', e.target.value)} readOnly={!!user} aria-invalid={err?.field === 'email'} style={{ ...inp('email'), ...(user ? { background: '#F7F5F0', color: '#4D5A52' } : {}) }} /></label>
               </section>
 
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

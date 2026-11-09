@@ -4,7 +4,7 @@ import type { Storefront, PubProduct, PubSize } from '@/lib/storefront';
 import { CartLine, lineKey, nowPrice, api } from '@/lib/shop-client';
 
 export type Note = { id: number; kind: 'ok' | 'info' | 'warn' | 'err'; title: string; text?: string; action?: { label: string; fn: () => void }; dur: number };
-export type User = { id: string; email: string; name: string | null; phone: string | null; promo_ok: boolean } | null;
+export type User = { id: string; email: string; name: string | null; phone: string | null; promo_ok: boolean; created_at?: string } | null;
 export type Address = { id: string; label: string; street: string; landmark: string | null; zone_id: string | null };
 export type PricedLine = CartLine & { product: PubProduct; sizeInfo: PubSize; price: number; was: number | null; line: number; kg: number };
 
