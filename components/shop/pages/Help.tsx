@@ -8,7 +8,7 @@ const FAQ: [string, string][] = [
   ['How do I order?', 'Pick a product, choose its size and tap Add to cart. Combos go in as one package. When you’re ready, open your cart and check out. You don’t need an account.'],
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
   ['How do I pay?', 'At checkout, tap Pay securely and Paystack’s window opens. Pay by card, bank transfer or USSD, and your order confirms on its own. Tiada never sees your card details.'],
-  ['When will my order arrive?', 'Every Lagos area has a delivery day, shown below and at checkout before you pay. Outside Lagos, we send by courier and email you the tracking number.'],
+  ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Every Lagos area has a delivery day, shown below and at checkout before you pay. Oyo orders go by courier and we email you the tracking number.'],
   ['How do I track my order?', 'Use the TD code from your confirmation email on the Track page, with the last 4 digits of your phone. If you have an account, your orders are under My account.'],
   ['Something is wrong with my order', 'Message us within 24 hours with a photo and your TD code. We’ll replace the item or refund you.'],
 ];
@@ -30,7 +30,7 @@ export default function Help() {
     <div className="fade" style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0', display: 'flex', flexDirection: 'column', gap: 56 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 640 }}>
         <H1>How Tiada works</H1>
-        <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.7, color: '#4D5A52' }}>We buy cereals, milk and foodstuffs in bulk, pack them by weight into clean sealed bags at our Agege hub, and deliver across Lagos on a set day for each area.</p>
+        <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.7, color: '#4D5A52' }}>We buy cereals, milk and foodstuffs in bulk, pack them by weight into clean sealed bags at our Agege hub, and deliver across Lagos on a set day for each area. We also deliver to Oyo State by courier.</p>
       </div>
       <section aria-labelledby="faq-h">
         <h2 id="faq-h" style={{ margin: '0 0 12px', fontWeight: 500, fontSize: 24 }}>Questions</h2>
@@ -44,11 +44,18 @@ export default function Help() {
         </div>
       </section>
       <section id="delivery" aria-labelledby="del-h" style={{ scrollMarginTop: 140 }}>
-        <h2 id="del-h" style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 24 }}>Delivery days in Lagos</h2>
+        <h2 id="del-h" style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 24 }}>Where and when we deliver</h2>
         <p style={{ margin: '0 0 16px', fontSize: 14, color: '#66736B' }}>Order before the day before to make your area’s run. Fees can change with weight; your exact fee shows at checkout.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
           {lagos.map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.label}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{z.day || 'Day confirmed after you order'} · {naira(z.fee)}</span></div>)}
         </div>
+        {data.zones.some(z => z.state) && <>
+          <h3 style={{ margin: '24px 0 10px', fontWeight: 600, fontSize: 17 }}>Outside Lagos</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
+            {data.zones.filter(z => z.state).map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.label || z.state}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>By courier, {z.days || '1–3 days'} · from {naira(z.fee)}</span></div>)}
+          </div>
+          <p style={{ margin: '10px 0 0', fontSize: 13, color: '#66736B' }}>We don’t deliver to other states yet.</p>
+        </>}
         {data.policies.delivery && <p style={{ margin: '16px 0 0', fontSize: 14, lineHeight: 1.7, color: '#4D5A52' }}>{data.policies.delivery}</p>}
       </section>
       <section id="contact" aria-labelledby="ct-h" style={{ scrollMarginTop: 140, display: 'flex', flexWrap: 'wrap', gap: 40 }}>

@@ -9,7 +9,7 @@ import { IBox, ICard, ITruck } from '../Icons';
 const WHY = [
   { i: <IBox size={30} color="#0B3A23" stroke={1.4} />, t: 'Sized for your home', s: '250g, 500g, 1kg or a paint bucket' },
   { i: <ICard size={30} color="#0B3A23" stroke={1.4} />, t: 'Pay online, securely', s: 'Card, transfer or USSD through Paystack' },
-  { i: <ITruck size={30} color="#0B3A23" stroke={1.4} />, t: 'Delivery across Lagos', s: 'A set day for every area' },
+  { i: <ITruck size={30} color="#0B3A23" stroke={1.4} />, t: 'Delivery in Lagos and Oyo', s: 'A set day for every Lagos area' },
 ];
 
 export default function Home() {

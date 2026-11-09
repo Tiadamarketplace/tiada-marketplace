@@ -11,7 +11,7 @@ const site = (process.env.SITE_URL || 'https://tiadamarketplace.com').replace(/\
 export const metadata: Metadata = {
   metadataBase: new URL(site),
   title: { default: 'Tiada Marketplace · Foodstuffs and cereals in Lagos', template: '%s · Tiada Marketplace' },
-  description: 'Your trusted plug for quality foodstuff, cereals, groceries and everyday kitchen essentials. Sized for your home and delivered across Lagos.',
+  description: 'Your trusted plug for quality foodstuff, cereals, groceries and everyday kitchen essentials. Sized for your home and delivered in Lagos and Oyo State.',
   openGraph: { type: 'website', siteName: 'Tiada Marketplace', images: [{ url: '/img/og.jpg', width: 1200, height: 675 }] },
   icons: { icon: '/icon-sm.png', apple: '/logo-icon.png' },
 };

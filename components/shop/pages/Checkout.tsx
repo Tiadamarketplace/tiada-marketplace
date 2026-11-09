@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
-import { naira, api, waLink } from '@/lib/shop-client';
+import { naira, api, waLink, whereWeDeliver } from '@/lib/shop-client';
 import { EmptyCart, Thumb, btnSolid, btnOut, field, labelStyle } from '../ui';
 import { ILock } from '../Icons';
 
@@ -158,7 +158,7 @@ export default function Checkout() {
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
                 <div role="tablist" aria-label="Where to deliver" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 6, background: '#F4F1EA', alignSelf: 'flex-start' }}>
-                  {([['lagos', 'In Lagos'], ['out', 'Outside Lagos']] as const).map(([k, l]) => (
+                  {([['lagos', 'In Lagos'], ...(states.length ? [['out', states.length === 1 ? `${states[0].state} State` : 'Outside Lagos']] : [])] as ['lagos' | 'out', string][]).map(([k, l]) => (
                     <button key={k} type="button" role="tab" className="ub" aria-selected={where === k} onClick={() => { setWhere(k); set('zone', ''); set('speed', 'next'); }} style={{ height: 40, padding: '0 18px', borderRadius: 4, fontSize: 14, fontWeight: 600, background: where === k ? '#FFFFFF' : 'transparent', color: where === k ? '#0B3A23' : '#66736B', boxShadow: where === k ? '0 1px 3px rgba(17,32,23,0.12)' : 'none' }}>{l}</button>
                   ))}
                 </div>
@@ -174,13 +174,15 @@ export default function Checkout() {
                   </div>
                 ) : (
                   <>
-                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Sent by courier. We email you the courier’s tracking number once it’s on the way.</p>
-                    <label style={labelStyle}>State
-                      <select id="co-zone" value={f.zone} onChange={e => set('zone', e.target.value)} aria-invalid={err?.field === 'zone'} style={{ ...inp('zone'), cursor: 'pointer' }}>
-                        <option value="">Choose your state</option>
-                        {states.map(z => <option key={z.id} value={z.id}>{z.state}{z.label && z.label !== z.state ? ` · ${z.label}` : ''} · from {naira(z.fee)}</option>)}
-                      </select>
-                    </label>
+                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Outside Lagos we deliver to {whereWeDeliver(states).replace(/^Lagos(, | and )/, '')} only, by courier. We email you the tracking number once it’s on the way.</p>
+                    <div id="co-zone" tabIndex={-1} role="radiogroup" aria-label="Your state" style={{ display: 'flex', flexDirection: 'column', gap: 8, outline: err?.field === 'zone' ? '1.5px solid #B8402B' : 'none', borderRadius: 6 }}>
+                      {states.map(z => { const on = f.zone === z.id; return (
+                        <button key={z.id} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('zone', z.id)} style={{ minHeight: 60, padding: '10px 16px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', alignItems: 'center', gap: 14 }}>
+                          <span style={{ width: 18, height: 18, flex: 'none', borderRadius: '50%', border: on ? '5.5px solid #0B3A23' : '1.5px solid #B9B3A5' }} />
+                          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14.5, fontWeight: 500 }}>{z.label || z.state}</span><span style={{ fontSize: 12.5, color: '#66736B' }}>By courier · {z.days || '1–3 days'}</span></span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{naira(z.fee)}</span>
+                        </button>); })}
+                    </div>
                   </>
                 )}
                 {zone && (

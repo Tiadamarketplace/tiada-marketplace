@@ -39,6 +39,12 @@ export const lineKey = (pid: string, size: string, swaps?: { from: string; to: s
 export const SWAP_CEREAL = ['Cornflakes', 'Coco Pops', 'Frosties', 'Moon and Star', 'Golden Morn', 'Fruit and Fiber', 'Oat', 'Custard', 'Milo', 'Choco Malt', 'Lactorich milk', 'Dano milk', 'Peak milk', 'Sugar'];
 export const SWAP_FOOD = ['Rice', 'Spaghetti', 'Noodles', 'Garri', 'Beans', 'Semo', 'Veg oil', 'Palm oil', 'Sugar', 'Tin tomatoes', 'Seasoning cubes', 'Junks/beverages'];
 
+/** "Lagos and Oyo", from the zones the shop delivers to. */
+export function whereWeDeliver(zones: { state: string | null }[]) {
+  const st = Array.from(new Set(zones.map(z => z.state).filter((x): x is string => !!x)));
+  const all = ['Lagos', ...st];
+  return all.length === 1 ? all[0] : all.slice(0, -1).join(', ') + ' and ' + all[all.length - 1];
+}
 export const waLink = (num: string, text?: string) => `https://wa.me/${(num || '2348075110000').replace(/\D/g, '')}${text ? '?text=' + encodeURIComponent(text) : ''}`;
 
 export async function api<T = unknown>(url: string, init?: RequestInit & { json?: unknown }): Promise<T> {

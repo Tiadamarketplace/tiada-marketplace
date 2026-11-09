@@ -230,7 +230,7 @@ export function RouteBar() {
 type Msg = { id: number; who: string; text: string };
 const BOT: Record<string, string> = {
   track: 'Put your order code (it starts with TD-) on the Track page and you’ll see where it is. Signed in? Your orders are under My account.',
-  days: 'Every Lagos area has its own delivery day. You’ll see yours at checkout once you pick your area. Outside Lagos we send through a courier.',
+  days: 'We deliver in Lagos and Oyo State. Every Lagos area has its own delivery day, and Oyo orders go by courier. You’ll see your fee and day at checkout.',
   swap: 'On any combo, tap “Swap items” and change what you don’t want. The price stays the same.',
   person: 'Okay, I’ve asked the team to join this chat. Someone will reply here shortly.',
 };

@@ -45,7 +45,7 @@ export async function priceCart(items: CartItemT[], opts: { zoneId?: string | nu
   const zone = zones.find(z => z.id === opts.zoneId);
   if (!zone) {
     if (opts.quote) return { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zone: null, speedLabel: null, min: fees.min };
-    throw new HttpError(400, 'Choose your delivery area or state.');
+    throw new HttpError(400, 'Choose your delivery area. We deliver in Lagos and the states shown at checkout.');
   }
   let fee: number, speedLabel: string;
   if (zone.state) {

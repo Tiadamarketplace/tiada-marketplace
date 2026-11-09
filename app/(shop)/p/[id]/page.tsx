@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const p = (await getStorefront()).products.find(x => x.id === id);
   if (!p) return { title: 'Not found' };
-  const d = `${p.name} from ${naira(minPrice(p))} at Tiada Marketplace. ${aisleLabel(p.cat)}, packed fresh and delivered across Lagos.`;
+  const d = `${p.name} from ${naira(minPrice(p))} at Tiada Marketplace. ${aisleLabel(p.cat)}, packed fresh and delivered in Lagos and Oyo State.`;
   return { title: p.name, description: d, alternates: { canonical: '/p/' + p.id }, openGraph: { title: p.name, description: d, images: p.img ? [{ url: p.img }] : undefined } };
 }
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

@@ -10,7 +10,15 @@ export async function getProducts(includeHidden = false): Promise<Product[]> {
   if (!includeHidden) q = q.eq('hidden', false);
   return must(await q) as Product[];
 }
-export async function getZones(): Promise<Zone[]> { return must(await db().from('zones').select('*').order('sort')) as Zone[]; }
+/** Delivery zones. Lagos areas always; outside Lagos only the states switched on in Admin > Delivery (Oyo to start). */
+export const DEFAULT_OPEN_STATES = ['st:Oyo'];
+export async function getZones(all = false): Promise<Zone[]> {
+  const [zones, open] = await Promise.all([
+    db().from('zones').select('*').order('sort').then(r => must(r) as Zone[]),
+    all ? Promise.resolve(null) : getSetting<string[]>('open_states', DEFAULT_OPEN_STATES),
+  ]);
+  return open ? zones.filter(z => !z.state || open.includes(z.id)) : zones;
+}
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   const r = await db().from('settings').select('value').eq('key', key).maybeSingle();
   return (r.data?.value as T) ?? fallback;

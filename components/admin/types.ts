@@ -23,6 +23,7 @@ export type Data = {
   orders: Order[]; products: Product[]; promos: Promo[]; zones: Zone[]; reviews: Review[]; activity: { staff_name: string; text: string; created_at: string }[];
   customers: Customer[]; chats: Chat[]; messages: { id: string; order_id: string; kind: string; email_to: string; email_ok: boolean; created_at: string }[];
   settings: { fees: Fees; business: Partial<Business>; hours: [string, boolean, string, string][]; alerts: Partial<Alerts>; policies: Partial<{ returns: string; delivery: string }>; slider: Partial<{ on: boolean; seconds: number }> };
+  openStates: string[];
   vouchers: Voucher[]; contact: Contact[]; waiting: Record<string, number>; subscribers: number;
   staff: Staff[]; testMode: boolean; testPending: { id: string; name: string; total: number; created_at: string }[]; now: number;
 };

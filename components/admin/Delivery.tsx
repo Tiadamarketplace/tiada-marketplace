@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import type { Ctx } from './Desk';
-import { Section, Btn, call, useToast, input, lab, naira } from './ui';
+import { Section, Btn, Switch, call, useToast, input, lab, naira } from './ui';
 
 const REG: Record<string, string> = { sw: 'South West', ss: 'South South & South East', nc: 'North Central', nw: 'North' };
 export default function Delivery({ c }: { c: Ctx }) {
@@ -14,6 +14,15 @@ export default function Delivery({ c }: { c: Ctx }) {
   const [areas, setAreas] = useState<Record<string, number>>(Object.fromEntries(lagos.map(z => [z.id, z.fee])));
   const [regions, setRegions] = useState<Record<string, number>>(Object.fromEntries(Object.keys(REG).map(r => [r, regionFee(r)])));
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string[]>(d.openStates || ['st:Oyo']);
+  const [showAll, setShowAll] = useState(false);
+  const states = d.zones.filter(z => z.state);
+  const toggleState = async (id: string, on: boolean) => {
+    const next = on ? Array.from(new Set(open.concat(id))) : open.filter(x => x !== id);
+    setOpen(next);
+    try { await call('/api/admin/settings', { key: 'open_states', value: next }); await reload(); toast('ok', on ? 'State switched on.' : 'State switched off.', 'Checkout shows the change within a minute.'); }
+    catch (e) { setOpen(open); toast('err', 'That didn’t save.', (e as Error).message); }
+  };
   const owner = d.me.role === 'Owner';
   const n = (v: string) => Number(v.replace(/\D/g, '')) || 0;
   const F = (k: keyof typeof f, l: string, s?: string) => <label style={lab}>{l}<input value={f[k]} onChange={e => setF(x => ({ ...x, [k]: n(e.target.value) }))} inputMode="numeric" disabled={!owner} style={input} />{s && <span style={{ fontWeight: 400, fontSize: 12, color: '#66736B' }}>{s}</span>}</label>;
@@ -28,7 +37,17 @@ export default function Delivery({ c }: { c: Ctx }) {
           </div>
         ))}
       </Section>
-      <Section title="Outside Lagos" sub="Courier fee by region, before extra weight.">
+      <Section title="States we deliver to" sub="Besides Lagos. Customers only see the states switched on here.">
+        {states.filter(z => showAll || open.includes(z.id)).map(z => (
+          <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid #F0ECE3' }}>
+            <span style={{ flex: 1 }}><span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{z.state}</span><span style={{ fontSize: 12, color: '#66736B' }}>{z.label} · {naira(z.fee)} · {z.days || ''}</span></span>
+            <Switch on={open.includes(z.id)} label={`Deliver to ${z.state}`} onChange={v => owner && toggleState(z.id, v)} />
+          </div>
+        ))}
+        {!open.length && !showAll && <p style={{ margin: 0, fontSize: 13, color: '#66736B' }}>Lagos only right now.</p>}
+        <Btn kind="text" small onClick={() => setShowAll(!showAll)}>{showAll ? 'Show only the states that are on' : `Show all ${states.length} states`}</Btn>
+      </Section>
+      <Section title="Outside Lagos fees" sub="Courier fee by region, before extra weight.">
         {Object.entries(REG).map(([r, l]) => (
           <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid #F0ECE3' }}>
             <span style={{ flex: 1 }}><span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{l}</span><span style={{ fontSize: 12, color: '#66736B' }}>{d.zones.filter(z => z.region === r).map(z => z.state).join(', ')}</span></span>

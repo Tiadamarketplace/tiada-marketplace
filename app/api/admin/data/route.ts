@@ -1,7 +1,7 @@
 import { handle, ok } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { requireStaff, staffList, ROLE_LABEL } from '@/lib/staff';
-import { DEFAULT_FEES } from '@/lib/catalog';
+import { DEFAULT_FEES, DEFAULT_OPEN_STATES } from '@/lib/catalog';
 import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -45,6 +45,7 @@ export const GET = handle(async (req: Request) => {
     orders: seesOrders ? must(orders) : [], products: must(products), promos: must(promos), zones: must(zones), reviews: must(reviews), activity: must(activity),
     customers: !seesOrders ? [] : me.role === 'owner' ? cust : cust.map(c => ({ ...c, phone: c.phone ? c.phone.slice(0, 4) + '•••' + c.phone.slice(-4) : null })),
     chats: chatList, messages: seesOrders ? must(messages) : [],
+    openStates: (set.open_states as string[] | undefined) || DEFAULT_OPEN_STATES,
     settings: { fees: set.fees || DEFAULT_FEES, business: set.business || {}, hours: set.hours || [], alerts: set.alerts || {}, policies: set.policies || {}, slider: set.slider || { on: true, seconds: 6 } },
     vouchers: vouchers.data || [], contact: contact.data || [], waiting, subscribers: subs.count || 0,
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
