@@ -54,7 +54,7 @@ alter table promos alter column title type text;
 -- 5. Newsletter sign-ups from the footer (people without an account)
 create table if not exists subscribers (
   email       text primary key,
-  token       text not null default encode(gen_random_bytes(16), 'hex'),  -- for one-click unsubscribe
+  token       text not null default md5(random()::text || clock_timestamp()::text),  -- for one-click unsubscribe
   created_at  timestamptz not null default now(),
   left_at     timestamptz
 );
