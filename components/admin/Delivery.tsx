@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import type { Ctx } from './Desk';
+import OyoFees from './OyoFees';
 import { Section, Btn, Switch, call, useToast, input, lab, naira } from './ui';
 
 const REG: Record<string, string> = { sw: 'South West', ss: 'South South & South East', nc: 'North Central', nw: 'North' };
@@ -47,7 +48,8 @@ export default function Delivery({ c }: { c: Ctx }) {
         {!open.length && !showAll && <p style={{ margin: 0, fontSize: 13, color: '#66736B' }}>Lagos only right now.</p>}
         <Btn kind="text" small onClick={() => setShowAll(!showAll)}>{showAll ? 'Show only the states that are on' : `Show all ${states.length} states`}</Btn>
       </Section>
-      <Section title="Outside Lagos fees" sub="Courier fee by region, before extra weight.">
+      {open.includes('st:Oyo') && <OyoFees c={c} />}
+      <Section title="Outside Lagos fees" sub="Courier fee by region, before extra weight. Oyo uses its own fees above.">
         {Object.entries(REG).map(([r, l]) => (
           <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid #F0ECE3' }}>
             <span style={{ flex: 1 }}><span style={{ display: 'block', fontWeight: 600, fontSize: 13.5 }}>{l}</span><span style={{ fontSize: 12, color: '#66736B' }}>{d.zones.filter(z => z.region === r).map(z => z.state).join(', ')}</span></span>

@@ -3,7 +3,7 @@ import { handle, ok, fail } from '@/lib/http';
 import { db, must } from '@/lib/db';
 import { requireCustomer } from '@/lib/customer';
 
-const Body = z.object({ label: z.string().trim().min(1).max(20), street: z.string().trim().min(6, 'Add a house number and street.').max(160), landmark: z.string().trim().max(120).optional().nullable(), zone_id: z.string().max(40) });
+const Body = z.object({ label: z.string().trim().min(1).max(20), street: z.string().trim().min(6, 'Add a house number and street.').max(160), landmark: z.string().trim().max(120).optional().nullable(), zone_id: z.string().max(40).transform(z => (z.startsWith('oyo:') ? 'st:Oyo' : z)) });
 export const POST = handle(async (req: Request) => {
   const c = await requireCustomer();
   const b = Body.parse(await req.json());

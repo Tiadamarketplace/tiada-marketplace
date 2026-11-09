@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { getProducts, getZones, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
+import { deliveryZones } from './delivery';
+import { getProducts, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
 import { HttpError } from './http';
 import { applyVoucher } from './vouchers';
 
@@ -16,7 +17,7 @@ export type PricedLine = { pid: string; name: string; size: string; qty: number;
 /** Work out the order from scratch on the server. Prices from the browser are never trusted. */
 export async function priceCart(items: CartItemT[], opts: { zoneId?: string | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
   if (!items.length) throw new HttpError(400, 'Your basket is empty.');
-  const [products, zones, fees] = await Promise.all([getProducts(), getZones(), getSetting<Fees>('fees', DEFAULT_FEES)]);
+  const [products, zones, fees] = await Promise.all([getProducts(), deliveryZones(), getSetting<Fees>('fees', DEFAULT_FEES)]);
   const lines: PricedLine[] = [];
   for (const it of items) {
     const p = products.find(x => x.id === it.pid);
@@ -44,11 +45,11 @@ export async function priceCart(items: CartItemT[], opts: { zoneId?: string | nu
 
   const zone = zones.find(z => z.id === opts.zoneId);
   if (!zone) {
-    if (opts.quote) return { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zone: null, speedLabel: null, min: fees.min };
+    if (opts.quote) return { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zone: null, areaLabel: null, speedLabel: null, min: fees.min };
     throw new HttpError(400, 'Choose your delivery area. We deliver in Lagos and the states shown at checkout.');
   }
   let fee: number, speedLabel: string;
-  if (zone.state) {
+  if (zone.state && !zone.area) {
     const extra = kg > 5 ? Math.ceil(kg - 5) * fees.interKg : 0;
     const rush = opts.speed === 'same' ? fees.express : 0;
     fee = zone.fee + extra + rush;
@@ -60,5 +61,7 @@ export async function priceCart(items: CartItemT[], opts: { zoneId?: string | nu
     else { fee = zone.fee + weight + van + (opts.speed === 'same' ? fees.same : 0); speedLabel = opts.speed === 'same' ? 'Priority delivery' : 'Standard delivery'; }
   }
   const total = subtotal - discount + fee;
-  return { lines, subtotal, discount, voucher: v?.code || null, fee, total, kg, zone, speedLabel, min: fees.min };
+  // an Oyo area is stored on the order as the Oyo state, with the area as the label
+  const areaLabel = zone.area ? `${zone.area}, Oyo` : zone.state || zone.label.split(',')[0];
+  return { lines, subtotal, discount, voucher: v?.code || null, fee, total, kg, zone: zone.area ? { ...zone, id: 'st:Oyo' } : zone, areaLabel, speedLabel, min: fees.min };
 }

@@ -52,7 +52,16 @@ export default function Help() {
         {data.zones.some(z => z.state) && <>
           <h3 style={{ margin: '24px 0 10px', fontWeight: 600, fontSize: 17 }}>Outside Lagos</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-            {data.zones.filter(z => z.state).map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.label || z.state}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>By courier, {z.days || '1–3 days'} · from {naira(z.fee)}</span></div>)}
+            {(() => {
+              // group Oyo areas (Ibadan, other towns) and any other states into one card each
+              const groups: Record<string, { label: string; fees: number[]; days: string; n: number }> = {};
+              for (const z of data.zones.filter(x => x.state)) {
+                const k = z.id.startsWith('oyo:') ? `${z.state}: ${z.city}` : z.id;
+                const g = (groups[k] ||= { label: z.id.startsWith('oyo:') ? (z.city === 'Ibadan' ? 'Ibadan, Oyo State' : `${z.city}, Oyo State`) : z.label || z.state || '', fees: [], days: z.days || '1–3 days', n: 0 });
+                g.fees.push(z.fee); g.n++;
+              }
+              return Object.entries(groups).map(([k, g]) => <div key={k} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{g.label}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{g.n > 1 ? `${g.n} areas · ` : ''}{g.days} · from {naira(Math.min(...g.fees))}</span></div>);
+            })()}
           </div>
           <p style={{ margin: '10px 0 0', fontSize: 13, color: '#66736B' }}>We don’t deliver to other states yet.</p>
         </>}

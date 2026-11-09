@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { db, must } from './db';
-import { getProducts, getZones, getSetting, DEFAULT_FEES, Fees, Product } from './catalog';
+import { deliveryZones } from './delivery';
+import { getProducts, getSetting, DEFAULT_FEES, Fees, Product } from './catalog';
 
 /** Shapes shared by the server and the shop's browser code. */
 export type PubSize = { label: string; price: number | null; sale: number | null; kg: number; na: boolean; left: number | null };
@@ -9,7 +10,7 @@ export type Slide = { id: string; kicker: string; title: string; text: string; b
 export type Business = { name: string; tagline: string; address: string; phone: string; whatsapp: string; email: string; tiktok: string };
 export type Storefront = {
   products: PubProduct[];
-  zones: { id: string; label: string; fee: number; day: string | null; state: string | null; region: string | null; days: string | null }[];
+  zones: { id: string; label: string; fee: number; day: string | null; state: string | null; region: string | null; days: string | null; city?: string | null }[];
   fees: Pick<Fees, 'min' | 'lagosKg' | 'interKg' | 'van' | 'same' | 'express' | 'eco'>;
   slides: Slide[]; slider: { on: boolean; seconds: number };
   business: Business; policies: { returns: string; delivery: string };
@@ -48,7 +49,7 @@ async function loadStorefront(): Promise<Storefront> {
   }
   const nowIso = new Date().toISOString();
   const [products, zones, fees, business, policies, slider, promos, ratings, top] = await Promise.all([
-    getProducts(), getZones(), getSetting<Fees>('fees', DEFAULT_FEES), getSetting<Partial<Business>>('business', {}),
+    getProducts(), deliveryZones(), getSetting<Fees>('fees', DEFAULT_FEES), getSetting<Partial<Business>>('business', {}),
     getSetting('policies', { returns: '', delivery: '' }), getSetting('slider', { on: true, seconds: 6 }),
     db().from('promos').select('*').eq('is_on', true).gt('ends_at', nowIso).lte('starts_at', nowIso).order('sort').order('created_at'),
     db().from('reviews').select('product_id,stars').eq('status', 'live'),
@@ -68,7 +69,7 @@ async function loadStorefront(): Promise<Storefront> {
       sizes: (p.sizes as (Product['sizes'][number] & { stock?: number | null })[]).map(s => ({ label: s.label, price: s.price, sale: s.sale, kg: s.kg, na: !!s.na || s.price == null, left: sizeLeft(s, p) })),
       rating: agg[p.id] ? { n: agg[p.id].n, avg: Math.round(agg[p.id].sum / agg[p.id].n * 10) / 10 } : null,
     })),
-    zones: zones.map(z => ({ id: z.id, label: z.label, fee: z.fee, day: z.day, state: z.state, region: z.region, days: z.days })),
+    zones: zones.map(z => ({ id: z.id, label: z.label, fee: z.fee, day: z.day, state: z.state, region: z.region, days: z.days, city: z.city || null })),
     fees: { min: fees.min, lagosKg: fees.lagosKg, interKg: fees.interKg, van: fees.van, same: fees.same, express: fees.express, eco: fees.eco },
     slides, slider: { on: slider.on !== false, seconds: Math.min(10, Math.max(3, Number(slider.seconds) || 6)) },
     business: { ...DEFAULT_BUSINESS, ...business }, policies: { returns: policies.returns || '', delivery: policies.delivery || '' },

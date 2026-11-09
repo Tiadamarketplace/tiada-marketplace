@@ -30,7 +30,7 @@ export const POST = handle(async (req: Request) => {
   const ref = 'TDA_' + crypto.randomBytes(9).toString('hex');
   const order = must(await db().from('orders').insert({
     customer_id: cust?.id || null, email: b.email, name: b.name, phone: b.phone, address: b.address, landmark: b.landmark || null,
-    zone_id: zone.id, area_label: zone.state || zone.label.split(',')[0], speed: b.speed, speed_label: priced.speedLabel,
+    zone_id: zone.id, area_label: priced.areaLabel, speed: b.speed, speed_label: priced.speedLabel,
     items: priced.lines, note: b.note || null, subtotal: priced.subtotal, discount: priced.discount, voucher: priced.voucher,
     delivery_fee: priced.fee, total: priced.total, kg: priced.kg, status: 'pending', pay_ref: ref,
   }).select('id,total').single()) as { id: string; total: number };

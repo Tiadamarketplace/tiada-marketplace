@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
-import { naira, api, waLink, whereWeDeliver } from '@/lib/shop-client';
+import { naira, api, waLink } from '@/lib/shop-client';
 import { EmptyCart, Thumb, btnSolid, btnOut, field, labelStyle } from '../ui';
 import { ILock } from '../Icons';
 
@@ -25,6 +25,8 @@ export default function Checkout() {
   const router = useRouter();
   const lagos = useMemo(() => data.zones.filter(z => !z.state), [data.zones]);
   const states = useMemo(() => data.zones.filter(z => z.state), [data.zones]);
+  const courier = (z?: { id: string; state: string | null }) => !!z?.state && !z.id.startsWith('oyo:');
+  const oyoGroups = useMemo(() => Array.from(new Set(states.filter(z => z.id.startsWith('oyo:')).map(z => z.city || 'Oyo'))), [states]);
   const [step, setStep] = useState<'details' | 'pay'>('details');
   const [where, setWhere] = useState<'lagos' | 'out'>('lagos');
   const [f, setF] = useState<Form>({ name: '', phone: '', email: '', address: '', landmark: '', note: '', zone: '', speed: 'next', save: true });
@@ -71,10 +73,10 @@ export default function Checkout() {
   const zone = data.zones.find(z => z.id === f.zone);
   const sub = priced.reduce((a, l) => a + l.line, 0);
   // the server's quote is the real figure; until it arrives, show the area's base fee
-  const estFee = zone ? zone.fee + (f.speed === 'same' ? (zone.state ? data.fees.express : data.fees.same) : 0) : null;
+  const estFee = zone ? zone.fee + (f.speed === 'same' ? (courier(zone) ? data.fees.express : data.fees.same) : 0) : null;
   const fee = q ? q.fee : estFee;
   const total = q ? q.total : sub + (estFee || 0);
-  const arrive = zone ? (zone.state ? (zone.days || '2–5 working days') : f.speed === 'same' ? 'today or next morning' : `on ${zone.day || 'your area’s day'}`) : '';
+  const arrive = zone ? (zone.state ? (zone.days || '1–3 days') : f.speed === 'same' ? 'today or next morning' : `on ${zone.day || 'your area’s day'}`) : '';
 
   const applyCode = async () => {
     const c = code.trim().toUpperCase(); setCodeErr('');
@@ -159,7 +161,7 @@ export default function Checkout() {
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
                 <div role="tablist" aria-label="Where to deliver" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 6, background: '#F4F1EA', alignSelf: 'flex-start' }}>
-                  {([['lagos', 'In Lagos'], ...(states.length ? [['out', states.length === 1 ? `${states[0].state} State` : 'Outside Lagos']] : [])] as ['lagos' | 'out', string][]).map(([k, l]) => (
+                  {([['lagos', 'In Lagos'], ...(states.length ? [['out', new Set(states.map(z => z.state)).size === 1 ? `${states[0].state} State` : 'Outside Lagos']] : [])] as ['lagos' | 'out', string][]).map(([k, l]) => (
                     <button key={k} type="button" role="tab" className="ub" aria-selected={where === k} onClick={() => { setWhere(k); set('zone', ''); set('speed', 'next'); }} style={{ height: 40, padding: '0 18px', borderRadius: 4, fontSize: 14, fontWeight: 600, background: where === k ? '#FFFFFF' : 'transparent', color: where === k ? '#0B3A23' : '#66736B', boxShadow: where === k ? '0 1px 3px rgba(17,32,23,0.12)' : 'none' }}>{l}</button>
                   ))}
                 </div>
@@ -175,7 +177,19 @@ export default function Checkout() {
                   </div>
                 ) : (
                   <>
-                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Outside Lagos we deliver to {whereWeDeliver(states).replace(/^Lagos(, | and )/, '')} only, by courier. We email you the tracking number once it’s on the way.</p>
+                    {oyoGroups.length > 0 ? (
+                      <>
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Pick your area. The fee depends on how far it is from us in Oyo.</p>
+                        <label style={labelStyle}>Your area in Oyo State
+                          <select id="co-zone" value={f.zone.startsWith('oyo:') ? f.zone : ''} onChange={e => set('zone', e.target.value)} aria-invalid={err?.field === 'zone'} style={{ ...inp('zone'), cursor: 'pointer' }}>
+                            <option value="">Choose your area</option>
+                            {oyoGroups.map(g => <optgroup key={g} label={g}>{states.filter(z => z.id.startsWith('oyo:') && (z.city || 'Oyo') === g).map(z => <option key={z.id} value={z.id}>{z.label} · {naira(z.fee)}</option>)}</optgroup>)}
+                          </select>
+                        </label>
+                        {zone && zone.id.startsWith('oyo:') && <p className="fade" style={{ margin: 0, fontSize: 14, color: '#0B3A23' }}>Delivery to <strong>{zone.label}</strong>: {naira(zone.fee)}, usually {zone.days}.</p>}
+                        <p style={{ margin: 0, fontSize: 12.5, color: '#66736B' }}>Can’t see your area? <a href={waLink(data.business.whatsapp, 'Hi Tiada, do you deliver to my area in Oyo?')} target="_blank" rel="noopener" className="lnk" style={{ color: '#0B3A23' }}>Ask us on WhatsApp</a>.</p>
+                      </>
+                    ) : (
                     <div id="co-zone" tabIndex={-1} role="radiogroup" aria-label="Your state" style={{ display: 'flex', flexDirection: 'column', gap: 8, outline: err?.field === 'zone' ? '1.5px solid #B8402B' : 'none', borderRadius: 6 }}>
                       {states.map(z => { const on = f.zone === z.id; return (
                         <button key={z.id} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('zone', z.id)} style={{ minHeight: 60, padding: '10px 16px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -184,11 +198,12 @@ export default function Checkout() {
                           <span style={{ fontSize: 14, fontWeight: 600 }}>{naira(z.fee)}</span>
                         </button>); })}
                     </div>
+                    )}
                   </>
                 )}
                 {zone && (
                   <div role="radiogroup" aria-label="Delivery speed" className="fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 8 }}>
-                    {([['next', zone.state ? 'Standard courier' : 'Standard', zone.state ? (zone.days || '2–5 working days') : `On ${zone.day || 'your area’s day'}`, 0], ['same', zone.state ? 'Express courier' : 'Priority', zone.state ? 'Faster, where the courier offers it' : 'Today or next morning', zone.state ? data.fees.express : data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
+                    {([['next', courier(zone) ? 'Standard courier' : 'Standard', zone.state ? (zone.days || '1–3 days') : `On ${zone.day || 'your area’s day'}`, 0], ['same', courier(zone) ? 'Express courier' : 'Priority', courier(zone) ? 'Faster, where the courier offers it' : zone.state ? 'Same day where we can' : 'Today or next morning', courier(zone) ? data.fees.express : data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
                       <button key={k} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('speed', k)} style={{ padding: '12px 14px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <span style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 600 }}><span>{l}</span><span>{extra ? '+' + naira(extra) : ''}</span></span>
                         <span style={{ fontSize: 12.5, color: '#66736B' }}>{d}</span>
