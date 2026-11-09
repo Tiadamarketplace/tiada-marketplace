@@ -82,8 +82,8 @@ body{overflow-x:hidden}
 .hero-shade{background:linear-gradient(90deg,rgba(7,34,20,.94) 0%,rgba(7,34,20,.82) 30%,rgba(7,34,20,.38) 55%,rgba(7,34,20,0) 76%)}
 .hero-img{animation:settle 9s cubic-bezier(.2,.7,.2,1) both}
 @keyframes settle{from{transform:scale(1.07)}to{transform:scale(1)}}
-/* phones: show the whole hero picture, with the words underneath on green */
-@media (max-width:760px){.hero-img{position:relative!important;inset:auto!important;height:auto!important;aspect-ratio:16/9;object-position:center!important}.hero-shade{display:none}.hero-box{min-height:0!important;align-items:flex-start!important}.hero-box>.fade{padding:26px 0 40px!important}}
+/* phones: the tall phone picture behind the words, darker at the bottom so they stay readable */
+@media (max-width:760px){.hero-img{object-position:center top!important}.hero-shade{background:linear-gradient(0deg,rgba(7,34,20,.96) 0%,rgba(7,34,20,.86) 42%,rgba(7,34,20,.5) 62%,rgba(7,34,20,0) 80%)}.hero-kick{text-shadow:0 1px 10px rgba(0,0,0,.55)}.hero-box{min-height:max(660px,calc(100svh - 140px))!important;align-items:flex-end!important}.hero-box>.fade{padding:0 0 40px!important}}
 /* phones: 16px text in boxes so iPhone doesn't zoom in when you tap one */
 @media (max-width:900px),(pointer:coarse){input,select,textarea{font-size:16px!important}}
 @keyframes spin{to{transform:rotate(360deg)}}
