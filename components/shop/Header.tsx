@@ -57,14 +57,14 @@ export default function Header() {
               <button type="submit" className="ub hs-btn" aria-label="Search" style={{ width: 44, height: 38, borderRadius: 3, background: '#0B3A23', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><ISearch size={18} color="#FFFFFF" stroke={2} /></button>
             </form>
             {focus && q.trim() && (
-              <div className="drop-in" role="listbox" style={{ position: 'absolute', left: 0, right: 0, top: 54, background: '#FFFFFF', borderRadius: 6, border: '1px solid #ECE8DF', boxShadow: '0 20px 50px rgba(17,32,23,.16)', padding: 6, zIndex: 50 }}>
+              <div className="drop-in" role="listbox" style={{ ...(narrow ? { position: 'fixed', left: 12, right: 12, top: (box.current?.getBoundingClientRect().bottom ?? 110) + 8, maxHeight: '70vh', overflowY: 'auto' } : { position: 'absolute', left: 0, right: 0, top: 54 }), background: '#FFFFFF', borderRadius: 6, border: '1px solid #ECE8DF', boxShadow: '0 20px 50px rgba(17,32,23,.16)', padding: 6, zIndex: 50 }}>
                 {sugg.map(p => (
                   <button key={p.id} type="button" role="option" aria-selected="false" className="ub drop-row" onClick={() => go('/p/' + p.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 10px', borderRadius: 4 }}>
                     <span style={{ width: 42, height: 42, borderRadius: 4, overflow: 'hidden', background: '#F8F6F1', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {p.img ? <img src={p.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span className="serif" style={{ color: '#8A5F1C' }}>{p.name[0]}</span>}
                     </span>
-                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</span><span style={{ fontSize: 12, color: '#66736B' }}>{aisleLabel(p.cat)}</span></span>
-                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>{isCombo(p) ? '' : 'From '}{naira(minPrice(p))}</span>
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span><span style={{ fontSize: 12, color: '#66736B' }}>{aisleLabel(p.cat)}</span></span>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, whiteSpace: 'nowrap', flex: 'none' }}>{isCombo(p) ? '' : 'From '}{naira(minPrice(p))}</span>
                   </button>
                 ))}
                 {!sugg.length && <p style={{ margin: 0, padding: '14px 10px', fontSize: 13.5, color: '#66736B' }}>Nothing matches “{q.trim()}”. Try “rice” or “combo”.</p>}
