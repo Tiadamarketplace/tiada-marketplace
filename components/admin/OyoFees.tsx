@@ -44,6 +44,7 @@ export default function OyoFees({ c }: { c: Ctx }) {
         </div>
         <label style={lab}>Starting fee (₦)<input value={cfg.start} onChange={e => setCfg(x => ({ ...x, start: n(e.target.value) }))} inputMode="numeric" disabled={!owner} style={input} /></label>
         <label style={lab}>Plus, for every km (₦)<input value={cfg.perKm} onChange={e => setCfg(x => ({ ...x, perKm: n(e.target.value) }))} inputMode="numeric" disabled={!owner} style={input} /></label>
+        <label style={lab}>Never more than (₦)<input value={cfg.max ?? ''} onChange={e => setCfg(x => ({ ...x, max: e.target.value.trim() ? n(e.target.value) : null }))} inputMode="numeric" placeholder="No limit" disabled={!owner} style={input} /><span style={{ fontWeight: 400, fontSize: 12, color: '#66736B' }}>Far towns never pay more than this.</span></label>
       </div>
       {!cfg.hub && !parsed && <p style={{ margin: '12px 0 0', padding: '10px 12px', borderRadius: 8, background: '#FBF2DE', color: '#5C430F', fontSize: 13 }}>For now, distances are measured from the middle of Iseyin town. Paste your branch’s exact pin above for exact fees.</p>}
       <div style={{ marginTop: 14 }}>

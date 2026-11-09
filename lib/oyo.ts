@@ -3,10 +3,11 @@
  * The spot (hub) lives only in the settings table and is never sent to the browser:
  * customers only ever see the finished fee for their area.
  */
-export type OyoConfig = { hub: { lat: number; lng: number } | null; start: number; perKm: number; off: string[]; fees: Record<string, number> };
+export type OyoConfig = { hub: { lat: number; lng: number } | null; start: number; perKm: number; max?: number | null; off: string[]; fees: Record<string, number> };
 /** The Oyo branch is in Iseyin. Until the exact pin is saved in Admin > Delivery, fees are measured from the town centre. */
 export const ISEYIN_CENTRE = { lat: 7.967, lng: 3.6 };
-export const DEFAULT_OYO: OyoConfig = { hub: null, start: 1500, perKm: 150, off: [], fees: {} };
+// Kept low on purpose: small start fee, a little per km, and a ceiling so far towns stay affordable.
+export const DEFAULT_OYO: OyoConfig = { hub: null, start: 1000, perKm: 50, max: 5000, off: [], fees: {} };
 
 // [id, name, lat, lng, group]: approximate centres. Road distance is taken as 1.3 × the straight line.
 export type OyoGroup = 'Iseyin and nearby' | 'Ibadan' | 'Other towns';
@@ -41,7 +42,8 @@ export function oyoAreas(cfg: OyoConfig, fallback: number): OyoArea[] {
   return [...OYO_AREAS].sort((a, b) => OYO_GROUPS.indexOf(a[4]) - OYO_GROUPS.indexOf(b[4])).map(([id, name, lat, lng, group]) => {
     void fallback;
     const d = Math.round(km(cfg.hub || ISEYIN_CENTRE, { lat, lng }) * 10) / 10;
-    const auto = Math.ceil((cfg.start + d * cfg.perKm) / 100) * 100;
+    const raw = Math.ceil((cfg.start + d * cfg.perKm) / 100) * 100;
+    const auto = cfg.max ? Math.min(raw, cfg.max) : raw;
     const fee = cfg.fees[id] ?? auto;
     return { id: 'oyo:' + id, name, group, km: d, fee, auto, on: !cfg.off.includes(id) };
   });

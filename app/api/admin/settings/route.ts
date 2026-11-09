@@ -14,7 +14,7 @@ const Body = z.discriminatedUnion('key', [
   z.object({ key: z.literal('policies'), value: z.object({ returns: S(1500), delivery: S(1500) }) }),
   z.object({ key: z.literal('oyo'), value: z.object({
     hub: z.object({ lat: z.number().min(6.8).max(9.3), lng: z.number().min(2.6).max(4.7) }, { invalid_type_error: 'That spot isn’t in Oyo State.' }).nullable(),
-    start: z.number().int().min(0).max(100000), perKm: z.number().int().min(0).max(10000),
+    start: z.number().int().min(0).max(100000), perKm: z.number().int().min(0).max(10000), max: z.number().int().min(0).max(200000).nullable().optional(),
     off: z.array(z.string().max(30)).max(60), fees: z.record(z.string().max(30), z.number().int().min(0).max(200000)),
   }) }),
   z.object({ key: z.literal('open_states'), value: z.array(z.string().regex(/^st:[A-Za-z .-]{2,30}$/)).max(40) }),
