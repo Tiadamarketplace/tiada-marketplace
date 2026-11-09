@@ -18,6 +18,8 @@ export default function Header() {
   const [narrow, setNarrow] = useState(false);
   useEffect(() => { const m = window.matchMedia('(max-width: 640px)'); const f = () => setNarrow(m.matches); f(); m.addEventListener('change', f); return () => m.removeEventListener('change', f); }, []);
   const box = useRef<HTMLDivElement>(null);
+  // on the results page, keep the words in the search box
+  useEffect(() => { if (location.pathname === '/search') setQ(new URLSearchParams(location.search).get('q') || ''); }, []);
   const biz = data.business;
 
   const items = (id: string) => (id === 'deals'
