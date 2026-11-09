@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { mapLink, runOf } from './runs';
 import type { Ctx } from './Desk';
 import type { Order } from './types';
 import { naira, card, Btn, Tabs, Drawer, Confirm, Empty, StatusPill, call, useToast, input, lab, dt, ago, fmtPhone } from './ui';
@@ -24,7 +25,7 @@ export default function Orders({ c }: { c: Ctx }) {
   useEffect(() => { if (h.startsWith('run:')) { setDay(h.slice(4)); setTab('all'); setSheet(true); } }, [h]);
 
   const zone = (o: Order) => d.zones.find(z => z.id === o.zone_id);
-  const dayOf = (o: Order) => { const z = zone(o); return z?.state ? 'Courier' : o.speed === 'same' ? 'Priority' : z?.day || 'Unscheduled'; };
+  const dayOf = (o: Order) => runOf(o, zone(o));
   const count = (t: Tab) => (t === 'all' ? d.orders.length : d.orders.filter(o => o.status === t).length);
   const list = useMemo(() => d.orders.filter(o => (tab === 'all' ? true : o.status === tab) && (!day || dayOf(o) === day) && (!q.trim() || `${o.id} ${o.name} ${o.phone} ${o.area_label}`.toLowerCase().includes(q.trim().toLowerCase())))
     .sort((a, b) => (tab === 'new' ? Date.parse(a.paid_at || a.created_at) - Date.parse(b.paid_at || b.created_at) : Date.parse(b.created_at) - Date.parse(a.created_at))), [d.orders, tab, day, q]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -199,7 +200,8 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
         <div style={{ fontWeight: 600 }}>{o.name}</div>
         <div><a href={'tel:' + o.phone}>{fmtPhone(o.phone)}</a> · <a href={wa} target="_blank" rel="noopener">WhatsApp</a> · <a href={'mailto:' + o.email}>{o.email}</a></div>
         <div>{o.address}{o.landmark ? <span style={{ color: '#66736B' }}> (near {o.landmark})</span> : null}</div>
-        <div style={{ color: '#66736B' }}>{o.area_label} · {z?.state ? 'Courier' : z?.day ? `${z.day} run` : ''} · {o.speed_label}</div>
+        <div style={{ color: '#66736B' }}>{o.area_label} · {runOf(o, z)} · {o.speed_label}{o.spot?.km != null ? ` · about ${Math.round(o.spot.km)} km` : ''}</div>
+        {o.spot && <a href={mapLink(o.spot)} target="_blank" rel="noopener" style={{ color: '#0B3A23', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>Open in Google Maps</a>}
         {o.note && <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#FBF2DE', fontSize: 13 }}><strong>Their note:</strong> {o.note}</div>}
         {o.rider?.partner && <div style={{ marginTop: 6, color: '#4D5A52' }}>Sent with {o.rider.partner}{o.rider.tracking ? ` · ${o.rider.tracking}` : ''}{o.rider.driver ? ` · ${o.rider.driver}` : ''}</div>}
         {o.confirm?.how && <div style={{ color: '#4D5A52' }}>Delivered: {o.confirm.how}{o.confirm.by ? ` (${o.confirm.by})` : ''}</div>}
@@ -220,7 +222,7 @@ function RunSheet({ c, day, dayOf, onClose }: { c: Ctx; day: string; dayOf: (o: 
   const [pick, setPick] = useState(day && days.includes(day) ? day : days[0] || '');
   const [busy, setBusy] = useState(false);
   const list = d.orders.filter(o => ['new', 'packed', 'route'].includes(o.status) && dayOf(o) === pick);
-  const text = `*Tiada ${pick} run* (${list.length} drops)\n\n` + list.map((o, i) => `${i + 1}. ${o.id} · ${o.name} · ${fmtPhone(o.phone)}\n${o.address}${o.landmark ? ' (near ' + o.landmark + ')' : ''}, ${o.area_label}\n${o.items.map(it => `${it.qty} × ${it.name}${it.size !== 'Package' ? ' ' + it.size : ''}`).join(', ')}`).join('\n\n');
+  const text = `*Tiada ${pick} run* (${list.length} drops)\n\n` + list.map((o, i) => `${i + 1}. ${o.id} · ${o.name} · ${fmtPhone(o.phone)}\n${o.address}${o.landmark ? ' (near ' + o.landmark + ')' : ''}, ${o.area_label}${o.spot ? '\n' + mapLink(o.spot) : ''}\n${o.items.map(it => `${it.qty} × ${it.name}${it.size !== 'Package' ? ' ' + it.size : ''}`).join(', ')}`).join('\n\n');
   const copy = async () => { try { await navigator.clipboard.writeText(text); toast('ok', 'Copied.', 'Paste it into WhatsApp for the rider.'); } catch { toast('err', 'Couldn’t copy.', 'Select the text and copy it instead.'); } };
   const all = async (action: 'route' | 'done') => {
     setBusy(true); let n = 0;

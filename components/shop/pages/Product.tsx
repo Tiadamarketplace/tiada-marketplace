@@ -84,7 +84,7 @@ export default function ProductPage({ id }: { id: string }) {
   const off = maxOff(p);
   const accs: [string, string][] = [
     ['Description', DESC[p.cat] || ''],
-    ['Delivery', data.policies.delivery || 'We deliver in Lagos and Oyo State. Choose your area at checkout to see your fee and delivery day. Oyo orders go out from our Iseyin branch.'],
+    ['Delivery', data.policies.delivery || 'We deliver in Lagos and Oyo State. Type your address at checkout to see your fee before you pay: it depends on the distance. Lagos orders usually arrive the next day; Oyo orders go out from our Iseyin branch.'],
     ['Payment', 'Pay online through Paystack by card, bank transfer or USSD. Your payment confirms on its own and we email your receipt.'],
   ];
   if (data.policies.returns) accs.push(['Returns', data.policies.returns]);

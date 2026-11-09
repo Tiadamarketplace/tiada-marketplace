@@ -41,7 +41,7 @@ export default function CartPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: '#66736B' }}><span>Total weight</span><span>{kg} kg</span></div>
             {short > 0
               ? <p style={{ margin: 0, padding: '10px 12px', borderRadius: 6, background: '#F6E9CF', fontSize: 13, lineHeight: 1.55, color: '#4A3510' }}>Add <strong>{naira(short)}</strong> more to reach our {naira(data.fees.min)} delivery minimum.</p>
-              : <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#66736B' }}>Delivery is added at checkout once you choose your area.</p>}
+              : <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#66736B' }}>Delivery is added at checkout once you type your address.</p>}
             <Link href="/checkout" className="ub btn-solid press" style={{ ...btnSolid, opacity: short > 0 ? 0.5 : 1, pointerEvents: short > 0 ? 'none' : 'auto' }} aria-disabled={short > 0}>Check out</Link>
           </aside>
         </div>

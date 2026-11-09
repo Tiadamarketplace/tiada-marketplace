@@ -21,7 +21,7 @@ export default function Policy({ kind }: { kind: 'privacy' | 'terms' }) {
   const terms: Sec[] = [
     ['Prices', 'Prices are in naira and include packing. Delivery is added at checkout based on your area and order weight. We check every price again when you pay, so the total you see at checkout is the total you pay.'],
     ['Payment', 'Orders are confirmed only after payment goes through on Paystack. If a payment fails or you close the window, no order is placed and nothing is taken.'],
-    ['Delivery', pol.delivery || 'We deliver on your area’s set day. Someone needs to be at the address to receive the order.'],
+    ['Delivery', pol.delivery || 'We deliver in Lagos and Oyo State. The fee depends on the distance and shows at checkout before you pay. Someone needs to be at the address to receive the order.'],
     ['Sold out after you pay', 'Stock is checked when you pay, but if something runs out before packing, we’ll call you to swap it or refund that item in full to your original payment method.'],
     ['Returns and problems', pol.returns || 'If something arrives damaged or missing, message us within 24 hours with a photo and we’ll replace it or refund you.'],
     ['Refunds', 'Refunds go back through Paystack to the card or account you paid with. Banks usually show them within 5 to 10 working days.'],

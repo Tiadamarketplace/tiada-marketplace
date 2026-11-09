@@ -11,7 +11,10 @@ export const GET = handle(async () => {
   // stay signed in while you keep using the shop: renew the 30-day sign-in once a day
   const s = await readSession<{ iat?: number }>('c');
   if (s?.iat && Date.now() / 1000 - s.iat > 86400) { await setSession('c', { cid: c.id }); await db().from('customers').update({ last_seen: new Date().toISOString() }).eq('id', c.id); }
-  const addresses = must(await db().from('addresses').select('id,label,street,landmark,zone_id').eq('customer_id', c.id).order('created_at'));
+  let ar = await db().from('addresses').select('id,label,street,landmark,zone_id,spot').eq('customer_id', c.id).order('created_at');
+  if (ar.error && /spot/.test(ar.error.message)) ar = await db().from('addresses').select('id,label,street,landmark,zone_id').eq('customer_id', c.id).order('created_at') as typeof ar;
+  // the customer's own spot, without the distance to our pin
+  const addresses = (must(ar) as { spot?: { lat: number; lng: number; label?: string; place?: string } | null }[]).map(a => ({ ...a, spot: a.spot ? { lat: a.spot.lat, lng: a.spot.lng, label: a.spot.label || '', place: a.spot.place || '' } : null }));
   return ok({ user: c, addresses });
 });
 const Patch = z.object({ name: z.string().trim().min(2, 'Add your full name.').max(60).optional(), phone: z.string().trim().transform(s => s.replace(/[\s-]/g, '').replace(/^\+?234/, '0')).pipe(z.string().regex(/^0[789][01]\d{8}$/, 'Use an 11-digit Nigerian number, like 0803 000 0000.')).optional(), promo_ok: z.boolean().optional() });

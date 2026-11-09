@@ -1,4 +1,5 @@
 'use client';
+import { runOf } from './runs';
 import type { Ctx } from './Desk';
 import { naira, card, Btn, ago } from './ui';
 
@@ -49,7 +50,7 @@ export default function Today({ c }: { c: Ctx }) {
   const zoneOf = (id: string | null) => d.zones.find(z => z.id === id);
   const runMap: Record<string, { day: string; areas: Set<string>; n: number; kg: number }> = {};
   for (const o of d.orders.filter(x => x.status === 'new' || x.status === 'packed')) {
-    const z = zoneOf(o.zone_id); const day = z?.state ? 'Courier' : o.speed === 'same' ? 'Priority' : z?.day || 'Unscheduled';
+    const day = runOf(o, zoneOf(o.zone_id));
     const r = (runMap[day] ||= { day, areas: new Set(), n: 0, kg: 0 }); r.n++; r.kg += Number(o.kg) || 0; r.areas.add(o.area_label || '');
   }
   const todayIdx = new Date(now + 3600e3).getUTCDay();

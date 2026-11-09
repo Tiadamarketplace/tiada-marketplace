@@ -199,7 +199,7 @@ export function Lightbox({ src, name, onClose }: { src: string; name: string; on
 type Msg = { id: number; who: string; text: string };
 const BOT: Record<string, string> = {
   track: 'Put your order code (it starts with TD-) on the Track page and you’ll see where it is. Signed in? Your orders are under My account.',
-  days: 'We deliver in Lagos and Oyo State. Every Lagos area has its own delivery day, and Oyo orders go out from our Iseyin branch. You’ll see your fee and day at checkout.',
+  days: 'We deliver in Lagos and Oyo State. Type your address at checkout and you’ll see the fee before you pay: it depends on the distance. Lagos orders usually arrive the next day; Oyo orders go out from our Iseyin branch and usually take 1 to 3 days.',
   swap: 'On any combo, tap “Swap items” and change what you don’t want. The price stays the same.',
   person: 'Okay, I’ve asked the team to join this chat. Someone will reply here shortly.',
 };
@@ -258,7 +258,7 @@ export function Chat() {
               : <div key={m.id} className="fade" style={{ alignSelf: m.who === 'me' ? 'flex-end' : 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 14, background: m.who === 'me' ? '#0B3A23' : '#FFFFFF', color: m.who === 'me' ? '#FFFFFF' : '#1F2A23', fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{m.text}</div>)}
             {msgs.length <= 1 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                {[['Where’s my order?', 'track'], ['Delivery days', 'days'], ['Swapping combo items', 'swap'], ['Talk to a person', 'person']].map(([l, t]) => (
+                {[['Where’s my order?', 'track'], ['Delivery and fees', 'days'], ['Swapping combo items', 'swap'], ['Talk to a person', 'person']].map(([l, t]) => (
                   <button key={t} type="button" className="ub chip" onClick={() => say(l, t)} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', background: '#FFFFFF', fontSize: 13, display: 'flex', alignItems: 'center' }}>{l}</button>
                 ))}
               </div>

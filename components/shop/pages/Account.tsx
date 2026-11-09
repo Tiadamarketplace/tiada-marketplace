@@ -2,6 +2,7 @@
 import Link from '@/components/shop/Link';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import AddressSearch, { PlaceRef } from '../AddressSearch';
 import { useShop, Address } from '../ShopProvider';
 import { Dialog } from '../Overlays';
 import OrderSteps, { StatusPill } from '../OrderSteps';
@@ -152,7 +153,6 @@ function Profile() {
 
   const current = (orders || []).find(o => ['new', 'packed', 'route', 'issue'].includes(o.status));
   const since = user.created_at ? new Date(user.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : '';
-  const zoneName = (id: string | null) => { const z = data.zones.find(x => x.id === id); return z ? z.state || z.label.split(',')[0] : ''; };
   const def = addresses[0];
 
   const again = (o: Order) => {
@@ -256,7 +256,7 @@ function Profile() {
               <h2 id="det-h" style={{ ...h2, paddingBottom: 12, borderBottom: '1px solid #1F2A23' }}>Your details</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 28, paddingTop: 20, fontSize: 14.5, lineHeight: 1.65 }}>
                 <div><div style={label}>Contact</div><div style={{ marginTop: 8 }}>{user.name || <span style={{ color: '#66736B' }}>No name yet</span>}<br />{user.phone ? user.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3') : <span style={{ color: '#66736B' }}>No phone yet</span>}<br />{user.email}</div><button type="button" className="ub" onClick={() => setTab('profile')} style={{ ...textLink, marginTop: 10 }}>Edit</button></div>
-                <div><div style={label}>Default address</div><div style={{ marginTop: 8 }}>{def ? <>{def.street}<br />{zoneName(def.zone_id)}</> : <span style={{ color: '#66736B' }}>No address saved yet</span>}</div><button type="button" className="ub" onClick={() => setTab('addresses')} style={{ ...textLink, marginTop: 10 }}>{def ? 'Manage' : 'Add an address'}</button></div>
+                <div><div style={label}>Default address</div><div style={{ marginTop: 8 }}>{def ? <>{def.street}<br />{def.spot?.label || ''}</> : <span style={{ color: '#66736B' }}>No address saved yet</span>}</div><button type="button" className="ub" onClick={() => setTab('addresses')} style={{ ...textLink, marginTop: 10 }}>{def ? 'Manage' : 'Add an address'}</button></div>
                 <div><div style={label}>Emails</div><div style={{ marginTop: 8 }}>Order updates: on<br />Deals and new stock: {user.promo_ok ? 'on' : 'off'}</div><button type="button" className="ub" onClick={() => setTab('privacy')} style={{ ...textLink, marginTop: 10 }}>Change</button></div>
               </div>
             </section>
@@ -282,15 +282,14 @@ function Profile() {
 }
 
 function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<void> }) {
-  const { data, notify } = useShop();
+  const { notify } = useShop();
   const [adding, setAdding] = useState(false);
-  const [a, setA] = useState({ label: 'Home', street: '', landmark: '', zone_id: '' });
+  const [a, setA] = useState<{ label: string; street: string; landmark: string; place: PlaceRef | null; bad: string }>({ label: 'Home', street: '', landmark: '', place: null, bad: '' });
   const [err, setErr] = useState('');
-  const zoneName = (id: string | null) => { const z = data.zones.find(x => x.id === id); return z ? z.state || z.label : ''; };
   const save = async () => {
     setErr('');
-    if (!a.zone_id) return setErr('Choose the area or state.');
-    try { await api('/api/me/addresses', { json: { ...a, landmark: a.landmark || null } }); await reload(); setAdding(false); setA({ label: 'Home', street: '', landmark: '', zone_id: '' }); notify('ok', 'Address saved.'); }
+    if (!a.place) return setErr(a.bad || 'Type the address and pick it from the suggestions.');
+    try { await api('/api/me/addresses', { json: { label: a.label, street: a.street, landmark: a.landmark || null, place: a.place } }); await reload(); setAdding(false); setA({ label: 'Home', street: '', landmark: '', place: null, bad: '' }); notify('ok', 'Address saved.'); }
     catch (e) { setErr((e as Error).message); }
   };
   const remove = async (id: string) => { try { await api('/api/me/addresses?id=' + id, { method: 'DELETE' }); await reload(); notify('info', 'Address removed.'); } catch (e) { notify('err', 'Couldn’t remove that address.', (e as Error).message); } };
@@ -302,7 +301,7 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
           <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><strong style={{ fontWeight: 600 }}>{x.label}</strong>{i === 0 && <span style={{ fontSize: 11.5, fontWeight: 600, color: '#0B3A23' }}>Default</span>}</span>
           <span style={{ lineHeight: 1.55 }}>{x.street}</span>
           {x.landmark && <span style={{ fontSize: 13, color: '#66736B' }}>Near {x.landmark}</span>}
-          <span style={{ fontSize: 13, color: '#66736B' }}>{zoneName(x.zone_id)}</span>
+          <span style={{ fontSize: 13, color: x.spot ? '#66736B' : '#9E3522' }}>{x.spot ? x.spot.label : 'Add this address again so we can work out delivery.'}</span>
           <span style={{ display: 'flex', gap: 16, marginTop: 6 }}>
             {i > 0 && <button type="button" className="ub lnk" onClick={() => makeDefault(x.id)} style={{ fontSize: 13, color: '#0B3A23' }}>Make default</button>}
             <button type="button" className="ub lnk" onClick={() => remove(x.id)} style={{ fontSize: 13, color: '#66736B' }}>Remove</button>
@@ -312,9 +311,8 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
       {!adding ? (list.length < 5 && <button type="button" className="ub" onClick={() => setAdding(true)} style={{ minHeight: 150, borderRadius: 2, border: '1.5px dashed #CFC8B9', fontSize: 14, fontWeight: 600, color: '#0B3A23' }}>+ Add an address</button>) : (
         <form onSubmit={e => { e.preventDefault(); save(); }} className="fade" style={{ gridColumn: '1 / -1', border: '1px solid #ECE8DF', borderRadius: 2, padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           <label style={labelStyle}>Name it<input value={a.label} onChange={e => setA({ ...a, label: e.target.value })} maxLength={20} placeholder="Home, Office…" style={field} /></label>
-          <label style={labelStyle}>Area or state<select value={a.zone_id} onChange={e => setA({ ...a, zone_id: e.target.value })} style={field}><option value="">Choose…</option><optgroup label="Lagos">{data.zones.filter(z => !z.state).map(z => <option key={z.id} value={z.id}>{z.label}</option>)}</optgroup><optgroup label="Outside Lagos">{data.zones.filter(z => z.state).map(z => <option key={z.id} value={z.id}>{z.state}</option>)}</optgroup></select></label>
-          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Street address<input value={a.street} onChange={e => setA({ ...a, street: e.target.value })} placeholder="House number, street, estate" style={field} /></label>
-          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Nearest landmark (optional)<input value={a.landmark} onChange={e => setA({ ...a, landmark: e.target.value })} style={field} /></label>
+          <div style={{ ...labelStyle, gridColumn: '1 / -1' }}>Address<AddressSearch onPick={(p, text) => setA(x => ({ ...x, street: text, place: p?.ok ? p.place : null, bad: p && !p.ok ? p.reason : '' }))} /></div>
+          <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>House number, flat or landmark (optional)<input value={a.landmark} onChange={e => setA({ ...a, landmark: e.target.value })} maxLength={120} placeholder="e.g. No. 14, Flat 3, opposite the filling station" style={field} /></label>
           {err && <p role="alert" style={{ gridColumn: '1 / -1', margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
           <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 14, alignItems: 'center' }}><button type="submit" className="ub btn-solid press" style={{ ...btnSolid, height: 46 }}>Save address</button><button type="button" className="ub lnk" onClick={() => setAdding(false)} style={{ fontSize: 14 }}>Cancel</button></div>
         </form>

@@ -28,10 +28,9 @@ export default function Track({ initial }: { initial: string }) {
   };
   // opened from the button in an order email: show the order straight away
   useEffect(() => { if (initial) go(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const zone = o ? data.zones.find(z => (z.state || z.label.split(',')[0]) === o.area_label) : null;
   const next = o && ({
-    new: `We’re packing it now. It goes out ${zone?.state ? 'by courier' : `on ${zone?.day || 'your area’s delivery day'}`}.`,
-    packed: `Packed and sealed. It leaves our hub ${zone?.state ? 'with the courier' : `on ${zone?.day || 'your area’s delivery day'}`}.`,
+    new: 'We’re packing it now. We’ll email you when it’s packed and when it leaves.',
+    packed: 'Packed and sealed. It goes out with our rider soon.',
     route: o.rider?.driver ? `${o.rider.driver} has it and will call when close.` : o.rider?.tracking ? `With ${o.rider.partner}. Tracking number ${o.rider.tracking}.` : 'It has left our hub.',
     done: 'Delivered. Something wrong? Message us within 24 hours with a photo.',
   } as Record<string, string>)[o.status];

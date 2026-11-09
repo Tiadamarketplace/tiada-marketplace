@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { deliveryZones } from './delivery';
+import { resolve, Spot } from './geo';
+import { quoteSpot, regions } from './regions';
 import { getProducts, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
 import { HttpError } from './http';
 import { applyVoucher } from './vouchers';
@@ -12,13 +13,16 @@ export const CartItem = z.object({
   swaps: z.array(z.object({ from: z.string().max(40), to: z.string().max(40) })).max(10).optional(),
 });
 export type CartItemT = z.infer<typeof CartItem>;
+/** The address the customer picked from the suggestions. The server looks it up again itself. */
+export const Place = z.object({ id: z.string().max(300), lat: z.number().min(-90).max(90).optional().nullable(), lng: z.number().min(-180).max(180).optional().nullable(), s: z.string().max(80).optional().nullable() });
+export type PlaceT = z.infer<typeof Place>;
 
 export type PricedLine = { pid: string; name: string; size: string; qty: number; price: number; was: number | null; kg: number; swaps: { from: string; to: string }[]; img: string | null };
 
 /** Work out the order from scratch on the server. Prices from the browser are never trusted. */
-export async function priceCart(items: CartItemT[], opts: { zoneId?: string | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
+export async function priceCart(items: CartItemT[], opts: { place?: PlaceT | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
   if (!items.length) throw new HttpError(400, 'Your basket is empty.');
-  const [products, zones, fees] = await Promise.all([getProducts(), deliveryZones(), getSetting<Fees>('fees', DEFAULT_FEES)]);
+  const [products, regs, fees] = await Promise.all([getProducts(), regions(), getSetting<Fees>('fees', DEFAULT_FEES)]);
   const lines: PricedLine[] = [];
   for (const it of items) {
     const p = products.find(x => x.id === it.pid);
@@ -44,25 +48,19 @@ export async function priceCart(items: CartItemT[], opts: { zoneId?: string | nu
   const discount = v?.discount || 0;
   if (!opts.quote && subtotal < fees.min) throw new HttpError(400, `The minimum order for delivery is ₦${fees.min.toLocaleString()}. Add ₦${(fees.min - subtotal).toLocaleString()} more.`);
 
-  const zone = zones.find(z => z.id === opts.zoneId);
-  if (!zone) {
-    if (opts.quote) return { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zone: null, areaLabel: null, speedLabel: null, min: fees.min };
-    throw new HttpError(400, 'Choose your delivery area. We deliver in Lagos and the states shown at checkout.');
+  const spot: Spot | null = opts.place ? await resolve({ id: opts.place.id, lat: opts.place.lat, lng: opts.place.lng, session: opts.place.s }) : null;
+  const sq = spot ? quoteSpot(spot, regs) : null;
+  const none = { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zoneId: null, spot: null, areaLabel: null, speedLabel: null, days: null, min: fees.min };
+  if (!spot || !sq || !sq.ok) {
+    const reason = !opts.place ? 'Type your address and pick it from the suggestions.' : !spot ? 'We couldn’t find that address on the map. Try typing it a little differently, then pick it from the list.' : (sq as { reason: string }).reason;
+    if (opts.quote) return { ...none, reason };
+    throw new HttpError(400, reason);
   }
-  let fee: number, speedLabel: string;
-  if (zone.state && !zone.area) {
-    const extra = kg > 5 ? Math.ceil(kg - 5) * fees.interKg : 0;
-    const rush = opts.speed === 'same' ? fees.express : 0;
-    fee = zone.fee + extra + rush;
-    speedLabel = opts.speed === 'same' ? 'Express courier' : 'Standard courier';
-  } else {
-    const weight = kg > 5 ? Math.round((kg - 5) * fees.lagosKg) : 0;
-    const van = kg > 20 ? fees.van : 0;
-    if (opts.speed === 'eco') { fee = fees.eco + weight + van; speedLabel = 'Economy delivery (grouped)'; }
-    else { fee = zone.fee + weight + van + (opts.speed === 'same' ? fees.same : 0); speedLabel = opts.speed === 'same' ? 'Priority delivery' : 'Standard delivery'; }
-  }
+  const weight = kg > 5 ? Math.round((kg - 5) * fees.lagosKg) : 0;
+  const van = kg > 20 ? fees.van : 0;
+  const rush = opts.speed === 'same';
+  const fee = sq.fee + weight + van + (rush ? fees.same : 0);
+  const speedLabel = rush ? 'Priority delivery' : 'Standard delivery';
   const total = subtotal - discount + fee;
-  // an Oyo area is stored on the order as the Oyo state, with the area as the label
-  const areaLabel = zone.area ? `${zone.area}, Oyo` : zone.state || zone.label.split(',')[0];
-  return { lines, subtotal, discount, voucher: v?.code || null, fee, total, kg, zone: zone.area ? { ...zone, id: 'st:Oyo' } : zone, areaLabel, speedLabel, min: fees.min };
+  return { lines, subtotal, discount, voucher: v?.code || null, fee, total, kg, zoneId: sq.region === 'Oyo' ? 'st:Oyo' : null, spot: { ...spot, region: sq.region, km: sq.km, days: sq.days }, areaLabel: spot.label || sq.region, speedLabel, days: rush ? 'today or next morning where we can' : sq.days, min: fees.min, reason: null };
 }

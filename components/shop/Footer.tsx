@@ -45,7 +45,7 @@ export default function Footer() {
           <H>Help</H>
           <L href="/help">How Tiada works</L>
           <L href="/track">Track my order</L>
-          <L href="/help#delivery">Delivery days</L>
+          <L href="/help#delivery">Delivery and fees</L>
           <L href="/help#contact">Contact us</L>
           <L href="/account">My account</L>
         </nav>

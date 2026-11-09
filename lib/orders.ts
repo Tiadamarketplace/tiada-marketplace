@@ -20,8 +20,9 @@ export async function markPaid(orderId: string, amountKobo: number, paidAt?: str
 
 /** What a customer is allowed to see about an order. */
 export function publicOrder(o: Order) {
-  const { pay_ref, customer_id, rider, confirm, track_fails, stock_taken, ...rest } = o as Order & Record<string, unknown>;
+  const { pay_ref, customer_id, rider, confirm, track_fails, stock_taken, spot, ...rest } = o as Order & Record<string, unknown>;
   void pay_ref; void customer_id; void track_fails; void stock_taken;
-  return { ...rest, rider: rider ? { partner: rider.partner, tracking: rider.tracking, driver: rider.driver, phone: rider.phone } : null,
+  // never send the map spot (the customer's exact location, and its distance from our pin) to the browser
+  return { ...rest, spot: spot ? { days: (spot as { days?: string }).days || null } : null, rider: rider ? { partner: rider.partner, tracking: rider.tracking, driver: rider.driver, phone: rider.phone } : null,
     confirm: confirm ? { how: (confirm as { how?: string }).how, at: (confirm as { at?: string }).at } : null };
 }

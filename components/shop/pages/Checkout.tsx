@@ -1,15 +1,16 @@
 'use client';
 import Link from '@/components/shop/Link';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
-import { naira, api, waLink } from '@/lib/shop-client';
+import { naira, api, waLink, whereWeDeliver } from '@/lib/shop-client';
 import { EmptyCart, Thumb, btnSolid, btnOut, field, labelStyle } from '../ui';
 import { ILock } from '../Icons';
+import AddressSearch, { Pick, PlaceRef } from '../AddressSearch';
 
-type Quote = { subtotal: number; discount: number; voucher: string | null; fee: number | null; total: number; kg: number; speed: string | null; min: number };
-type Form = { name: string; phone: string; email: string; address: string; landmark: string; note: string; zone: string; speed: 'next' | 'same' | 'eco'; save: boolean };
+type Quote = { subtotal: number; discount: number; voucher: string | null; fee: number | null; total: number; kg: number; speed: string | null; min: number; days: string | null; area: string | null; reason: string | null };
+type Form = { name: string; phone: string; email: string; address: string; landmark: string; note: string; place: PlaceRef | null; speed: 'next' | 'same'; save: boolean };
 declare global { interface Window { PaystackPop?: new () => { resumeTransaction: (code: string, cb: { onSuccess?: (t: unknown) => void; onCancel?: () => void; onError?: (e: { message?: string }) => void }) => void } } }
 
 const SAVE_KEY = 'tiada_checkout';
@@ -22,13 +23,10 @@ const loadPaystack = () => new Promise<void>((res, rej) => {
 
 export default function Checkout() {
   const { priced, data, user, userReady, addresses, notify, setCartOpen } = useShop();
-  const lagos = useMemo(() => data.zones.filter(z => !z.state), [data.zones]);
-  const states = useMemo(() => data.zones.filter(z => z.state), [data.zones]);
-  const courier = (z?: { id: string; state: string | null }) => !!z?.state && !z.id.startsWith('oyo:');
-  const oyoGroups = useMemo(() => Array.from(new Set(states.filter(z => z.id.startsWith('oyo:')).map(z => z.city || 'Oyo'))), [states]);
   const [step, setStep] = useState<'details' | 'pay'>('details');
-  const [where, setWhere] = useState<'lagos' | 'out'>('lagos');
-  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', address: '', landmark: '', note: '', zone: '', speed: 'next', save: true });
+  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', address: '', landmark: '', note: '', place: null, speed: 'next', save: true });
+  const [spot, setSpot] = useState<Pick | null>(null);
+  const [start, setStart] = useState<{ text: string; place: PlaceRef | null } | null>(null);
   const [err, setErr] = useState<{ field?: string; text: string } | null>(null);
   const [q, setQ] = useState<Quote | null>(null);
   const [code, setCode] = useState('');
@@ -43,13 +41,14 @@ export default function Checkout() {
   // fill in what we know: saved guest details, then the signed-in account
   useEffect(() => {
     if (loaded.current) return; loaded.current = true;
-    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s) { setF(v => ({ ...v, ...s })); if (s.zone && states.some(z => z.id === s.zone)) setWhere('out'); } } catch { /* */ }
-  }, [states]);
+    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s) { setF(v => ({ ...v, ...s, speed: s.speed === 'same' ? 'same' : 'next', place: null })); if (s.place && s.address) setStart({ text: s.address, place: s.place }); } } catch { /* */ }
+  }, []);
   useEffect(() => {
     if (!user) return;
     setF(v => ({ ...v, email: user.email, name: v.name || user.name || '', phone: v.phone || user.phone || '' }));
-    if (addresses[0]) setF(v => (v.address ? v : { ...v, address: addresses[0].street, landmark: addresses[0].landmark || '', zone: v.zone || addresses[0].zone_id || '' }));
-  }, [user, addresses]);
+    const a = addresses[0];
+    if (a?.spot?.place && !f.address) { setStart({ text: a.street, place: { id: a.spot.place, lat: a.spot.lat, lng: a.spot.lng } }); setF(v => ({ ...v, landmark: v.landmark || a.landmark || '' })); }
+  }, [user, addresses]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setF(x => ({ ...x, [k]: v })); if (err?.field === k) setErr(null); };
 
   const items = priced.map(l => ({ pid: l.pid, size: l.size, qty: l.qty, swaps: l.swaps }));
@@ -58,7 +57,7 @@ export default function Checkout() {
     if (!items.length) return;
     let on = true;
     const t = setTimeout(() => {
-      api<Quote>('/api/quote', { json: { items, zone_id: f.zone || null, speed: f.speed, voucher: codeApplied || null, email: f.email || null } })
+      api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: codeApplied || null, email: f.email || null } })
         .then(r => on && setQ(r))
         .catch((e: Error & { status?: number }) => {
           if (!on) return;
@@ -67,20 +66,21 @@ export default function Checkout() {
         });
     }, 250);
     return () => { on = false; clearTimeout(t); };
-  }, [itemsKey, f.zone, f.speed, codeApplied, f.email]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [itemsKey, f.place?.id, f.place?.lat, f.speed, codeApplied, f.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const zone = data.zones.find(z => z.id === f.zone);
   const sub = priced.reduce((a, l) => a + l.line, 0);
-  // the server's quote is the real figure; until it arrives, show the area's base fee
-  const estFee = zone ? zone.fee + (f.speed === 'same' ? (courier(zone) ? data.fees.express : data.fees.same) : 0) : null;
-  const fee = q ? q.fee : estFee;
+  const good = spot?.ok ? spot : null;
+  // the server's quote is the real figure; until it arrives, show the address's base fee
+  const estFee = good ? good.fee + (f.speed === 'same' ? data.fees.same : 0) : null;
+  const fee = q && f.place ? q.fee : estFee;
   const total = q ? q.total : sub + (estFee || 0);
-  const arrive = zone ? (zone.state ? (zone.days || '1–3 days') : f.speed === 'same' ? 'today or next morning' : `on ${zone.day || 'your area’s day'}`) : '';
+  const arrive = q?.days || (good ? (f.speed === 'same' ? 'today or next morning where we can' : good.days) : '');
+  const onPick = (p: Pick | null, text: string) => { setSpot(p); setF(x => ({ ...x, address: text, place: p?.ok ? p.place : null })); if (err?.field === 'address') setErr(null); };
 
   const applyCode = async () => {
     const c = code.trim().toUpperCase(); setCodeErr('');
     if (!c) return setCodeErr('Type your code first.');
-    try { const r = await api<Quote>('/api/quote', { json: { items, zone_id: f.zone || null, speed: f.speed, voucher: c, email: f.email || null } }); setQ(r); setCodeApplied(c); notify('ok', `${c} applied.`, `You save ${naira(r.discount)}.`); }
+    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: c, email: f.email || null } }); setQ(r); setCodeApplied(c); notify('ok', `${c} applied.`, `You save ${naira(r.discount)}.`); }
     catch (e) { setCodeErr((e as Error).message); }
   };
 
@@ -89,14 +89,13 @@ export default function Checkout() {
       ['name', f.name.trim().length >= 2, 'Add your full name.'],
       ['phone', /^0[789][01]\d{8}$/.test(f.phone.replace(/[\s-]/g, '').replace(/^\+?234/, '0')), 'Use an 11-digit Nigerian phone number, like 0803 000 0000.'],
       ['email', /^\S+@\S+\.\S+$/.test(f.email.trim()), 'Enter a full email address so we can send your receipt.'],
-      ['zone', !!zone, where === 'lagos' ? 'Choose your area in Lagos.' : 'Choose your state.'],
-      ['address', f.address.trim().length >= 6, 'Add a house number and street.'],
+      ['address', !!good && !!f.place, spot && !spot.ok ? spot.reason : 'Type your address and pick it from the suggestions, so we can work out delivery.'],
     ];
     const bad = need.find(n => !n[1]);
     if (bad) { setErr({ field: bad[0], text: bad[2] }); document.getElementById('co-' + bad[0])?.focus(); return; }
     if (sub < data.fees.min) { setErr({ text: `The minimum order for delivery is ${naira(data.fees.min)}. Add ${naira(data.fees.min - sub)} more.` }); return; }
     setErr(null);
-    try { const { name, phone, email, address, landmark, zone: z, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, zone: z, speed })); } catch { /* */ }
+    try { const { name, phone, email, address, landmark, place, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, place: place ? { id: place.id, lat: place.lat, lng: place.lng } : null, speed })); } catch { /* */ }
     setStep('pay'); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -104,7 +103,7 @@ export default function Checkout() {
     setPhase('opening');
     let r: { order: { id: string; total: number }; ref: string; access_code: string; authorization_url: string };
     try {
-      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: f.address.trim(), landmark: f.landmark.trim() || null, zone_id: f.zone, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
+      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: f.address.trim(), landmark: f.landmark.trim() || null, place: f.place, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
     } catch (e) {
       const m = (e as Error).message; const st = (e as { status?: number }).status;
       if (st === 409) { setPhase('idle'); setChanged(m); return; }
@@ -159,63 +158,26 @@ export default function Checkout() {
 
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
-                <div role="tablist" aria-label="Where to deliver" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 6, background: '#F4F1EA', alignSelf: 'flex-start' }}>
-                  {([['lagos', 'In Lagos'], ...(states.length ? [['out', new Set(states.map(z => z.state)).size === 1 ? `${states[0].state} State` : 'Outside Lagos']] : [])] as ['lagos' | 'out', string][]).map(([k, l]) => (
-                    <button key={k} type="button" role="tab" className="ub" aria-selected={where === k} onClick={() => { setWhere(k); set('zone', ''); set('speed', 'next'); }} style={{ height: 40, padding: '0 18px', borderRadius: 4, fontSize: 14, fontWeight: 600, background: where === k ? '#FFFFFF' : 'transparent', color: where === k ? '#0B3A23' : '#66736B', boxShadow: where === k ? '0 1px 3px rgba(17,32,23,0.12)' : 'none' }}>{l}</button>
-                  ))}
-                </div>
-                {where === 'lagos' ? (
-                  <div id="co-zone" tabIndex={-1} role="radiogroup" aria-label="Your area" style={{ display: 'flex', flexDirection: 'column', gap: 8, outline: err?.field === 'zone' ? '1.5px solid #B8402B' : 'none', borderRadius: 6 }}>
-                    {lagos.map(z => { const on = f.zone === z.id; return (
-                      <button key={z.id} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('zone', z.id)} style={{ minHeight: 60, padding: '10px 16px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', alignItems: 'center', gap: 14 }}>
-                        <span style={{ width: 18, height: 18, flex: 'none', borderRadius: '50%', border: on ? '5.5px solid #0B3A23' : '1.5px solid #B9B3A5' }} />
-                        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14.5, fontWeight: 500 }}>{z.label}</span><span style={{ fontSize: 12.5, color: '#66736B' }}>{z.day ? `Delivered on ${z.day}` : 'Delivery day confirmed after you order'}</span></span>
-                        <span style={{ fontSize: 14, fontWeight: 600 }}>{naira(z.fee)}</span>
-                      </button>); })}
-                    <p style={{ margin: 0, fontSize: 12.5, color: '#66736B' }}>Can’t see your area? <a href={waLink(data.business.whatsapp, 'Hi Tiada, do you deliver to my area?')} target="_blank" rel="noopener" className="lnk" style={{ color: '#0B3A23' }}>Ask us on WhatsApp</a>.</p>
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>We deliver in {whereWeDeliver(data.zones)}. Start typing and pick your address from the list. The delivery fee depends on the distance.</p>
+                {addresses.some(a => a.spot?.place) && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {addresses.filter(a => a.spot?.place).map(a => <button key={a.id} type="button" className="ub chip" onClick={() => { set('landmark', a.landmark || ''); setStart({ text: a.street, place: { id: a.spot!.place, lat: a.spot!.lat, lng: a.spot!.lng } }); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 12.5 }}>{a.label}: {a.street.slice(0, 28)}</button>)}
                   </div>
-                ) : (
-                  <>
-                    {oyoGroups.length > 0 ? (
-                      <>
-                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>Pick your area. The fee depends on how far it is from our Iseyin branch.</p>
-                        <label style={labelStyle}>Your area in Oyo State
-                          <select id="co-zone" value={f.zone.startsWith('oyo:') ? f.zone : ''} onChange={e => set('zone', e.target.value)} aria-invalid={err?.field === 'zone'} style={{ ...inp('zone'), cursor: 'pointer' }}>
-                            <option value="">Choose your area</option>
-                            {oyoGroups.map(g => <optgroup key={g} label={g}>{states.filter(z => z.id.startsWith('oyo:') && (z.city || 'Oyo') === g).map(z => <option key={z.id} value={z.id}>{z.label} · {naira(z.fee)}</option>)}</optgroup>)}
-                          </select>
-                        </label>
-                        {zone && zone.id.startsWith('oyo:') && <p className="fade" style={{ margin: 0, fontSize: 14, color: '#0B3A23' }}>Delivery to <strong>{zone.label}</strong>: {naira(zone.fee)}, usually {zone.days}.</p>}
-                        <p style={{ margin: 0, fontSize: 12.5, color: '#66736B' }}>Can’t see your area? <a href={waLink(data.business.whatsapp, 'Hi Tiada, do you deliver to my area in Oyo?')} target="_blank" rel="noopener" className="lnk" style={{ color: '#0B3A23' }}>Ask us on WhatsApp</a>.</p>
-                      </>
-                    ) : (
-                    <div id="co-zone" tabIndex={-1} role="radiogroup" aria-label="Your state" style={{ display: 'flex', flexDirection: 'column', gap: 8, outline: err?.field === 'zone' ? '1.5px solid #B8402B' : 'none', borderRadius: 6 }}>
-                      {states.map(z => { const on = f.zone === z.id; return (
-                        <button key={z.id} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('zone', z.id)} style={{ minHeight: 60, padding: '10px 16px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', alignItems: 'center', gap: 14 }}>
-                          <span style={{ width: 18, height: 18, flex: 'none', borderRadius: '50%', border: on ? '5.5px solid #0B3A23' : '1.5px solid #B9B3A5' }} />
-                          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14.5, fontWeight: 500 }}>{z.label || z.state}</span><span style={{ fontSize: 12.5, color: '#66736B' }}>By courier · {z.days || '1–3 days'}</span></span>
-                          <span style={{ fontSize: 14, fontWeight: 600 }}>{naira(z.fee)}</span>
-                        </button>); })}
-                    </div>
-                    )}
-                  </>
                 )}
-                {zone && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label htmlFor="co-address" style={{ fontSize: 13, fontWeight: 600 }}>Delivery address</label>
+                  <AddressSearch key={start?.text || 'new'} id="co-address" initial={start} onPick={onPick} invalid={err?.field === 'address'} />
+                </div>
+                {good && (
                   <div role="radiogroup" aria-label="Delivery speed" className="fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 8 }}>
-                    {([['next', courier(zone) ? 'Standard courier' : 'Standard', zone.state ? (zone.days || '1–3 days') : `On ${zone.day || 'your area’s day'}`, 0], ['same', courier(zone) ? 'Express courier' : 'Priority', courier(zone) ? 'Faster, where the courier offers it' : zone.state ? 'Same day where we can' : 'Today or next morning', courier(zone) ? data.fees.express : data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
+                    {([['next', 'Standard', `Usually ${good.days}`, 0], ['same', 'Priority', 'Today or next morning where we can', data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
                       <button key={k} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('speed', k)} style={{ padding: '12px 14px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <span style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 600 }}><span>{l}</span><span>{extra ? '+' + naira(extra) : ''}</span></span>
                         <span style={{ fontSize: 12.5, color: '#66736B' }}>{d}</span>
                       </button>); })}
                   </div>
                 )}
-                {addresses.length > 1 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {addresses.map(a => <button key={a.id} type="button" className="ub chip" onClick={() => { set('address', a.street); set('landmark', a.landmark || ''); if (a.zone_id) set('zone', a.zone_id); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 12.5 }}>{a.label}: {a.street.slice(0, 28)}</button>)}
-                  </div>
-                )}
-                <label style={labelStyle}>Street address<input id="co-address" type="text" autoComplete="street-address" placeholder="House number, street, estate" value={f.address} onChange={e => set('address', e.target.value)} aria-invalid={err?.field === 'address'} style={inp('address')} /></label>
-                <label style={labelStyle}><span>Nearest landmark <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span></span><input type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} placeholder="e.g. opposite the filling station" style={field} /></label>
+                <label style={labelStyle}><span>House number, flat or landmark <span style={{ fontWeight: 400, color: '#66736B' }}>(helps the rider)</span></span><input type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} placeholder="e.g. No. 14, Flat 3, opposite the filling station" maxLength={120} style={field} /></label>
                 <label style={labelStyle}><span>Note for us <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span></span><textarea rows={2} value={f.note} onChange={e => set('note', e.target.value)} maxLength={300} placeholder="Gate code, best time to call…" style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical' }} /></label>
                 {user && <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5 }}><input type="checkbox" checked={f.save} onChange={e => set('save', e.target.checked)} style={{ width: 18, height: 18, accentColor: '#0B3A23' }} />Save this address to my account</label>}
               </section>
@@ -229,7 +191,7 @@ export default function Checkout() {
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13.5, lineHeight: 1.5, minWidth: 0 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#66736B' }}>Delivering to</span>
                   <span style={{ fontWeight: 600 }}>{f.name} · {f.phone}</span>
-                  <span>{f.address}, {zone?.state || zone?.label}</span>
+                  <span>{f.address}</span>{f.landmark.trim() && <span style={{ color: '#66736B' }}>{f.landmark.trim()}</span>}
                   <span style={{ color: '#66736B' }}>Arrives {arrive}</span>
                 </span>
                 <button type="button" className="ub lnk" onClick={() => { setStep('details'); setPhase('idle'); }} style={{ alignSelf: 'flex-start', fontSize: 13.5, color: '#0B3A23' }}>Change</button>
@@ -277,7 +239,7 @@ export default function Checkout() {
           ))}
           <div style={{ height: 1, background: '#E4DFD3' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Subtotal</span><span>{naira(q?.subtotal ?? sub)}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#66736B' }}> · {q.speed}</span> : null}</span><span>{fee != null ? naira(fee) : <span style={{ color: '#66736B', fontSize: 13 }}>Choose your area</span>}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#66736B' }}> · {q.speed}</span> : null}</span><span>{fee != null ? naira(fee) : <span style={{ color: '#66736B', fontSize: 13 }}>Add your address</span>}</span></div>
           {!!q?.discount && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14.5, color: '#0B3A23' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Discount <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 4, border: '1px dashed #D49B41', background: '#FFFFFF' }}>{q.voucher}</span>

@@ -50,11 +50,11 @@ export function oyoAreas(cfg: OyoConfig, fallback: number): OyoArea[] {
 }
 
 /** Reads "7.4290, 3.9110" or a Google Maps link and returns the spot, or null. */
-export function parseSpot(s: string): { lat: number; lng: number } | null {
+export function parseSpot(s: string, b: [number, number, number, number] = [6.8, 9.3, 2.6, 4.7]): { lat: number; lng: number } | null {
   const t = decodeURIComponent(s || '');
   const m = /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/.exec(t) || /@(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(t) || /(?:q|query|ll)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(t) || /(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/.exec(t);
   if (!m) return null;
   const lat = Number(m[1]), lng = Number(m[2]);
-  // must be somewhere in or near Oyo State
-  return lat > 6.8 && lat < 9.3 && lng > 2.6 && lng < 4.7 ? { lat, lng } : null;
+  // must be inside the state's box (Oyo by default)
+  return lat > b[0] && lat < b[1] && lng > b[2] && lng < b[3] ? { lat, lng } : null;
 }

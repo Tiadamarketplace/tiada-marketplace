@@ -9,7 +9,7 @@ import { IBox, ICard, ITruck } from '../Icons';
 const WHY = [
   { i: <IBox size={30} color="#0B3A23" stroke={1.4} />, t: 'Sized for your home', s: '250g, 500g, 1kg or a paint bucket' },
   { i: <ICard size={30} color="#0B3A23" stroke={1.4} />, t: 'Pay online, securely', s: 'Card, transfer or USSD through Paystack' },
-  { i: <ITruck size={30} color="#0B3A23" stroke={1.4} />, t: 'Delivery in Lagos and Oyo', s: 'A set day for every Lagos area' },
+  { i: <ITruck size={30} color="#0B3A23" stroke={1.4} />, t: 'Delivery in Lagos and Oyo', s: 'Fee by distance, shown before you pay' },
 ];
 
 export default function Home() {
@@ -37,7 +37,7 @@ export default function Home() {
           <div className="fade" style={{ maxWidth: 540, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 18, padding: '48px 0' }}>
             <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#D49B41' }}>Tiada Marketplace · Lagos &amp; Oyo</span>
             <h1 className="serif" style={{ margin: 0, fontSize: 'clamp(40px, 5.6vw, 68px)', lineHeight: 1.02, letterSpacing: '-0.01em', color: '#FFFFFF', textShadow: '0 2px 24px rgba(0,0,0,0.25)' }}>Foodstuffs and cereals, packed for your home.</h1>
-            <p style={{ margin: 0, maxWidth: 470, fontSize: 16, lineHeight: 1.7, color: 'rgba(255,255,255,0.88)' }}>Breakfast cereals by weight, ready-made combos and pantry staples, packed at our hub and brought to your door on your area’s delivery day.</p>
+            <p style={{ margin: 0, maxWidth: 470, fontSize: 16, lineHeight: 1.7, color: 'rgba(255,255,255,0.88)' }}>Breakfast cereals by weight, ready-made combos and pantry staples, packed at our hub and brought to your door in Lagos and Oyo.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 24px', marginTop: 6 }}>
               <Link href="/aisle/cereal" className="ub btn-gold press" style={{ height: 50, padding: '0 30px', borderRadius: 4, background: '#D49B41', color: '#0B3A23', fontWeight: 700, fontSize: 15, display: 'inline-flex', alignItems: 'center' }}>Shop cereals</Link>
               <Link href="/aisle/ccombo" className="lnk" style={{ fontWeight: 600, fontSize: 15, color: '#FFFFFF' }}>See the combos</Link>

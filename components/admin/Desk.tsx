@@ -29,7 +29,7 @@ const TITLES: Record<Sec, [string, string]> = {
   banners: ['Banners', 'The slides in the middle of the home page. Each one can link to a product, an aisle or any page.'], discounts: ['Discount codes', 'Codes customers type at checkout.'],
   emails: ['Emails', 'Send news, deals or a restock note to your customers.'], reviews: ['Reviews', 'Reviews only show in the shop after you approve them.'], chat: ['Chat', 'Customers who asked to talk to a person.'],
   messages: ['Website messages', 'Sent from the Contact us form on the Help page.'], customers: ['Customers', 'Everyone who has an account or has ordered.'],
-  settings: ['Shop settings', 'Business details, opening hours, alerts and policies.'], delivery: ['Delivery', 'Fees for each Lagos area and each region outside Lagos.'], team: ['Team & security', 'Who can open this desk, and what they’ve done.'],
+  settings: ['Shop settings', 'Business details, opening hours, alerts and policies.'], delivery: ['Delivery', 'Fees by distance from your pins in Lagos and Oyo.'], team: ['Team & security', 'Who can open this desk, and what they’ve done.'],
 };
 
 export default function Desk() { return <Toasts><Inner /></Toasts>; }

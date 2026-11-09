@@ -41,8 +41,8 @@ export default function OrderResult({ id, payRef, cancelled }: { id: string; pay
     return () => { on = false; clearTimeout(t); };
   }, [id, payRef, cancelled]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const zone = o?.zone_id ? data.zones.find(z => z.id === o.zone_id) : null;
-  const day = zone ? (zone.state ? zone.days || 'in 2–5 working days' : o?.speed_label?.startsWith('Priority') ? 'today or next morning' : `on ${zone.day || 'your area’s delivery day'}`) : 'on your area’s delivery day';
+  const reg = data.zones.find(z => z.id === (o?.zone_id === 'st:Oyo' ? 'st:Oyo' : 'st:Lagos'));
+  const day = o?.speed_label?.startsWith('Priority') ? 'today or next morning where we can' : `usually ${reg?.days || 'in 1–3 days'}`;
   const wa = waLink(data.business.whatsapp, `Hi Tiada, about my order ${id}.`);
   const wrap = (c: React.ReactNode) => <div className="fade" style={{ maxWidth: 620, margin: '48px auto 0', padding: '0 clamp(16px, 3vw, 28px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>{c}</div>;
   const spinner = <span style={{ width: 54, height: 54, borderRadius: '50%', border: '4px solid #E6E0D2', borderTopColor: '#0B3A23', animation: 'spin .9s linear infinite' }} />;
@@ -80,7 +80,7 @@ export default function OrderResult({ id, payRef, cancelled }: { id: string; pay
       ))}
     </div>
     <ol style={{ listStyle: 'none', margin: '4px 0 0', padding: 0, width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, textAlign: 'left' }}>
-      {[['We pack it', 'Measured and sealed at our Agege hub.'], ['We tell you', 'An email when the rider sets off.'], ['It arrives', `At your door ${day}.`]].map(([t, d], i) => (
+      {[['We pack it', 'Measured and sealed at our hub.'], ['We tell you', 'An email when the rider sets off.'], ['It arrives', `At your door ${day}.`]].map(([t, d], i) => (
         <li key={t} style={{ padding: 16, borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><span style={{ fontSize: 12, fontWeight: 700, color: '#D49B41' }}>{i + 1}</span><strong style={{ fontSize: 14, fontWeight: 600 }}>{t}</strong><span style={{ fontSize: 13, lineHeight: 1.55, color: '#66736B' }}>{d}</span></li>
       ))}
     </ol>

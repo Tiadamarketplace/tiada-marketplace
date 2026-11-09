@@ -47,7 +47,7 @@ export const GET = handle(async (req: Request) => {
     customers: !seesOrders ? [] : me.role === 'owner' ? cust : cust.map(c => ({ ...c, phone: c.phone ? c.phone.slice(0, 4) + '•••' + c.phone.slice(-4) : null })),
     chats: chatList, messages: seesOrders ? must(messages) : [],
     openStates: (set.open_states as string[] | undefined) || DEFAULT_OPEN_STATES,
-    settings: { oyo: set.oyo || null, fees: set.fees || DEFAULT_FEES, business: set.business || {}, hours: set.hours || [], alerts: set.alerts || {}, policies: set.policies || {}, slider: set.slider || { on: true, seconds: 6 } },
+    settings: { oyo: set.oyo || null, lagos: set.lagos || null, fees: set.fees || DEFAULT_FEES, business: set.business || {}, hours: set.hours || [], alerts: set.alerts || {}, policies: set.policies || {}, slider: set.slider || { on: true, seconds: 6 } },
     vouchers: vouchers.data || [], contact: contact.data || [], waiting, subscribers: subs.count || 0,
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
     testMode: env.paystackKey.startsWith('sk_test_'),

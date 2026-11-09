@@ -123,7 +123,7 @@ export default function Header() {
                   </button>
                 ))}
                 <div style={{ height: 1, background: '#ECE8DF', margin: '8px 20px' }} />
-                {[['/account', user ? `My account · ${user.name?.split(' ')[0] || 'signed in'}` : 'Sign in or create an account'], ['/track', 'Track an order'], ['/help', 'Help and delivery days']].map(([h, l]) => (
+                {[['/account', user ? `My account · ${user.name?.split(' ')[0] || 'signed in'}` : 'Sign in or create an account'], ['/track', 'Track an order'], ['/help', 'Help and delivery']].map(([h, l]) => (
                   <button key={h} type="button" className="ub drop-row" onClick={() => go(h)} style={{ width: '100%', padding: '13px 20px', fontSize: 14.5 }}>{l}</button>
                 ))}
                 <a href={waLink(biz.whatsapp)} target="_blank" rel="noopener" style={{ margin: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 6, background: '#F1F5F1', textDecoration: 'none', color: '#0B3A23', fontWeight: 600, fontSize: 14 }}><IWhatsApp size={18} /> WhatsApp {biz.phone}</a>

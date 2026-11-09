@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import AddressSearch from '../AddressSearch';
 import { useShop } from '../ShopProvider';
 import { api, naira, waLink } from '@/lib/shop-client';
 import { H1, btnSolid, field, labelStyle } from '../ui';
@@ -9,7 +10,7 @@ const FAQ: [string, string][] = [
   ['How do I order?', 'Pick a product, choose its size and tap Add to cart. Combos go in as one package. When you’re ready, open your cart and check out. You don’t need an account.'],
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
   ['How do I pay?', 'At checkout, tap Pay securely and Paystack’s window opens. Pay by card, bank transfer or USSD, and your order confirms on its own. Tiada never sees your card details.'],
-  ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Every Lagos area has a delivery day, shown below and at checkout before you pay. Oyo orders go out from our Iseyin branch: Iseyin and nearby towns usually the same or next day, Ibadan and other towns within a few days.'],
+  ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Type your address at checkout and you see the fee and how long it usually takes before you pay. Lagos orders usually arrive the next day. Oyo orders go out from our Iseyin branch and usually take 1 to 3 days. You can check your fee below.'],
   ['How do I track my order?', 'Type the TD code from your confirmation email on the Track page. If you have an account, your orders are under My account.'],
   ['Something is wrong with my order', 'Message us within 24 hours with a photo and your TD code. We’ll replace the item or refund you.'],
 ];
@@ -36,8 +37,9 @@ const HOW: [string, string[]][] = [
     'If something you ordered runs out before we pack it, we call you first to swap it for something else or refund that item in full.',
   ]],
   ['We deliver to your door', [
-    'In Lagos, every area has its own delivery day, which you see at checkout before you pay, along with the fee. If you need it sooner, choose Priority and we deliver the same day or the next morning where we can. Our rider calls you when they are close.',
-    'In Oyo State, orders go out from our branch in Iseyin. You pick your area at checkout and the fee depends on how far it is from the branch. Iseyin and nearby towns usually get their order the same or next day; Ibadan and other towns within a few days.',
+    'At checkout you type your address and pick it from the map suggestions. The delivery fee is worked out from how far you are from us: a small starting fee plus a little for every kilometre, with a low maximum so far places stay affordable. If we don’t reach your area yet, you see that straight away, before you pay.',
+    'In Lagos, orders usually arrive the next day. If you need it sooner, choose Priority and we deliver the same day or the next morning where we can. Our rider calls you when they are close.',
+    'In Oyo State, orders go out from our branch in Iseyin, so the fee depends on how far you are from the branch. Iseyin and nearby towns usually get their order the same or next day; Ibadan and other towns within a few days.',
     'We deliver in Lagos and Oyo State only for now.',
   ]],
   ['You can track it any time', [
@@ -57,7 +59,6 @@ export default function Help() {
   const [err, setErr] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const lagos = data.zones.filter(z => !z.state);
   const send = async () => {
     setErr(''); setBusy(true);
     try { await api('/api/contact', { json: { ...m, phone: m.phone || null } }); setSent(true); notify('ok', 'Message sent.', 'We’ll reply by email.'); }
@@ -92,26 +93,15 @@ export default function Help() {
       </section>
       <section id="delivery" aria-labelledby="del-h" style={{ scrollMarginTop: 140 }}>
         <h2 id="del-h" style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 24 }}>Where and when we deliver</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#66736B' }}>Order before the day before to make your area’s run. Fees can change with weight; your exact fee shows at checkout.</p>
+        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#66736B' }}>The fee depends on the distance from us. Heavy orders over 5 kg cost a little more; your exact fee always shows at checkout before you pay.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-          {lagos.map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.label}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{z.day || 'Day confirmed after you order'} · {naira(z.fee)}</span></div>)}
+          {data.zones.map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.state === 'Lagos' ? 'Lagos' : `${z.state} State`}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{naira(z.fee)} to {naira(z.max)} · usually {z.days}</span></div>)}
         </div>
-        {data.zones.some(z => z.state) && <>
-          <h3 style={{ margin: '24px 0 10px', fontWeight: 600, fontSize: 17 }}>Outside Lagos</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-            {(() => {
-              // group Oyo areas (Ibadan, other towns) and any other states into one card each
-              const groups: Record<string, { label: string; fees: number[]; days: string; n: number }> = {};
-              for (const z of data.zones.filter(x => x.state)) {
-                const k = z.id.startsWith('oyo:') ? `${z.state}: ${z.city}` : z.id;
-                const g = (groups[k] ||= { label: z.id.startsWith('oyo:') ? (z.city === 'Ibadan' ? 'Ibadan, Oyo State' : `${z.city}, Oyo State`) : z.label || z.state || '', fees: [], days: z.days || '1–3 days', n: 0 });
-                g.fees.push(z.fee); g.n++;
-              }
-              return Object.entries(groups).map(([k, g]) => <div key={k} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{g.label}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{g.n > 1 ? `${g.n} areas · ` : ''}{g.days} · from {naira(Math.min(...g.fees))}</span></div>);
-            })()}
-          </div>
-          <p style={{ margin: '10px 0 0', fontSize: 13, color: '#66736B' }}>We don’t deliver to other states yet.</p>
-        </>}
+        <div style={{ marginTop: 22, maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label htmlFor="fee-check" style={{ fontSize: 15, fontWeight: 600 }}>Check your delivery fee</label>
+          <AddressSearch id="fee-check" onPick={() => {}} />
+        </div>
+        <p style={{ margin: '12px 0 0', fontSize: 13, color: '#66736B' }}>We don’t deliver to other states yet.</p>
         {data.policies.delivery && <p style={{ margin: '16px 0 0', fontSize: 14, lineHeight: 1.7, color: '#4D5A52' }}>{data.policies.delivery}</p>}
       </section>
       <section id="contact" aria-labelledby="ct-h" style={{ scrollMarginTop: 140, display: 'flex', flexWrap: 'wrap', gap: 40 }}>

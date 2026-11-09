@@ -5,7 +5,7 @@ import { photoFor } from './photos';
 
 export type Order = {
   id: string; customer_id: string | null; email: string; name: string; phone: string; address: string; landmark: string | null;
-  zone_id: string | null; area_label: string | null; speed: string; speed_label: string | null;
+  zone_id: string | null; spot?: { days?: string; lat: number; lng: number } | null; area_label: string | null; speed: string; speed_label: string | null;
   items: { pid?: string; name: string; size: string; qty: number; price: number; img?: string | null; swaps?: { from: string; to: string }[] }[];
   subtotal: number; discount: number; voucher: string | null; delivery_fee: number; total: number; kg: number; status: string; prev_status: string | null;
   pay_ref: string | null; pay_account: unknown; paid_at: string | null; rider: { partner?: string; tracking?: string; driver?: string; phone?: string; cost?: number } | null;
@@ -30,7 +30,7 @@ async function zoneOf(o: Order) {
   return (await db().from('zones').select('label,day,state,days').eq('id', o.zone_id).maybeSingle()).data as { label: string; day: string | null; state: string | null; days: string | null } | null;
 }
 const whenText = (o: Order, z: Awaited<ReturnType<typeof zoneOf>>) =>
-  z?.state ? `By courier, ${z.days || '2–5 working days'}` : o.speed === 'same' ? 'Today or tomorrow morning' : z?.day ? `On ${z.day}` : 'On your area’s delivery day';
+  o.speed === 'same' ? 'Today or tomorrow morning' : o.spot?.days ? `Usually ${o.spot.days}` : z?.state ? `By courier, ${z.days || '2–5 working days'}` : z?.day ? `On ${z.day}` : 'Usually the next day';
 
 /** The customer email for each step of an order. */
 export async function compose(o: Order, kind: Kind, d: Data = {}): Promise<{ subject: string; title: string; inbox: string; mail: Mail }> {
@@ -48,7 +48,7 @@ export async function compose(o: Order, kind: Kind, d: Data = {}): Promise<{ sub
         { kind: 'button', label: 'Track my order', url: track, sub: 'We’ll email you again when it’s packed and when it leaves our hub.' }] } };
     case 'packed': return {
       subject: 'Your order is packed and ready', title: 'Order packed', inbox: `${o.id} is packed and sealed. It goes out ${when.toLowerCase()}.`,
-      mail: { kicker: `Packed · ${o.id}`, title: 'Packed and sealed.', intro: `Your order has been measured, packed and sealed at our Agege hub. It goes out ${when.toLowerCase()}.`, blocks: [
+      mail: { kicker: `Packed · ${o.id}`, title: 'Packed and sealed.', intro: `Your order has been measured, packed and sealed at our hub. It goes out ${when.toLowerCase()}.`, blocks: [
         { kind: 'tracker', at: 1 }, itemsBlock(o, 'In the bag'), { kind: 'button', label: 'Track my order', url: track }] } };
     case 'route': {
       const courier = !!r.tracking && !r.driver;
