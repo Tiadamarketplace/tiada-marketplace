@@ -9,10 +9,46 @@ const FAQ: [string, string][] = [
   ['How do I order?', 'Pick a product, choose its size and tap Add to cart. Combos go in as one package. When you’re ready, open your cart and check out. You don’t need an account.'],
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
   ['How do I pay?', 'At checkout, tap Pay securely and Paystack’s window opens. Pay by card, bank transfer or USSD, and your order confirms on its own. Tiada never sees your card details.'],
-  ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Every Lagos area has a delivery day, shown below and at checkout before you pay. Oyo orders go by courier and we email you the tracking number.'],
+  ['When will my order arrive?', 'We deliver in Lagos and Oyo State for now. Every Lagos area has a delivery day, shown below and at checkout before you pay. Oyo orders go out from our Iseyin branch: Iseyin and nearby towns usually the same or next day, Ibadan and other towns within a few days.'],
   ['How do I track my order?', 'Type the TD code from your confirmation email on the Track page. If you have an account, your orders are under My account.'],
   ['Something is wrong with my order', 'Message us within 24 hours with a photo and your TD code. We’ll replace the item or refund you.'],
 ];
+/** "How Tiada works", step by step. Plain words, the same promises as the checkout and the emails. */
+const HOW: [string, string[]][] = [
+  ['We buy in bulk from trusted suppliers', [
+    'We buy cereals, milk powder, beverages and foodstuffs in their large original cartons, bags and tins from established distributors and markets we have worked with for a long time. Buying in bulk is what keeps our prices lower than buying the same brand in small packs.',
+  ]],
+  ['We repack it into the size you need', [
+    'At our hub, each product is weighed on a scale and packed into a clean, sealed, food-grade bag with the Tiada label on it. Nothing is mixed, cut or topped up: the Coco Pops in your bag are the same Coco Pops from the carton, just in a smaller pack.',
+    'That is why most items arrive in a clear Tiada bag and not in the brand’s own box. The brand pictures on our site show you exactly what is inside. Anything we sell sealed in its original pack says so in its size, like “400g tin”.',
+  ]],
+  ['You choose a size, or a ready-made combo', [
+    'Single items come in sizes such as 250g, 500g, 1kg and a paint bucket for the month. Bigger sizes cost less per kilo, so you can save by buying ahead if you have the space.',
+    'Combos are ready-made boxes for breakfast or for the pantry, from a small emergency pack to a full month for a family or a student. Open any combo to swap an item you don’t want for another one. The price stays the same, and our packers see your swaps.',
+  ]],
+  ['You order and pay online', [
+    'You don’t need an account to order. At checkout you give your name, phone number, email and delivery address, then pay in Paystack’s secure window by card, bank transfer or USSD. Tiada never sees or stores your card details.',
+    'If you create an account, it is just your email: we send you a 6-digit code to sign in, so there is no password to remember. Your details and addresses fill in by themselves next time, and every order you place is kept in one place.',
+    'Your order is confirmed the moment your payment goes through. We check every price on our side before you pay, so the total you see is the total you pay.',
+  ]],
+  ['We pack your order and email you at each step', [
+    'You get an email when your payment is confirmed, when your order is packed and sealed, when it leaves our hub, and when it is delivered. Each email has your order code (it starts with TD-) and a button to track it.',
+    'If something you ordered runs out before we pack it, we call you first to swap it for something else or refund that item in full.',
+  ]],
+  ['We deliver to your door', [
+    'In Lagos, every area has its own delivery day, which you see at checkout before you pay, along with the fee. If you need it sooner, choose Priority and we deliver the same day or the next morning where we can. Our rider calls you when they are close.',
+    'In Oyo State, orders go out from our branch in Iseyin. You pick your area at checkout and the fee depends on how far it is from the branch. Iseyin and nearby towns usually get their order the same or next day; Ibadan and other towns within a few days.',
+    'We deliver in Lagos and Oyo State only for now.',
+  ]],
+  ['You can track it any time', [
+    'Type your order code on the Track page to see where your order is. No sign-in needed. If you have an account, all your orders and their progress are under My account.',
+  ]],
+  ['If anything is wrong, we put it right', [
+    'If an item arrives damaged, missing or not as expected, message us within 24 hours with a photo and your order code. We will replace it or refund you. Refunds go back through Paystack to the card or account you paid with, and banks usually show them within 5 to 10 working days.',
+    'You can reach a real person on WhatsApp, by email, through the chat on every page, or with the form at the bottom of this page.',
+  ]],
+];
+
 export default function Help() {
   const { data, notify } = useShop();
   const b = data.business;
@@ -29,10 +65,20 @@ export default function Help() {
   };
   return (
     <div className="fade" style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0', display: 'flex', flexDirection: 'column', gap: 56 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 640 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 680 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#66736B' }}>Help</span>
         <H1>How Tiada works</H1>
-        <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.7, color: '#4D5A52' }}>We buy cereals, milk and foodstuffs in bulk, pack them by weight into clean sealed bags at our Agege hub, and deliver across Lagos on a set day for each area. We also deliver to Oyo State by courier.</p>
+        <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: '#4D5A52' }}>Tiada Marketplace is a family food shop that sells breakfast cereals, milk and everyday foodstuffs in the amount your home actually needs. Here is everything that happens between you tapping “Add to cart” and the bag landing at your door.</p>
       </div>
+      <section aria-label="How it works, step by step" style={{ borderTop: '1px solid #1F2A23' }}>
+        {HOW.map(([h, body], i) => (
+          <div key={h} className="how-row" style={{ display: 'grid', gridTemplateColumns: '64px minmax(0, 240px) minmax(0, 1fr)', gap: 24, padding: '28px 0', borderBottom: '1px solid #ECE8DF' }}>
+            <span className="serif" style={{ fontSize: 26, color: '#D49B41', lineHeight: 1.1 }}>{String(i + 1).padStart(2, '0')}</span>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, lineHeight: 1.35 }}>{h}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15.5, lineHeight: 1.8, color: '#4D5A52' }}>{body.map((t, k) => <p key={k} style={{ margin: 0 }}>{t}</p>)}</div>
+          </div>
+        ))}
+      </section>
       <section aria-labelledby="faq-h">
         <h2 id="faq-h" style={{ margin: '0 0 12px', fontWeight: 500, fontSize: 24 }}>Questions</h2>
         <div style={{ borderTop: '1px solid #ECE8DF' }}>
