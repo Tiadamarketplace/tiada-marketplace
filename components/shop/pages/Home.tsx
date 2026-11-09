@@ -1,6 +1,7 @@
 'use client';
 import Link from '@/components/shop/Link';
 import { useShop } from '../ShopProvider';
+import HeroVideo from '../HeroVideo';
 import Row from '../Row';
 import Slider from '../Slider';
 import { AISLES } from '@/lib/shop-client';
@@ -32,6 +33,7 @@ export default function Home() {
 
       <section aria-label="Welcome" style={{ position: 'relative', overflow: 'hidden', background: '#0B3A23' }}>
         <picture><source media="(max-width: 760px)" srcSet="/img/hero-phone.jpg" /><img className="hero-img" src="/img/hero.jpg" alt="A bowl of chocolate cereal balls splashing in milk, with a tin of Milo behind it" fetchPriority="high" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '70% center', display: 'block' }} /></picture>
+        <HeroVideo src="/img/hero-phone.mp4" />
         <div className="hero-shade" aria-hidden="true" style={{ position: 'absolute', inset: 0 }} />
         <div className="hero-box" style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '0 clamp(16px, 3vw, 28px)', minHeight: 'clamp(460px, 44vw, 600px)', display: 'flex', alignItems: 'center' }}>
           <div className="fade" style={{ maxWidth: 540, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 18, padding: '48px 0' }}>
