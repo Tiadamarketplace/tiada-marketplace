@@ -1,6 +1,7 @@
 import { db, must } from './db';
 import { env } from './env';
 import { render, plain, sendEmail, sendMail, naira, esc, Block, Mail } from './email';
+import { photoFor } from './photos';
 
 export type Order = {
   id: string; customer_id: string | null; email: string; name: string; phone: string; address: string; landmark: string | null;
@@ -149,7 +150,7 @@ export async function backInStock(pid: string, size: string) {
   const price = s ? (s.sale && s.price && s.sale < s.price ? s.sale : s.price) : null;
   const what = size === 'Package' ? p.name : `${p.name} ${size}`;
   const m: Mail = { kicker: 'Back in stock', title: `${what} is back.`, intro: 'You asked us to let you know. We’ve just restocked it, and it tends to go quickly.',
-    blocks: [{ kind: 'items', title: 'Back now', rows: [{ name: p.name, meta: size === 'Package' ? 'Combo' : size, price: price ? naira(price) : '', img: p.img }] }, { kind: 'button', label: 'Get it now', url: `${site()}/p/${p.id}` }],
+    blocks: [{ kind: 'items', title: 'Back now', rows: [{ name: p.name, meta: size === 'Package' ? 'Combo' : size, price: price ? naira(price) : '', img: photoFor(p.id, p.img) }] }, { kind: 'button', label: 'Get it now', url: `${site()}/p/${p.id}` }],
     why: 'You asked to be told when this was back. We won’t email you about it again.' };
   let sent = 0;
   for (const w of waiting) { const r = await sendEmail(w.email, `${what} is back`, render(m), plain(m)); if (r.ok) sent++; }

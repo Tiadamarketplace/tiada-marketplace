@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { db, must } from './db';
 import { deliveryZones } from './delivery';
 import { getProducts, getSetting, DEFAULT_FEES, Fees, Product } from './catalog';
+import { photoFor } from './photos';
 
 /** Shapes shared by the server and the shop's browser code. */
 export type PubSize = { label: string; price: number | null; sale: number | null; kg: number; na: boolean; left: number | null };
@@ -45,7 +46,8 @@ async function loadStorefront(): Promise<Storefront> {
   // Local preview without a database: TIADA_MOCK points at a JSON file shaped like Storefront.
   if (process.env.TIADA_MOCK && (process.env.NODE_ENV !== 'production' || process.env.TIADA_MOCK_BUILD === '1')) {
     const fs = await import('fs');
-    return JSON.parse(fs.readFileSync(process.env.TIADA_MOCK, 'utf8')) as Storefront;
+    const m = JSON.parse(fs.readFileSync(process.env.TIADA_MOCK, 'utf8')) as Storefront;
+    return { ...m, products: m.products.map(p => ({ ...p, img: photoFor(p.id, p.img, p.cat) })) };
   }
   const nowIso = new Date().toISOString();
   const [products, zones, fees, business, policies, slider, promos, ratings, top] = await Promise.all([
@@ -65,7 +67,7 @@ async function loadStorefront(): Promise<Storefront> {
   }));
   return {
     products: products.map(p => ({
-      id: p.id, name: p.name, cat: p.cat, items: p.items, status: p.status, img: p.img,
+      id: p.id, name: p.name, cat: p.cat, items: p.items, status: p.status, img: photoFor(p.id, p.img, p.cat),
       sizes: (p.sizes as (Product['sizes'][number] & { stock?: number | null })[]).map(s => ({ label: s.label, price: s.price, sale: s.sale, kg: s.kg, na: !!s.na || s.price == null, left: sizeLeft(s, p) })),
       rating: agg[p.id] ? { n: agg[p.id].n, avg: Math.round(agg[p.id].sum / agg[p.id].n * 10) / 10 } : null,
     })),

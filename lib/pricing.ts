@@ -3,6 +3,7 @@ import { deliveryZones } from './delivery';
 import { getProducts, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
 import { HttpError } from './http';
 import { applyVoucher } from './vouchers';
+import { photoFor } from './photos';
 
 export const CartItem = z.object({
   pid: z.string().max(40),
@@ -35,7 +36,7 @@ export async function priceCart(items: CartItemT[], opts: { zoneId?: string | nu
       swaps = it.swaps.filter(w => p.items!.includes(w.from) && allowed.includes(w.to));
     }
     const now = s.sale && s.sale < s.price ? s.sale : s.price;
-    lines.push({ pid: p.id, name: p.name, size: s.label, qty: it.qty, price: now, was: now < s.price ? s.price : null, kg: s.kg, swaps, img: p.img });
+    lines.push({ pid: p.id, name: p.name, size: s.label, qty: it.qty, price: now, was: now < s.price ? s.price : null, kg: s.kg, swaps, img: photoFor(p.id, p.img, p.cat) });
   }
   const subtotal = lines.reduce((a, l) => a + l.price * l.qty, 0);
   const kg = Math.round(lines.reduce((a, l) => a + l.kg * l.qty, 0) * 100) / 100;

@@ -3,6 +3,7 @@ import { db, must } from '@/lib/db';
 import { requireStaff, staffList, ROLE_LABEL } from '@/lib/staff';
 import { DEFAULT_FEES, DEFAULT_OPEN_STATES } from '@/lib/catalog';
 import { env } from '@/lib/env';
+import { photoFor } from '@/lib/photos';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export const GET = handle(async (req: Request) => {
   const cust = must(customers) as { phone: string | null }[];
   return ok({
     me: { name: me.name, email: me.email, role: ROLE_LABEL[me.role] },
-    orders: seesOrders ? must(orders) : [], products: must(products), promos: must(promos), zones: must(zones), reviews: must(reviews), activity: must(activity),
+    orders: seesOrders ? must(orders) : [], products: (must(products) as { id: string; img: string | null; cat: string }[]).map(p => ({ ...p, img: photoFor(p.id, p.img, p.cat) })), promos: must(promos), zones: must(zones), reviews: must(reviews), activity: must(activity),
     customers: !seesOrders ? [] : me.role === 'owner' ? cust : cust.map(c => ({ ...c, phone: c.phone ? c.phone.slice(0, 4) + '•••' + c.phone.slice(-4) : null })),
     chats: chatList, messages: seesOrders ? must(messages) : [],
     openStates: (set.open_states as string[] | undefined) || DEFAULT_OPEN_STATES,
