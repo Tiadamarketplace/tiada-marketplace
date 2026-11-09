@@ -10,7 +10,7 @@ const N = z.number().int().min(0).max(1_000_000);
 const Body = z.object({
   min: N, lagosKg: N, interKg: N, van: N, same: N, express: N, eco: N.optional(),
   areas: z.array(z.object({ id: z.string().max(20), fee: N })).max(30),
-  regions: z.record(z.enum(['sw', 'ss', 'nc', 'nw']), N),
+  regions: z.partialRecord(z.enum(['sw', 'ss', 'nc', 'nw']), N),
 });
 
 /** Saves delivery fees. Lagos areas are stored per zone; each other-state region fee is copied to its states. */

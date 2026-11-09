@@ -13,7 +13,7 @@ const Body = z.discriminatedUnion('key', [
   z.object({ key: z.literal('alerts'), value: z.object({ sound: z.boolean(), email: z.boolean(), emailTo: z.union([z.string().trim().email('Enter a valid email for alerts.'), z.literal('')]), whatsapp: z.boolean(), waTo: S(20), daily: z.boolean(), lowStock: z.boolean() }) }),
   z.object({ key: z.literal('policies'), value: z.object({ returns: S(1500), delivery: S(1500) }) }),
   z.object({ key: z.literal('oyo'), value: z.object({
-    hub: z.object({ lat: z.number().min(6.8).max(9.3), lng: z.number().min(2.6).max(4.7) }, { invalid_type_error: 'That spot isn’t in Oyo State.' }).nullable(),
+    hub: z.object({ lat: z.number().min(6.8).max(9.3), lng: z.number().min(2.6).max(4.7) }, { error: 'That spot isn’t in Oyo State.' }).nullable(),
     start: z.number().int().min(0).max(100000), perKm: z.number().int().min(0).max(10000), max: z.number().int().min(0).max(200000).nullable().optional(),
     off: z.array(z.string().max(30)).max(60), fees: z.record(z.string().max(30), z.number().int().min(0).max(200000)),
   }) }),
