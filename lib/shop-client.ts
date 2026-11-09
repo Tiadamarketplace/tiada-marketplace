@@ -4,7 +4,7 @@ import type { PubProduct, PubSize } from './storefront';
 export const naira = (n: number) => '₦' + Math.round(n || 0).toLocaleString('en-NG');
 
 export const AISLES: { id: string; label: string; lower: string; blurb: string; img: string }[] = [
-  { id: 'cereal', label: 'Breakfast Cereals', lower: 'breakfast cereals', blurb: 'Cornflakes, Coco Pops, Golden Morn and more, repacked fresh from bulk into the size you need.', img: '/img/cornflakes.jpg' },
+  { id: 'cereal', label: 'Breakfast Cereals', lower: 'breakfast cereals', blurb: 'Cornflakes, Coco Pops, Golden Morn and more, repacked fresh from bulk into the size you need.', img: '/img/p/cornflakes.jpg' },
   { id: 'milk', label: 'Milk & Beverages', lower: 'milk and beverages', blurb: 'Powdered milk, Milo and malt drinks by weight, from 250g to a paint bucket.', img: '/img/p/milo.jpg' },
   { id: 'grain', label: 'Oats & Custard', lower: 'oats and custard', blurb: 'Oats, granola and custard for warm, filling breakfasts.', img: '/img/p/oat.jpg' },
   { id: 'food', label: 'Foodstuffs', lower: 'foodstuffs', blurb: 'Rice, beans, garri, semo, pasta and oils for everyday cooking. Bigger sizes cost less per kilo.', img: '/img/p/rice.jpg' },
