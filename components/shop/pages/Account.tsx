@@ -100,6 +100,11 @@ function SignIn({ next }: { next: string }) {
               {wait > 0 ? <span style={{ color: '#66736B' }}>Send a new code in {wait}s</span> : <button type="button" className="ub lnk" onClick={send} style={{ color: '#0B3A23', fontSize: 13.5 }}>Send a new code</button>}
               <button type="button" className="ub lnk" onClick={() => { setStep('email'); setErr(''); }} style={{ color: '#66736B', fontSize: 13.5 }}>Use a different email</button>
             </div>
+            <details style={{ borderTop: '1px solid #ECE8DF', paddingTop: 14, fontSize: 14, color: '#4D5A52', lineHeight: 1.7 }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#1F2A23' }}>Didn’t get the code?</summary>
+              <p style={{ margin: '8px 0 0' }}>It can take a minute. Check your spam or promotions folder for an email from Tiada. Make sure <strong>{email}</strong> is spelled right, or send a new code.</p>
+              <p style={{ margin: '8px 0 0' }}>Can’t get into that email any more? <a href="https://wa.me/2348075110000?text=Hi%20Tiada%2C%20I%20can%E2%80%99t%20get%20into%20my%20account." target="_blank" rel="noopener" style={{ color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4 }}>Message us on WhatsApp</a> and we’ll move your account to a new email.</p>
+            </details>
           </div>
         )}
         {step === 'details' && (
@@ -117,6 +122,8 @@ function SignIn({ next }: { next: string }) {
         <h2 style={{ margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>New to Tiada?</h2>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>Use the same form. Your account is made the moment you enter the code, and you stay signed in on this device.</p>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>With an account, checkout fills in your details, every order is kept in one place, and you can buy a past order again in one tap.</p>
+        <h2 style={{ margin: '14px 0 0', fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Forgot your password?</h2>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>There isn’t one to forget. Every time you sign in, we email you a fresh code, so nobody can guess or steal a password.</p>
       </aside>
     </div>
   );
