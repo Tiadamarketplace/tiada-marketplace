@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/shop/Link';
+
 import { useShop } from './ShopProvider';
 import { naira, minPrice, maxOff, isSoldOut, lowLeft, sellable, isCombo, lineKey } from '@/lib/shop-client';
 import type { PubProduct } from '@/lib/storefront';
@@ -19,7 +19,6 @@ export function cardMeta(p: PubProduct) {
 
 export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean }) {
   const { setChoose, add, cart, setQty } = useShop();
-  const router = useRouter();
   const combo = isCombo(p);
   const sold = isSoldOut(p);
   const off = maxOff(p);
@@ -63,7 +62,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
   );
 
   if (list) return (
-    <li className="pcard" onClick={() => router.push(href)} style={{ cursor: 'pointer', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 22px', padding: '18px 0', borderBottom: '1px solid #ECE8DF' }}>
+    <li className="pcard" onClick={() => window.location.assign(href)} style={{ cursor: 'pointer', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 22px', padding: '18px 0', borderBottom: '1px solid #ECE8DF' }}>
       <div className="pimg" style={{ position: 'relative', width: 120, aspectRatio: '1 / 1', borderRadius: 5, overflow: 'hidden', background: '#F8F6F1', flex: 'none' }}><ProductImage p={p} size={15} />{sold && <span style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.72)' }} />}</div>
       <div style={{ flex: '1 1 220px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <Link href={href} className="pname" onClick={e => e.stopPropagation()} style={{ fontSize: 15.5, fontWeight: 500, color: '#1F2A23', textDecoration: 'none' }}>{p.name}</Link>
@@ -76,7 +75,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
   );
 
   return (
-    <article className="pcard tcard" onClick={() => router.push(href)} style={{ display: 'flex', flexDirection: 'column', gap: 9, minWidth: 0, cursor: 'pointer', background: '#FFFFFF', border: '1px solid #ECE8E0', borderRadius: 8, padding: '10px 10px 12px' }}>
+    <article className="pcard tcard" onClick={() => window.location.assign(href)} style={{ display: 'flex', flexDirection: 'column', gap: 9, minWidth: 0, cursor: 'pointer', background: '#FFFFFF', border: '1px solid #ECE8E0', borderRadius: 8, padding: '10px 10px 12px' }}>
       <div className="pimg" style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 5, overflow: 'hidden', background: '#F8F6F1' }}>
         <ProductImage p={p} />
         {badges}

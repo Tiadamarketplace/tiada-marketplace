@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 import { useState } from 'react';
 import { api } from '@/lib/shop-client';
 import { btnSolid } from '../ui';

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 export default function NotFound() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, textAlign: 'center', background: '#FBF9F4' }}>

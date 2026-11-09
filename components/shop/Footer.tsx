@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 import { useState } from 'react';
 import { useShop } from './ShopProvider';
 import { AISLES, api } from '@/lib/shop-client';

@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 import { useEffect, useRef, useState } from 'react';
 import type { Slide } from '@/lib/storefront';
 import { IChevron } from './Icons';

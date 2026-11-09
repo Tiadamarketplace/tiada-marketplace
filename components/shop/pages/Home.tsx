@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 import { useShop } from '../ShopProvider';
 import Row from '../Row';
 import Slider from '../Slider';

@@ -44,6 +44,9 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
 
   useEffect(() => { setCart(read<CartLine[]>('tiada_cart_v2', [])); setRecent(read<string[]>('tiada_recent', [])); setReady(true); }, []);
   useEffect(() => { if (ready) write('tiada_cart_v2', cart); }, [cart, ready]);
+  // pages load normally now, so save the cart once more as the browser leaves the page
+  const cartRef = useRef(cart); cartRef.current = cart;
+  useEffect(() => { if (!ready) return; const save = () => write('tiada_cart_v2', cartRef.current); window.addEventListener('pagehide', save); return () => window.removeEventListener('pagehide', save); }, [ready]);
 
   const dismiss = useCallback((id: number) => { clearTimeout(timers.current[id]); setNotes(n => n.filter(x => x.id !== id)); }, []);
   const notify = useCallback<Ctx['notify']>((kind, title, text, action) => {

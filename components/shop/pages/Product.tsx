@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/shop/Link';
+
 import { useEffect, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import Row from '../Row';
@@ -23,7 +23,6 @@ const ago = (iso: string) => { const d = Math.floor((Date.now() - +new Date(iso)
 
 export default function ProductPage({ id }: { id: string }) {
   const { byId, data, add, seen, recent, user, notify, setChoose } = useShop();
-  const router = useRouter();
   const p = byId[id];
   const combo = isCombo(p);
   const [si, setSi] = useState(() => defaultSize(p));
@@ -61,7 +60,7 @@ export default function ProductPage({ id }: { id: string }) {
   const swapList = combo ? (p.cat === 'ccombo' ? SWAP_CEREAL : SWAP_FOOD) : [];
   const swapArr = Object.entries(swaps).filter(([a, b]) => a !== b).map(([from, to]) => ({ from, to }));
   const doAdd = () => { if (!ok) return; add(p.id, s.label, qty, swapArr.length ? swapArr : undefined); };
-  const buyNow = () => { doAdd(); router.push('/checkout'); };
+  const buyNow = () => { doAdd(); window.location.assign('/checkout'); };
 
   const tellMe = async () => {
     setNErr('');

@@ -1,5 +1,4 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -22,11 +21,10 @@ export function useEscape(on: boolean, fn: () => void) {
 
 export function CartDrawer() {
   const { cartOpen, setCartOpen, priced, subtotal, setQty, remove, count } = useShop();
-  const router = useRouter();
   const close = () => setCartOpen(false);
   useEscape(cartOpen, close);
   if (!cartOpen) return null;
-  const go = (h: string) => { close(); router.push(h); };
+  const go = (h: string) => { close(); window.location.assign(h); };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 70 }}>
       <button type="button" className="ub" aria-label="Close cart" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />
@@ -83,7 +81,6 @@ export function Stepper({ qty, dec, inc, h = 38 }: { qty: number; dec: () => voi
 
 export function ChooseSize() {
   const { choose, setChoose, byId, add } = useShop();
-  const router = useRouter();
   const p = choose ? byId[choose] : null;
   const [i, setI] = useState(0);
   const [qty, setQ] = useState(1);
@@ -94,7 +91,7 @@ export function ChooseSize() {
   const s = p.sizes[i];
   const ok = s && inStock(p, s);
   const cap = s?.left != null ? s.left : 50;
-  const details = () => { close(); router.push('/p/' + p.id); };
+  const details = () => { close(); window.location.assign('/p/' + p.id); };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 75 }}>
       <button type="button" className="ub" aria-label="Close" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />
@@ -197,34 +194,6 @@ export function Lightbox({ src, name, onClose }: { src: string; name: string; on
       <button type="button" className="ub" aria-label="Close picture" onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IClose size={22} color="#FFFFFF" /></button>
     </div>
   </Portal>);
-}
-
-/** Thin gold bar at the top while a new page loads. */
-export function RouteBar() {
-  const path = usePathname();
-  const [st, setSt] = useState<'off' | 'run' | 'done'>('off');
-  const first = useRef(true);
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement).closest('a');
-      if (!a || a.target === '_blank' || e.metaKey || e.ctrlKey || e.shiftKey) return;
-      const u = new URL(a.href, location.href);
-      if (u.origin === location.origin && u.pathname !== location.pathname) setSt('run');
-    };
-    const go = () => setSt('run');
-    document.addEventListener('click', h, true); window.addEventListener('tiada:nav', go);
-    return () => { document.removeEventListener('click', h, true); window.removeEventListener('tiada:nav', go); };
-  }, []);
-  useEffect(() => {
-    if (first.current) { first.current = false; return; }
-    setSt('done'); const t = setTimeout(() => setSt('off'), 500); window.scrollTo({ top: 0 }); return () => clearTimeout(t);
-  }, [path]);
-  if (st === 'off') return null;
-  return (
-    <div role="progressbar" aria-label="Loading page" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 3, pointerEvents: 'none' }}>
-      <span className={st === 'run' ? 'bar-run' : 'bar-done'} style={{ display: 'block', height: '100%', background: 'linear-gradient(90deg, #D49B41, #E9C27F)', boxShadow: '0 0 10px rgba(212,155,65,0.6)' }} />
-    </div>
-  );
 }
 
 type Msg = { id: number; who: string; text: string };

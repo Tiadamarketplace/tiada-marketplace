@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 import { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import ProductCard from '../ProductCard';

@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/shop/Link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from './ShopProvider';
 import { AISLES, naira, minPrice, aisleLabel, waLink, isCombo, whereWeDeliver } from '@/lib/shop-client';
@@ -11,7 +11,6 @@ const MEGA = [...AISLES.map(a => ({ id: a.id, label: a.label, lower: a.lower }))
 
 export default function Header() {
   const { data, count, setCartOpen, user } = useShop();
-  const router = useRouter();
   const [menu, setMenu] = useState(false);
   const [sub, setSub] = useState<string | null>(null);
   const [q, setQ] = useState('');
@@ -35,7 +34,7 @@ export default function Header() {
   }, []);
   useEffect(() => { document.body.style.overflow = menu ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [menu]);
 
-  const go = (href: string) => { setMenu(false); setSub(null); setFocus(false); router.push(href); };
+  const go = (href: string) => { setMenu(false); setSub(null); setFocus(false); window.location.assign(href); };
   const submit = (e?: React.FormEvent) => { e?.preventDefault(); const t = q.trim(); if (t) { go('/search?q=' + encodeURIComponent(t)); } };
 
   return (

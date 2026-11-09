@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/shop/Link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop, Address } from '../ShopProvider';
 import { Dialog } from '../Overlays';
@@ -16,9 +16,8 @@ const date = (s: string) => new Date(s).toLocaleDateString('en-NG', { day: 'nume
 
 export default function Account({ next }: { next: string }) {
   const { user, userReady } = useShop();
-  const router = useRouter();
   // already signed in and sent here to sign in? go straight on
-  useEffect(() => { if (userReady && user && next) router.replace(next); }, [userReady, user, next, router]);
+  useEffect(() => { if (userReady && user && next) window.location.replace(next); }, [userReady, user, next]);
   if (!userReady || (user && next)) return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px clamp(16px, 3vw, 28px)' }}>
       <div className="skel" style={{ height: 170, borderRadius: 16 }} />
@@ -30,7 +29,6 @@ export default function Account({ next }: { next: string }) {
 
 function SignIn({ next }: { next: string }) {
   const { refreshUser, notify, setUser } = useShop();
-  const router = useRouter();
   const [step, setStep] = useState<'email' | 'code' | 'details'>('email');
   const [email, setEmail] = useState('');
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
@@ -41,7 +39,7 @@ function SignIn({ next }: { next: string }) {
   const [d, setD] = useState({ name: '', phone: '' });
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
   useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(w => w - 1), 1000); return () => clearTimeout(t); }, [wait]);
-  const finish = async () => { await refreshUser(); if (next) router.push(next); };
+  const finish = async () => { await refreshUser(); if (next) window.location.assign(next); };
 
   const send = async () => {
     setErr('');
@@ -137,7 +135,6 @@ const textLink: React.CSSProperties = { fontSize: 13.5, fontWeight: 500, color: 
 
 function Profile() {
   const { user, setUser, refreshUser, addresses, data, restore, byId, notify, setCartOpen } = useShop();
-  const router = useRouter();
   const [tab, setTabState] = useState<Tab>('overview');
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -170,8 +167,8 @@ function Profile() {
     restore(lines); setCartOpen(true);
     notify(gone.length ? 'warn' : 'ok', `${lines.length} item${lines.length === 1 ? '' : 's'} added to your cart.`, gone.length ? `Not available now: ${gone.join(', ')}.` : 'Prices are today’s prices.');
   };
-  const signOut = async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => null); setUser(null); notify('info', 'You’re signed out.'); router.push('/'); };
-  const del = async () => { try { await api('/api/me', { method: 'DELETE' }); setUser(null); notify('info', 'Your account has been deleted.'); router.push('/'); } catch (e) { notify('err', 'We couldn’t delete your account.', (e as Error).message); } };
+  const signOut = async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => null); setUser(null); notify('info', 'You’re signed out.'); window.location.assign('/'); };
+  const del = async () => { try { await api('/api/me', { method: 'DELETE' }); setUser(null); notify('info', 'Your account has been deleted.'); window.location.assign('/'); } catch (e) { notify('err', 'We couldn’t delete your account.', (e as Error).message); } };
   const view = (id: string) => { setOpen(id); setTab('orders'); };
 
   const Row = ({ o }: { o: Order }) => (

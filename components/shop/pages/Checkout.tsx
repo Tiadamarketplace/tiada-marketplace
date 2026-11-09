@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/shop/Link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
@@ -22,7 +22,6 @@ const loadPaystack = () => new Promise<void>((res, rej) => {
 
 export default function Checkout() {
   const { priced, data, user, userReady, addresses, notify, setCartOpen } = useShop();
-  const router = useRouter();
   const lagos = useMemo(() => data.zones.filter(z => !z.state), [data.zones]);
   const states = useMemo(() => data.zones.filter(z => z.state), [data.zones]);
   const courier = (z?: { id: string; state: string | null }) => !!z?.state && !z.id.startsWith('oyo:');
@@ -111,7 +110,7 @@ export default function Checkout() {
       if (st === 409) { setPhase('idle'); setChanged(m); return; }
       setFail({ title: 'We couldn’t start your payment', text: m }); setPhase('failed'); return;
     }
-    const done = () => router.push(`/order/${r.order.id}?ref=${r.ref}`);
+    const done = () => window.location.assign(`/order/${r.order.id}?ref=${r.ref}`);
     try {
       await loadPaystack();
       const pop = new window.PaystackPop!();

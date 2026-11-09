@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/shop/Link';
 export default function NotFound() {
   return (
     <div className="fade" style={{ maxWidth: 560, margin: '0 auto', padding: '80px clamp(16px, 3vw, 28px) 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
