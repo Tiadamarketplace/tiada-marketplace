@@ -78,8 +78,8 @@ export default function Header() {
           </a>
           <nav aria-label="Shortcuts" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, flex: 'none' }}>
             {user ? (
-              <Link href="/account" className="ub icn" aria-label={`Your account, ${user.name || user.email}`} title={user.name || user.email} style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#0B3A23', color: '#F6E9CF', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #FFFFFF, 0 0 0 3.5px #D49B41' }}>{initials(user.name, user.email)}</span>
+              <Link href="/account" className="ub icn" aria-label={`Your account, ${user.name || user.email}`} style={{ height: 44, padding: '0 8px', borderRadius: 22, display: 'flex', alignItems: 'center', gap: 8, color: '#0B3A23', textDecoration: 'none' }}>
+                <IUser size={23} /><span className="desk-only" style={{ fontSize: 13.5, fontWeight: 500, color: '#1F2A23', whiteSpace: 'nowrap' }}>{user.name ? user.name.split(' ')[0] : 'Account'}</span>
               </Link>
             ) : <Link href="/account" className="ub icn" aria-label="Sign in or create an account" style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IUser size={23} /></Link>}
             <button type="button" className="ub icn" aria-label={`Cart, ${count} items`} onClick={() => setCartOpen(true)} style={{ position: 'relative', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}>
