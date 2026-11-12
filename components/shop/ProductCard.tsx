@@ -2,6 +2,7 @@
 import Link from '@/components/shop/Link';
 
 import { useShop } from './ShopProvider';
+import { Spin } from './ui';
 import { naira, minPrice, maxOff, isSoldOut, lowLeft, sellable, isCombo, lineKey } from '@/lib/shop-client';
 import type { PubProduct } from '@/lib/storefront';
 
@@ -18,7 +19,8 @@ export function cardMeta(p: PubProduct) {
 }
 
 export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean }) {
-  const { setChoose, add, cart, setQty } = useShop();
+  const { setChoose, addLive, adding, cart, setQty } = useShop();
+  const busy = adding === p.id;
   const combo = isCombo(p);
   const sold = isSoldOut(p);
   const off = maxOff(p);
@@ -42,9 +44,9 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
             <button type="button" className="ub step-b press" aria-label={`One more ${p.name}`} onClick={stop(() => setQty(key, qty + 1))} style={{ width: 44, background: '#0B3A23', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700 }}>+</button>
           </div>
         ) : (
-          <button type="button" className="ub btn-solid press" onClick={stop(() => (pkg ? add(p.id, pkg.label, 1) : setChoose(p.id)))}
+          <button type="button" className="ub btn-solid press" disabled={busy} aria-busy={busy} onClick={stop(() => (pkg ? void addLive(p.id, pkg.label, 1) : setChoose(p.id)))}
             style={{ width: '100%', height: 44, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 14.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {pkg ? 'Add to cart' : inCart ? `Choose size · ${inCart} in cart` : 'Choose size'}
+            {busy ? <><Spin /><span style={{ marginLeft: 10 }}>Adding…</span></> : pkg ? 'Add to cart' : inCart ? `Choose size · ${inCart} in cart` : 'Choose size'}
           </button>
         )}
     </div>

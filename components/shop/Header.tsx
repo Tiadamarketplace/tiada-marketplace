@@ -45,7 +45,7 @@ export default function Header() {
       <div style={{ background: '#D49B41', color: '#0B3A23', textAlign: 'center', fontSize: 13, fontWeight: 600, padding: '9px 16px' }}>
         Delivery in {whereWeDeliver(data.zones)} · Pay online, securely · <Link href="/help" style={{ color: 'inherit', textUnderlineOffset: 3 }}>How Tiada works</Link>
       </div>
-      <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid #ECE8DF' }}>
+      <header className="site-head" style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderBottom: '1px solid #ECE8DF' }}>
         <div style={{ maxWidth: 1240, margin: '0 auto', padding: '12px clamp(16px, 3vw, 28px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 12px' }}>
           <button type="button" className="ub icn mob-only" aria-label="Open menu" onClick={() => setMenu(true)} style={{ width: 44, height: 44, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IMenu size={24} /></button>
           <Link href="/" aria-label="Tiada Marketplace home" style={{ display: 'block' }}><img className="logo-img" src="/logo-sm.png" alt="Tiada Marketplace" style={{ height: 62, width: 'auto', display: 'block' }} /></Link>

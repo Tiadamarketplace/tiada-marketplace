@@ -16,6 +16,8 @@ type Ctx = {
   cartOpen: boolean; setCartOpen: (v: boolean) => void;
   choose: string | null; setChoose: (pid: string | null) => void;
   added: { pid: string; size: string; qty: number } | null; dismissAdded: () => void;
+  /** Add to cart with a real stock check first (the button shows a spinner while it runs). */
+  addLive: (pid: string, size: string, qty: number, swaps?: { from: string; to: string }[]) => Promise<boolean>; adding: string | null;
   notes: Note[]; notify: (kind: Note['kind'], title: string, text?: string, action?: Note['action']) => void; dismiss: (id: number) => void;
   user: User; addresses: Address[]; userReady: boolean; refreshUser: () => Promise<void>; setUser: (u: User) => void;
   recent: string[]; seen: (pid: string) => void;
@@ -116,6 +118,18 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
     if (s?.left != null && qty > s.left) notify('warn', `Only ${s.left} ${p.name} ${size !== 'Package' ? size + ' ' : ''}left.`, 'We’ve added all we have to your cart.');
     setAdded({ pid, size, qty }); if (addedT.current) clearTimeout(addedT.current); addedT.current = setTimeout(() => setAdded(null), 1800);
   };
+  const [adding, setAdding] = useState<string | null>(null);
+  const addLive: Ctx['addLive'] = async (pid, size, qty, swaps) => {
+    if (adding) return false;
+    setAdding(pid); const t0 = Date.now();
+    try {
+      let ok = true;
+      try { const r = await api<{ ok: boolean }>(`/api/stock?pid=${encodeURIComponent(pid)}&size=${encodeURIComponent(size)}`); ok = r.ok; } catch { /* offline or busy: add anyway, checkout checks again */ }
+      const rest = 600 - (Date.now() - t0); if (rest > 0) await new Promise(res => setTimeout(res, rest));
+      if (!ok) { const p = byId[pid]; notify('err', `${p?.name || 'That item'}${size !== 'Package' ? ' ' + size : ''} just sold out.`, 'Pick another size, or tap “Tell me when it’s back” on the product page.'); return false; }
+      add(pid, size, qty, swaps); return true;
+    } finally { setAdding(null); }
+  };
   const setQty = (key: string, qty: number) => {
     const l = cart.find(x => x.key === key); if (!l) return;
     if (qty <= 0) return remove(key);
@@ -133,6 +147,6 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
   const restore = (lines: CartLine[]) => setCart(c => { const m = new Map(c.map(x => [x.key, x])); for (const l of lines) { const prev = m.get(l.key); m.set(l.key, prev ? { ...prev, qty: prev.qty + l.qty } : l); } return Array.from(m.values()); });
   const seen = useCallback((pid: string) => setRecent(r => { const n = [pid].concat(r.filter(x => x !== pid)).slice(0, 12); write('tiada_recent', n); return n; }), []);
 
-  const v: Ctx = { data, byId, cart, priced, count, subtotal, kg, add, setQty, remove, clear, restore, cartOpen, setCartOpen, choose, setChoose, added, dismissAdded: () => setAdded(null), notes, notify, dismiss, user, addresses, userReady, refreshUser, setUser, recent, seen, chatOpen, setChatOpen };
+  const v: Ctx = { data, byId, cart, priced, count, subtotal, kg, add, setQty, remove, clear, restore, cartOpen, setCartOpen, choose, setChoose, added, dismissAdded: () => setAdded(null), addLive, adding, notes, notify, dismiss, user, addresses, userReady, refreshUser, setUser, recent, seen, chatOpen, setChatOpen };
   return <C.Provider value={v}>{children}</C.Provider>;
 }

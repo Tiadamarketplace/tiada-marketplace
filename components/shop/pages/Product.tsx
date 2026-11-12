@@ -60,10 +60,11 @@ export default function ProductPage({ id }: { id: string }) {
   const was = s?.sale && s.price && s.sale < s.price ? s.price : null;
   const swapList = combo ? (p.cat === 'ccombo' ? SWAP_CEREAL : SWAP_FOOD) : [];
   const swapArr = Object.entries(swaps).filter(([a, b]) => a !== b).map(([from, to]) => ({ from, to }));
-  const { added } = useShop();
+  const { added, addLive, adding } = useShop();
   const justAdded = !!added && added.pid === p.id;
-  const doAdd = () => { if (!ok) return; add(p.id, s.label, qty, swapArr.length ? swapArr : undefined); };
-  const buyNow = () => { doAdd(); window.location.assign('/checkout'); };
+  const busy = adding === p.id;
+  const doAdd = () => { if (!ok) return Promise.resolve(false); return addLive(p.id, s.label, qty, swapArr.length ? swapArr : undefined); };
+  const buyNow = async () => { if (await doAdd()) window.location.assign('/checkout'); };
 
   const tellMe = async () => {
     setNErr('');
@@ -176,9 +177,9 @@ export default function ProductPage({ id }: { id: string }) {
                     <span aria-live="polite" style={{ minWidth: 54, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 600 }}>{qty}</span>
                     <button type="button" className="ub btn-solid" aria-label="Increase quantity" onClick={() => { if (qty >= cap) notify('warn', `Only ${cap} left in ${s.label}.`); setQty(q => Math.min(cap, q + 1)); }} style={{ width: 46, background: '#0B3A23', color: '#FFFFFF', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                   </div>
-                  <button type="button" className="ub btn-solid press" onClick={doAdd} style={{ flex: '1 1 200px', height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{justAdded ? '✓ Added to cart' : <>Add to cart · {naira(price * qty)}</>}</button>
+                  <button type="button" className="ub btn-solid press" disabled={busy} aria-busy={busy} onClick={() => void doAdd()} style={{ flex: '1 1 200px', height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{busy ? <><Spin /><span style={{ marginLeft: 10 }}>Adding to cart…</span></> : justAdded ? '✓ Added to cart' : <>Add to cart · {naira(price * qty)}</>}</button>
                 </div>
-                <button type="button" className="ub btn-out" onClick={buyNow} style={{ height: 50, borderRadius: 4, border: '1.5px solid #0B3A23', color: '#0B3A23', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Buy it now</button>
+                <button type="button" className="ub btn-out" disabled={busy} onClick={() => void buyNow()} style={{ height: 50, borderRadius: 4, border: '1.5px solid #0B3A23', color: '#0B3A23', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Buy it now</button>
               </>
             )}
 
@@ -247,7 +248,7 @@ export default function ProductPage({ id }: { id: string }) {
       <div className="mob-only buybar" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 35, alignItems: 'center', gap: 12, padding: '12px 16px', background: '#FFFFFF', borderTop: '1px solid #ECE8DF', boxShadow: '0 -10px 30px rgba(17,32,23,0.08)' }}>
         <span style={{ display: 'flex', flexDirection: 'column' }}><strong style={{ fontSize: 16, fontWeight: 600 }}>{naira(price * qty)}</strong><span style={{ fontSize: 12, color: '#4E5A53' }}>{s?.label} · Qty {qty}</span></span>
         {ok
-          ? <button type="button" className="ub btn-solid press" onClick={doAdd} style={{ flex: 1, height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{justAdded ? '✓ Added' : 'Add to cart'}</button>
+          ? <button type="button" className="ub btn-solid press" disabled={busy} aria-busy={busy} onClick={() => void doAdd()} style={{ flex: 1, height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{busy ? <><Spin /><span style={{ marginLeft: 10 }}>Adding…</span></> : justAdded ? '✓ Added' : 'Add to cart'}</button>
           : <button type="button" className="ub" onClick={() => (!combo ? setChoose(p.id) : null)} style={{ flex: 1, height: 50, borderRadius: 4, background: '#EDEBE5', color: '#4E5A53', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Sold out</button>}
       </div>
       {view && p.img && <Lightbox src={p.img} name={p.name} onClose={() => setView(false)} />}

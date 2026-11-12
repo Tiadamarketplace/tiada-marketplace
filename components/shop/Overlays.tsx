@@ -8,6 +8,7 @@ import { useShop } from './ShopProvider';
 import { naira, nowPrice, inStock, defaultSize, api, waLink } from '@/lib/shop-client';
 import { IClose, ICheck } from './Icons';
 import { ProductImage } from './ProductCard';
+const Spin = () => <span aria-hidden="true" style={{ width: 18, height: 18, flex: 'none', display: 'inline-block', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFFFFF', animation: 'spin .8s linear infinite' }} />;
 
 const X = ({ c = '#1F2A23', s = 18 }: { c?: string; s?: number }) => <IClose size={s} color={c} />;
 const Thumb = ({ pid, size }: { pid: string; size: number }) => {
@@ -80,7 +81,7 @@ export function Stepper({ qty, dec, inc, h = 38 }: { qty: number; dec: () => voi
 }
 
 export function ChooseSize() {
-  const { choose, setChoose, byId, add } = useShop();
+  const { choose, setChoose, byId, addLive, adding } = useShop();
   const p = choose ? byId[choose] : null;
   const [i, setI] = useState(0);
   const [qty, setQ] = useState(1);
@@ -120,7 +121,7 @@ export function ChooseSize() {
         <div style={{ display: 'flex', gap: 10 }}>
           {ok && <Stepper h={50} qty={qty} dec={() => setQ(q => Math.max(1, q - 1))} inc={() => setQ(q => Math.min(cap, q + 1))} />}
           {ok
-            ? <button type="button" className="ub btn-solid press" onClick={() => add(p.id, s.label, qty)} style={{ flex: 1, height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Add to cart · {naira(nowPrice(s) * qty)}</button>
+            ? <button type="button" className="ub btn-solid press" disabled={adding === p.id} aria-busy={adding === p.id} onClick={() => void addLive(p.id, s.label, qty)} style={{ flex: 1, height: 50, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{adding === p.id ? <><Spin /><span style={{ marginLeft: 10 }}>Adding to cart…</span></> : <>Add to cart · {naira(nowPrice(s) * qty)}</>}</button>
             : <button type="button" className="ub btn-out" onClick={details} style={{ flex: 1, height: 50, borderRadius: 4, border: '1.5px solid #0B3A23', color: '#0B3A23', fontSize: 14.5, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Sold out · get told when it’s back</button>}
         </div>
         <button type="button" className="ub lnk" onClick={details} style={{ alignSelf: 'center', fontSize: 13.5, minHeight: 32 }}>View full details</button>
