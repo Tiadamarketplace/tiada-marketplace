@@ -6,6 +6,7 @@ import { env } from '@/lib/env';
 import { photoFor } from '@/lib/photos';
 import { listRiders } from '@/lib/riders';
 import { listPopups } from '@/lib/popups';
+import { HERO_DEFAULT } from '@/lib/hero-core';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,7 @@ export const GET = handle(async (req: Request) => {
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
     riders: seesOrders ? await listRiders() : [],
     popups: await listPopups(),
+    hero: { ...HERO_DEFAULT, ...((set.hero as object) || {}) },
     testMode: env.paystackKey.startsWith('sk_test_'),
     testPending: me.role === 'owner' && env.paystackKey.startsWith('sk_test_')
       ? must(await db().from('orders').select('id,name,total,created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(10)) : [],

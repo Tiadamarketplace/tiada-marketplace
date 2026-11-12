@@ -184,3 +184,9 @@ body{overflow-x:hidden}
 .dr-chat{animation:drChat .45s cubic-bezier(.19,1,.22,1) both;transform-origin:bottom right}.dr-chat.out{animation:drChatOut .26s ease both}
 @keyframes drChat{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}@keyframes drChatOut{to{opacity:0;transform:translateY(12px) scale(.97)}}
 @media (prefers-reduced-motion:reduce){.dr-back,.dr-right,.dr-left,.dr-pop,.dr-chat{animation-duration:.01s!important}}
+/* hero slider */
+.hero-slot{min-height:clamp(460px,44vw,600px)}
+.hero-arrow{position:absolute;z-index:3;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.88);color:#0B3A23;font-size:28px;line-height:1;display:flex!important;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transition:opacity .25s}
+.hero:hover .hero-arrow,.hero-arrow:focus-visible{opacity:1}
+@media (max-width:760px){.hero-slot{min-height:min(540px,68svh)}.hero-arrow{display:none!important}.hero-front{flex-direction:column-reverse;justify-content:flex-end!important;align-items:stretch!important}.hero-front-pic{padding:24px 0 0!important;flex:0 0 auto!important}.hero-front-pic img{max-height:220px!important}}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

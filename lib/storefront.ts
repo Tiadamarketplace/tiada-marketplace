@@ -1,3 +1,4 @@
+import { HERO_DEFAULT, liveSlides, type HeroSettings } from './hero-core';
 import { livePopups, type PubPopup } from './popups';
 import { cache } from 'react';
 import { db, must } from './db';
@@ -19,6 +20,7 @@ export type Storefront = {
   business: Business; policies: { returns: string; delivery: string };
   reviews: { name: string; stars: number; text: string; product_id: string }[];
   popups?: PubPopup[];
+  hero?: HeroSettings;
 };
 
 export const DEFAULT_BUSINESS: Business = {
@@ -53,13 +55,14 @@ async function loadStorefront(): Promise<Storefront> {
     return { ...m, products: m.products.map(p => ({ ...p, img: photoFor(p.id, p.img, p.cat) })) };
   }
   const nowIso = new Date().toISOString();
-  const [products, zones, fees, business, policies, slider, promos, ratings, top, popups] = await Promise.all([
+  const [products, zones, fees, business, policies, slider, promos, ratings, top, popups, hero] = await Promise.all([
     getProducts(), regions(), getSetting<Fees>('fees', DEFAULT_FEES), getSetting<Partial<Business>>('business', {}),
     getSetting('policies', { returns: '', delivery: '' }), getSetting('slider', { on: true, seconds: 6 }),
     db().from('promos').select('*').eq('is_on', true).gt('ends_at', nowIso).lte('starts_at', nowIso).order('sort').order('created_at'),
     db().from('reviews').select('product_id,stars').eq('status', 'live'),
     db().from('reviews').select('name,stars,text,product_id').eq('status', 'live').gte('stars', 4).order('created_at', { ascending: false }).limit(12),
     livePopups(),
+    getSetting<HeroSettings>('hero', HERO_DEFAULT),
   ]);
   const agg: Record<string, { n: number; sum: number }> = {};
   for (const r of (must(ratings) as { product_id: string; stars: number }[])) { const a = (agg[r.product_id] ||= { n: 0, sum: 0 }); a.n++; a.sum += r.stars; }
@@ -80,6 +83,7 @@ async function loadStorefront(): Promise<Storefront> {
     slides, slider: { on: slider.on !== false, seconds: Math.min(10, Math.max(3, Number(slider.seconds) || 6)) },
     business: { ...DEFAULT_BUSINESS, ...business }, policies: { returns: policies.returns || '', delivery: policies.delivery || '' },
     popups,
+    hero: { ...HERO_DEFAULT, ...hero, slides: liveSlides({ ...HERO_DEFAULT, ...hero }) },
     reviews: ((top.data || []) as { name: string; stars: number; text: string; product_id: string }[]).map(r => ({ name: shortName(r.name), stars: r.stars, text: r.text.slice(0, 220), product_id: r.product_id })),
   };
 }

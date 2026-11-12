@@ -77,6 +77,7 @@ const PARTS: Part[] = [
     id: 'sell', title: 'Banners, pop-ups, discount codes, emails and reviews', open: 'banners',
     intro: 'Tools for getting more orders.',
     steps: [
+      ['Hero slides', 'The big picture at the top of the home page. Press + Add a slide and choose: Picture behind (your photo fills it, words on top), Picture beside (a colour behind, your picture next to the words) or Finished banner (a picture you designed, shown whole). Add up to 3 buttons, each going to any aisle, product, page or website, and pick how each looks. Set dates if it’s for a sale. With more than one slide on, it changes by itself; the Tiada welcome slide can stay first or be switched off.'],
       ['Banners', 'The slides in the middle of the home page. Each needs a wide photo, a title and where it links to. Use the switch to show or hide one, and the arrows to change the order.'],
       ['Pop-ups', 'A picture that pops up over the shop: a sale, a discount code, a holiday notice. Upload a square or upright picture, choose who sees it (everyone, visitors who aren’t signed in, or signed-in customers), how often (once, once a day or every visit), and when it starts and ends. It switches itself off at the end time.'],
       ['Discount codes', 'Make a code like FIRST10: a percentage or an amount off, a minimum order, an end date, and whether each customer can use it once. Pause it with the switch.'],
