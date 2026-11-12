@@ -103,13 +103,6 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
       {!checking && pick && (pick.ok
         ? <>
           <p role="status" className="fade" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver here{pick.label ? <> · <strong style={{ fontWeight: 600 }}>{pick.label}</strong></> : null}{showFee ? <> · delivery {naira(pick.fee)}, usually {pick.days}</> : null}</p>
-          {pick.lat != null && pick.lng != null && (
-            <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <iframe title="Your address on Google Maps" src={`https://maps.google.com/maps?q=${pick.lat},${pick.lng}&z=16&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-                style={{ width: '100%', height: 190, border: '1px solid #E4DFD3', borderRadius: 10, display: 'block', background: '#F1EEE6' }} />
-              <span style={{ fontSize: 12.5, color: '#4E5A53' }}>Pin in the wrong place? Type your address again and pick another suggestion, and add a landmark below to help the rider.</span>
-            </div>
-          )}
         </>
         : <p role="alert" className="shake" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, fontWeight: 600, color: '#B3261E' }}>{pick.reason}</p>)}
     </div>

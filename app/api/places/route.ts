@@ -22,6 +22,5 @@ export const POST = handle(async (req: Request) => {
   const spot = await resolve({ id: p.id, lat: p.lat, lng: p.lng, session: p.s });
   if (!spot) return ok({ ok: false, reason: 'We couldn’t find that address on the map. Try typing it a little differently, then pick it from the list.' });
   const q = quoteSpot(spot, await regions());
-  // the customer's own spot (for their map preview); never our pin
-  return ok(q.ok ? { ok: true, label: spot.label, state: q.region, city: spot.city, fee: q.fee, days: q.days, lat: spot.lat, lng: spot.lng } : { ok: false, label: spot.label, reason: q.reason });
+  return ok(q.ok ? { ok: true, label: spot.label, state: q.region, city: spot.city, fee: q.fee, days: q.days } : { ok: false, label: spot.label, reason: q.reason });
 });
