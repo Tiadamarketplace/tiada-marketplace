@@ -114,7 +114,7 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
     });
     setChoose(null);
     if (s?.left != null && qty > s.left) notify('warn', `Only ${s.left} ${p.name} ${size !== 'Package' ? size + ' ' : ''}left.`, 'We’ve added all we have to your cart.');
-    setAdded({ pid, size, qty }); if (addedT.current) clearTimeout(addedT.current); addedT.current = setTimeout(() => setAdded(null), 3500);
+    setAdded({ pid, size, qty }); if (addedT.current) clearTimeout(addedT.current); addedT.current = setTimeout(() => setAdded(null), 1800);
   };
   const setQty = (key: string, qty: number) => {
     const l = cart.find(x => x.key === key); if (!l) return;

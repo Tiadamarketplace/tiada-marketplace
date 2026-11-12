@@ -129,9 +129,11 @@ export function ChooseSize() {
   );
 }
 
+const ADDED_POPUP_OFF = true;
 export function AddedPopup() {
   const { added, dismissAdded, byId, count, setCartOpen } = useShop();
-  if (!added) return null;
+  // Supermart-style: no pop-up when adding; the cart icon bumps and the button says ✓ Added
+  if (!added || ADDED_POPUP_OFF) return null;
   const p = byId[added.pid]; if (!p) return null;
   return (
     <div role="status" className="drop-in added-pop" style={{ position: 'fixed', top: 16, right: 'clamp(12px, 3vw, 28px)', zIndex: 72, width: 'min(360px, calc(100vw - 24px))', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 20px 50px rgba(17,32,23,0.2)', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>

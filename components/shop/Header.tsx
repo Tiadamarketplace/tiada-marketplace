@@ -10,7 +10,7 @@ export const initials = (name: string | null | undefined, email = '') => { const
 const MEGA = [...AISLES.map(a => ({ id: a.id, label: a.label, lower: a.lower })), { id: 'deals', label: 'Deals', lower: 'deals' }];
 
 export default function Header() {
-  const { data, count, setCartOpen, user } = useShop();
+  const { data, count, setCartOpen, user, added } = useShop();
   const [menu, setMenu] = useState(false);
   const [sub, setSub] = useState<string | null>(null);
   const [q, setQ] = useState('');
@@ -83,9 +83,9 @@ export default function Header() {
                 <IUser size={23} /><span className="desk-only" style={{ fontSize: 13.5, fontWeight: 500, color: '#1F2A23', whiteSpace: 'nowrap' }}>{user.name ? user.name.split(' ')[0] : 'Account'}</span>
               </Link>
             ) : <Link href="/account" className="ub icn" aria-label="Sign in or create an account" style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IUser size={23} /></Link>}
-            <button type="button" className="ub icn" aria-label={`Cart, ${count} items`} onClick={() => setCartOpen(true)} style={{ position: 'relative', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}>
+            <button type="button" key={added ? 'b' + count : 'cart'} className={`ub icn${added ? ' bump' : ''}`} aria-label={`Cart, ${count} items`} onClick={() => setCartOpen(true)} style={{ position: 'relative', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}>
               <IBag size={23} />
-              {count > 0 && <span key={count} className="pop" style={{ position: 'absolute', top: 3, right: 1, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: '#0B3A23', color: '#FFFFFF', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>}
+              {count > 0 && <span key={count} className="pop" style={{ position: 'absolute', top: 1, right: -1, minWidth: 20, height: 20, padding: '0 5px', borderRadius: 999, background: added ? '#D49B41' : '#0B3A23', transition: 'background .3s', color: '#FFFFFF', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>}
             </button>
           </nav>
         </div>
