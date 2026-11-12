@@ -39,6 +39,9 @@ const TITLES: Record<Sec, [string, string]> = {
   riders: ['Riders', 'Each rider gets a private link with their drops. They confirm each delivery with the customer’s code.'],
 };
 
+type NavEvent = Event & { canIntercept: boolean; hashChange: boolean; downloadRequest: string | null; formData: FormData | null; info: unknown; destination: { url: string }; intercept: (o: { handler: () => Promise<void>; scroll?: 'manual' | 'after-transition' }) => void };
+type NavApi = { addEventListener: (t: 'navigate', f: (e: NavEvent) => void) => void; removeEventListener: (t: 'navigate', f: (e: NavEvent) => void) => void; navigate: (url: string, o?: { history?: 'replace' | 'push'; info?: unknown }) => { finished: Promise<unknown> } };
+
 export default function Desk() { return <Toasts><Inner /></Toasts>; }
 
 function Inner() {
@@ -74,7 +77,27 @@ function Inner() {
       setD(r); setMe('in');
     } catch (e) { if ((e as { status?: number }).status === 401 || (e as { status?: number }).status === 403) setMe('out'); else toast('err', 'Couldn’t load the desk.', (e as Error).message); }
   }, [toast, go]);
-  useEffect(() => { reload(); }, [reload]);
+  // The browser's own loading bar/spinner: switching pages in the desk, and the first load, fetch fresh data
+  // inside a real browser navigation (Navigation API), so the tab shows it's loading, like a normal website.
+  // Browsers without it (older Safari/Firefox) just switch instantly as before.
+  const reloadRef = useRef(reload); reloadRef.current = reload;
+  useEffect(() => {
+    const nav = (window as unknown as { navigation?: NavApi }).navigation;
+    if (!nav) { reload(); return; }
+    const onNav = (e: NavEvent) => {
+      if (!e.canIntercept || e.downloadRequest || e.formData) return;
+      const u = new URL(e.destination.url);
+      if (u.origin !== location.origin || u.pathname !== location.pathname) return;
+      const first = e.info === 'tiada-load';
+      const part = (h: string) => h.replace(/^#/, '').split(/[=&]/)[0] || 'dash';
+      // opening an order or product drawer stays instant; a new page of the desk loads fresh data
+      if (!first && (!e.hashChange || part(u.hash) === part(location.hash))) return;
+      e.intercept({ scroll: 'manual', handler: async () => { setHash(decodeURIComponent(location.hash.slice(1))); await reloadRef.current(); } });
+    };
+    nav.addEventListener('navigate', onNav);
+    nav.navigate(location.href, { history: 'replace', info: 'tiada-load' }).finished.catch(() => reloadRef.current());
+    return () => nav.removeEventListener('navigate', onNav);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (me !== 'in') return; const t = setInterval(() => { if (document.visibilityState === 'visible') reload(); }, 30000); return () => clearInterval(t); }, [me, reload]);
   // lock the desk after 15 minutes without a click or key
   useEffect(() => {
