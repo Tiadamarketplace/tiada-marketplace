@@ -152,3 +152,7 @@ body{overflow-x:hidden}
 @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-5px);opacity:1}}
 @media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.7}}
 @media (max-width:560px){.pp-grid{grid-template-columns:1fr!important}}
+/* solid − qty + steppers */
+.step-b:hover{background:#14532F!important}
+/* "Added to your cart": at the bottom on phones, so the cart icon stays free */
+@media (max-width:640px){.added-pop{top:auto!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;left:12px;right:12px!important;width:auto!important;animation:up .28s cubic-bezier(.2,.8,.2,1)!important}}

@@ -36,7 +36,7 @@ export default function Track({ initial }: { initial: string }) {
   } as Record<string, string>)[o.status];
 
   return (
-    <div className="fade" style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0' }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 40 }}>
         <div style={{ flex: '1 1 380px', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <span style={small}>No account needed</span>

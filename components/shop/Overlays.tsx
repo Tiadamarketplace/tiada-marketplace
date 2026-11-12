@@ -30,7 +30,7 @@ export function CartDrawer() {
       <button type="button" className="ub" aria-label="Close cart" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />
       <aside aria-label="Your cart" role="dialog" aria-modal="true" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(420px, 92vw)', background: '#FFFFFF', display: 'flex', flexDirection: 'column', animation: 'slideR .32s cubic-bezier(.2,.8,.2,1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 12px 14px 24px', borderBottom: '1px solid #ECE8DF' }}>
-          <h2 style={{ margin: 0, fontWeight: 500, fontSize: 20 }}>Your cart{count ? ` (${count})` : ''}</h2>
+          <h2 style={{ margin: 0, fontWeight: 700, fontSize: 20 }}>Your cart{count ? ` (${count})` : ''}</h2>
           <button type="button" className="ub icn" aria-label="Close cart" onClick={close} style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X s={20} /></button>
         </div>
         {!priced.length ? (
@@ -45,7 +45,7 @@ export function CartDrawer() {
                 <div key={it.key} style={{ display: 'flex', gap: 14, padding: '18px 0', borderBottom: '1px solid #ECE8DF' }}>
                   <Thumb pid={it.pid} size={76} />
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 14.5, fontWeight: 500 }}>{it.product.name}</span><span style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{naira(it.line)}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35 }}>{it.product.name}</span><span style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{naira(it.line)}</span></div>
                     <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{it.size} · {naira(it.price)}{it.was ? <s style={{ marginLeft: 6 }}>{naira(it.was)}</s> : null}</span>
                     {it.swaps?.length ? <span style={{ fontSize: 12, color: '#4E5A53' }}>Swapped: {it.swaps.map(w => `${w.from} → ${w.to}`).join(', ')}</span> : null}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
@@ -71,10 +71,10 @@ export function CartDrawer() {
 
 export function Stepper({ qty, dec, inc, h = 38 }: { qty: number; dec: () => void; inc: () => void; h?: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', height: h, border: '1px solid #DCD6CA', borderRadius: 4 }}>
-      <button type="button" className="ub icn" aria-label="One less" onClick={dec} style={{ width: h, height: h - 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>−</button>
-      <span style={{ minWidth: 28, textAlign: 'center', fontSize: 14, fontWeight: 600 }}>{qty}</span>
-      <button type="button" className="ub icn" aria-label="One more" onClick={inc} style={{ width: h, height: h - 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>+</button>
+    <div className="stepper" style={{ display: 'inline-flex', alignItems: 'stretch', height: h, borderRadius: 4, overflow: 'hidden', border: '1.5px solid #0B3A23', background: '#FFFFFF' }}>
+      <button type="button" className="ub step-b press" aria-label="One less" onClick={dec} style={{ width: h, background: '#0B3A23', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700 }}>−</button>
+      <span aria-live="polite" style={{ minWidth: 40, padding: '0 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#0B3A23' }}>{qty}</span>
+      <button type="button" className="ub step-b press" aria-label="One more" onClick={inc} style={{ width: h, background: '#0B3A23', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700 }}>+</button>
     </div>
   );
 }
@@ -134,14 +134,14 @@ export function AddedPopup() {
   if (!added) return null;
   const p = byId[added.pid]; if (!p) return null;
   return (
-    <div role="status" className="drop-in" style={{ position: 'fixed', top: 16, right: 'clamp(12px, 3vw, 28px)', zIndex: 72, width: 'min(360px, calc(100vw - 24px))', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 20px 50px rgba(17,32,23,0.2)', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div role="status" className="drop-in added-pop" style={{ position: 'fixed', top: 16, right: 'clamp(12px, 3vw, 28px)', zIndex: 72, width: 'min(360px, calc(100vw - 24px))', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 20px 50px rgba(17,32,23,0.2)', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}><ICheck size={18} color="#0B3A23" stroke={2.4} />Added to your cart</span>
         <button type="button" className="ub icn" aria-label="Dismiss" onClick={dismissAdded} style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X c="#4E5A53" s={16} /></button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Thumb pid={p.id} size={56} />
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</span><span style={{ fontSize: 12.5, color: '#4E5A53' }}>{added.size} · Qty {added.qty}</span></span>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14.5, fontWeight: 700 }}>{p.name}</span><span style={{ fontSize: 12.5, color: '#4E5A53' }}>{added.size} · Qty {added.qty}</span></span>
       </div>
       <button type="button" className="ub btn-out" onClick={() => { dismissAdded(); setCartOpen(true); }} style={{ height: 44, borderRadius: 4, border: '1.5px solid #0B3A23', color: '#0B3A23', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>View cart ({count})</button>
     </div>
