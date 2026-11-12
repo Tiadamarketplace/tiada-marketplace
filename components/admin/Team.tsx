@@ -32,7 +32,7 @@ export default function Team({ c }: { c: Ctx }) {
             <label style={lab}>Name<input value={add.name} onChange={e => setAdd(x => ({ ...x, name: e.target.value }))} style={input} /></label>
             <label style={lab}>Email<input type="email" value={add.email} onChange={e => setAdd(x => ({ ...x, email: e.target.value }))} style={input} /></label>
             <label style={lab}>Role<select value={add.role} onChange={e => setAdd(x => ({ ...x, role: e.target.value }))} style={input}><option value="staff">Staff</option><option value="support">Support</option><option value="owner">Owner</option></select></label>
-            <Btn type="submit" disabled={busy || !add.name || !add.email} style={{ alignSelf: 'end' }}>Add person</Btn>
+            <Btn type="submit" disabled={busy || !add.name || !add.email} style={{ alignSelf: 'end' }}>{busy ? 'Adding…' : 'Add person'}</Btn>
           </form>
         </Section>
       )}
@@ -53,7 +53,7 @@ export default function Team({ c }: { c: Ctx }) {
         <form onSubmit={e => { e.preventDefault(); run(async () => { await call('/api/admin/staff', { action: 'password', ...pw }); setPw({ current: '', next: '' }); toast('ok', 'Password changed.'); }); }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
           <label style={lab}>Current password<input type="password" autoComplete="current-password" value={pw.current} onChange={e => setPw(x => ({ ...x, current: e.target.value }))} style={input} /></label>
           <label style={lab}>New password (10+ characters)<input type="password" autoComplete="new-password" value={pw.next} onChange={e => setPw(x => ({ ...x, next: e.target.value }))} style={input} /></label>
-          <Btn type="submit" disabled={busy || !pw.current || pw.next.length < 10} style={{ alignSelf: 'end' }}>Change password</Btn>
+          <Btn type="submit" disabled={busy || !pw.current || pw.next.length < 10} style={{ alignSelf: 'end' }}>{busy ? 'Saving…' : 'Change password'}</Btn>
         </form>
         <p style={{ margin: '12px 0 0', fontSize: 12.5, color: '#66736B' }}>The desk locks itself after 15 minutes without use.</p>
       </Section>

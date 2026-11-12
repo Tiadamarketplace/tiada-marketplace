@@ -8,7 +8,7 @@ import { Dialog } from '../Overlays';
 import OrderSteps, { StatusPill } from '../OrderSteps';
 import { ProductImage } from '../ProductCard';
 import { naira, api, lineKey, CartLine, waLink } from '@/lib/shop-client';
-import { H1, btnSolid, btnOut, field, labelStyle, Spin } from '../ui';
+import { H1, btnSolid, btnOut, field, labelStyle, Spin, BusyButton } from '../ui';
 
 type OItem = { pid: string; name: string; size: string; qty: number; price: number; swaps?: { from: string; to: string }[] };
 type Order = { drop_code?: string | null; id: string; status: string; total: number; delivery_fee: number; discount: number; created_at: string; address: string; area_label: string | null; speed_label: string | null; items: OItem[]; rider: { partner?: string; tracking?: string; driver?: string; phone?: string } | null; issue: { reason?: string; note?: string; eta?: string } | null; refunds?: { amount: number }[] | null };
@@ -276,8 +276,8 @@ function Profile() {
           {tab === 'privacy' && <section><h2 style={{ ...h2, paddingBottom: 12, borderBottom: '1px solid #1F2A23' }}>Emails & privacy</h2><Privacy onDelete={() => setAsk('delete')} onSignOut={() => setAsk('out')} /></section>}
         </div>
       </div>
-      {ask === 'out' && <Dialog title="Sign out?" text="You’ll need a new email code to sign in again. Your cart stays on this device." yesLabel="Sign out" onNo={() => setAsk(null)} onYes={() => { setAsk(null); signOut(); }} />}
-      {ask === 'delete' && <Dialog title="Delete your account?" text="This removes your details, saved addresses and reviews. Past orders stay on our records for tax, but are no longer linked to you. This can’t be undone." yesLabel="Delete my account" danger onNo={() => setAsk(null)} onYes={() => { setAsk(null); del(); }} />}
+      {ask === 'out' && <Dialog title="Sign out?" text="You’ll need a new email code to sign in again. Your cart stays on this device." yesLabel="Sign out" onNo={() => setAsk(null)} onYes={() => signOut()} />}
+      {ask === 'delete' && <Dialog title="Delete your account?" text="This removes your details, saved addresses and reviews. Past orders stay on our records for tax, but are no longer linked to you. This can’t be undone." yesLabel="Delete my account" danger onNo={() => setAsk(null)} onYes={() => del()} />}
     </div>
   );
 }
@@ -306,8 +306,8 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
           {x.landmark && <span style={{ fontSize: 13, color: '#4E5A53' }}>Near {x.landmark}</span>}
           <span style={{ fontSize: 13, color: x.spot ? '#4E5A53' : '#9E3522' }}>{x.spot ? x.spot.label : 'Add this address again so we can work out delivery.'}</span>
           <span style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-            {i > 0 && <button type="button" className="ub lnk" onClick={() => makeDefault(x.id)} style={{ fontSize: 13, color: '#0B3A23' }}>Make default</button>}
-            <button type="button" className="ub lnk" onClick={() => remove(x.id)} style={{ fontSize: 13, color: '#4E5A53' }}>Remove</button>
+            {i > 0 && <BusyButton dark className="ub lnk" onClick={() => makeDefault(x.id)} busyText="Saving…" style={{ fontSize: 13, color: '#0B3A23', display: 'flex', alignItems: 'center' }}>Make default</BusyButton>}
+            <BusyButton dark className="ub lnk" onClick={() => remove(x.id)} busyText="Removing…" style={{ fontSize: 13, color: '#4E5A53', display: 'flex', alignItems: 'center' }}>Remove</BusyButton>
           </span>
         </div>
       ))}
@@ -349,14 +349,16 @@ function Details() {
 
 function Privacy({ onDelete, onSignOut }: { onDelete: () => void; onSignOut: () => void }) {
   const { user, setUser, notify } = useShop();
+  const [pBusy, setPBusy] = useState(false);
   const promo = async (v: boolean) => {
+    if (pBusy) return; setPBusy(true);
     try { const r = await api<{ user: NonNullable<typeof user> }>('/api/me', { method: 'PATCH', json: { promo_ok: v } }); setUser(r.user); notify('ok', v ? 'You’ll get our deals emails.' : 'No more deals emails.', v ? '' : 'You’ll still get emails about your orders.'); }
-    catch (e) { notify('err', 'Couldn’t change that.', (e as Error).message); }
+    catch (e) { notify('err', 'Couldn’t change that.', (e as Error).message); } finally { setPBusy(false); }
   };
   const row = (t: string, s: string, right: React.ReactNode) => <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid #ECE8DF' }}><span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 14.5, fontWeight: 600 }}>{t}</span><span style={{ fontSize: 13, color: '#4E5A53', lineHeight: 1.5 }}>{s}</span></span>{right}</div>;
   return (
     <div>
-      {row('Deals emails', 'New stock and combo deals, a few times a month at most.', <button type="button" role="switch" aria-checked={!!user?.promo_ok} aria-label="Deals emails" className="ub" onClick={() => promo(!user?.promo_ok)} style={{ width: 44, height: 26, borderRadius: 999, background: user?.promo_ok ? '#0B3A23' : '#C9CFC9', position: 'relative', flex: 'none' }}><span style={{ position: 'absolute', top: 3, left: 3, width: 20, height: 20, borderRadius: '50%', background: '#FFFFFF', transition: 'transform .2s', transform: `translateX(${user?.promo_ok ? 18 : 0}px)` }} /></button>)}
+      {row('Deals emails', 'New stock and combo deals, a few times a month at most.', <>{pBusy && <Spin dark size={16} />}<button type="button" disabled={pBusy} aria-busy={pBusy} role="switch" aria-checked={!!user?.promo_ok} aria-label="Deals emails" className="ub" onClick={() => promo(!user?.promo_ok)} style={{ width: 44, height: 26, borderRadius: 999, background: user?.promo_ok ? '#0B3A23' : '#C9CFC9', position: 'relative', flex: 'none' }}><span style={{ position: 'absolute', top: 3, left: 3, width: 20, height: 20, borderRadius: '50%', background: '#FFFFFF', transition: 'transform .2s', transform: `translateX(${user?.promo_ok ? 18 : 0}px)` }} /></button></>)}
       {row('Order emails', 'Receipts and delivery updates. These always come, so you know where your order is.', <span style={{ fontSize: 12.5, fontWeight: 600, color: '#0B3A23' }}>Always on</span>)}
       {row('Signed in on this device', 'You stay signed in while you keep shopping. Sign out if this is a shared phone or computer.', <button type="button" className="ub btn-out" onClick={onSignOut} style={{ ...btnOut, height: 40, fontSize: 13.5, padding: '0 16px' }}>Sign out</button>)}
       {row('Your data', 'See our privacy policy for what we keep and why.', <Link href="/privacy" className="lnk" style={{ fontSize: 13.5, color: '#0B3A23' }}>Privacy policy</Link>)}

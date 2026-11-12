@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
 import { naira, api, waLink, whereWeDeliver } from '@/lib/shop-client';
-import { Box, BoxArea, BoxSelect, EmptyCart, Thumb, btnSolid, btnOut } from '../ui';
+import { Box, BoxArea, BoxSelect, EmptyCart, Thumb, btnSolid, btnOut, Spin } from '../ui';
 import { ILock } from '../Icons';
 import AddressSearch, { Pick, PlaceRef } from '../AddressSearch';
 
@@ -88,14 +88,18 @@ export default function Checkout() {
   // what the rider reads: the address, plus the city and state if the address doesn't already say them
   const fullAddress = () => { let a = f.address.trim(); for (const x of [f.city.trim(), f.state]) if (x && !a.toLowerCase().includes(x.toLowerCase())) a += ', ' + x; return a; };
 
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [contBusy, setContBusy] = useState(false);
   const applyCode = async () => {
     const c = code.trim().toUpperCase(); setCodeErr('');
     if (!c) return setCodeErr('Type your code first.');
+    if (codeBusy) return; setCodeBusy(true);
     try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: c, email: f.email || null } }); setQ(r); setCodeApplied(c); notify('ok', `${c} applied.`, `You save ${naira(r.discount)}.`); }
-    catch (e) { setCodeErr((e as Error).message); }
+    catch (e) { setCodeErr((e as Error).message); } finally { setCodeBusy(false); }
   };
 
-  const toPay = () => {
+  const toPay = async () => {
+    if (contBusy) return;
     const need: [keyof Form, boolean, string][] = [
       ['name', f.name.trim().length >= 2, 'Add your full name.'],
       ['phone', /^0[789][01]\d{8}$/.test(f.phone.replace(/[\s-]/g, '').replace(/^\+?234/, '0')), 'Use an 11-digit Nigerian phone number, like 0803 000 0000.'],
@@ -107,6 +111,12 @@ export default function Checkout() {
     if (sub < data.fees.min) { setErr({ text: `The minimum order for delivery is ${naira(data.fees.min)}. Add ${naira(data.fees.min - sub)} more.` }); return; }
     setErr(null);
     try { const { name, phone, email, address, landmark, city, state, place, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, city, state, place: place ? { id: place.id, lat: place.lat, lng: place.lng } : null, speed })); } catch { /* */ }
+    // one last check of prices, stock and the delivery fee before the payment step
+    setContBusy(true); const t0 = Date.now();
+    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: codeApplied || null, email: f.email || null } }); setQ(r); }
+    catch (e) { setContBusy(false); setErr({ text: (e as Error).message }); return; }
+    const rest = 500 - (Date.now() - t0); if (rest > 0) await new Promise(res => setTimeout(res, rest));
+    setContBusy(false);
     setStep('pay'); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -191,7 +201,7 @@ export default function Checkout() {
                 {user && <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5 }}><input type="checkbox" checked={f.save} onChange={e => set('save', e.target.checked)} style={{ width: 18, height: 18, accentColor: '#0B3A23' }} />Save this address to my account</label>}
               </section>
               {err && <p role="alert" className="shake" style={{ margin: 0, padding: '12px 14px', borderRadius: 6, background: '#F8E6E1', color: '#7A2A1B', fontSize: 14, fontWeight: 500 }}>{err.text}</p>}
-              <button type="submit" className="ub btn-solid press" style={btnSolid}>Continue to payment</button>
+              <button type="submit" className="ub btn-solid press" disabled={contBusy} aria-busy={contBusy} style={{ ...btnSolid, gap: 10 }}>{contBusy ? <><Spin />Checking your order…</> : 'Continue to payment'}</button>
             </form>
           ) : (
             <section style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -264,7 +274,7 @@ export default function Checkout() {
                 <>
                   <form onSubmit={e => { e.preventDefault(); applyCode(); }} style={{ display: 'flex', gap: 8 }}>
                     <input type="text" value={code} onChange={e => { setCode(e.target.value); setCodeErr(''); }} placeholder="Discount code" aria-label="Discount code" autoFocus style={{ flex: 1, height: 46, padding: '0 14px', borderRadius: 4, border: `1px solid ${codeErr ? '#B8402B' : '#DCD6CA'}`, fontSize: 14.5, minWidth: 0, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#FFFFFF' }} />
-                    <button type="submit" className="ub btn-out" style={{ ...btnOut, height: 46, padding: '0 18px', fontSize: 14 }}>Apply</button>
+                    <button type="submit" className="ub btn-out" disabled={codeBusy} aria-busy={codeBusy} style={{ ...btnOut, height: 46, padding: '0 18px', fontSize: 14, gap: 8 }}>{codeBusy ? <><Spin dark />Checking…</> : 'Apply'}</button>
                   </form>
                   {codeErr && <span role="alert" className="shake" style={{ fontSize: 13, fontWeight: 600, color: '#9E3522' }}>{codeErr}</span>}
                 </>

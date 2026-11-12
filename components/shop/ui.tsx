@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from '@/components/shop/Link';
 import { useShop } from './ShopProvider';
 import { ProductImage } from './ProductCard';
@@ -45,4 +46,20 @@ export function BoxArea({ label, ...p }: React.TextareaHTMLAttributes<HTMLTextAr
 /** A small turning circle for buttons that are waiting. White on dark buttons, green on light ones. */
 export function Spin({ dark, size = 18 }: { dark?: boolean; size?: number }) {
   return <span aria-hidden="true" style={{ width: size, height: size, flex: 'none', display: 'inline-block', borderRadius: '50%', border: `2px solid ${dark ? 'rgba(11,58,35,0.2)' : 'rgba(255,255,255,0.35)'}`, borderTopColor: dark ? '#0B3A23' : '#FFFFFF', animation: 'spin .8s linear infinite' }} />;
+}
+
+/**
+ * A button that shows a spinner while it works. If onClick returns a promise, the spinner runs until it settles.
+ * With nav, the spinner stays until the browser has moved to the next page (it comes back if they press Back).
+ */
+export function BusyButton({ onClick, children, dark, nav, busyText, disabled, style, ...rest }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> & { onClick: () => unknown; dark?: boolean; nav?: boolean; busyText?: React.ReactNode }) {
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (!nav) return; const back = () => setBusy(false); window.addEventListener('pageshow', back); return () => window.removeEventListener('pageshow', back); }, [nav]);
+  const click = () => {
+    if (busy) return;
+    const r = onClick();
+    if (nav) { setBusy(true); return; }
+    if (r && typeof (r as Promise<unknown>).then === 'function') { setBusy(true); (r as Promise<unknown>).finally(() => setBusy(false)); }
+  };
+  return <button type="button" {...rest} disabled={disabled || busy} aria-busy={busy || undefined} onClick={click} style={{ ...style, gap: 10, opacity: disabled ? 0.55 : 1 }}>{busy ? <><Spin dark={dark} />{busyText ?? children}</> : children}</button>;
 }

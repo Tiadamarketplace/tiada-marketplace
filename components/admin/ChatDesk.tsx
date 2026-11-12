@@ -18,10 +18,12 @@ export default function ChatDesk({ c }: { c: Ctx }) {
     return () => clearInterval(t);
   }, [setD]);
   useEffect(() => { box.current?.scrollTo({ top: 1e6 }); }, [cur?.messages.length]);
+  const [sending, setSending] = useState(false);
   const act = async (action: 'join' | 'send' | 'end', body: Record<string, unknown> = {}) => {
     if (!cur) return;
+    if (action === 'send') setSending(true);
     try { await call('/api/admin/chat', { action, id: cur.id, ...body }); const r = await call<{ chats: Chat[] }>('/api/admin/data?part=chats'); setD(x => (x ? { ...x, chats: r.chats } : x)); if (action === 'send') setText(''); }
-    catch (e) { toast('err', 'That didn’t work.', (e as Error).message); }
+    catch (e) { toast('err', 'That didn’t work.', (e as Error).message); } finally { setSending(false); }
   };
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'stretch' }}>
@@ -49,7 +51,7 @@ export default function ChatDesk({ c }: { c: Ctx }) {
           {cur.status === 'open' && (
             <form onSubmit={e => { e.preventDefault(); if (text.trim()) act('send', { text: text.trim() }); }} style={{ display: 'flex', gap: 8, padding: 12, borderTop: '1px solid #ECE8DF' }}>
               <input value={text} onChange={e => setText(e.target.value)} placeholder="Type a reply…" aria-label="Reply" maxLength={1000} style={{ flex: 1, height: 44, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 14 }} />
-              <Btn type="submit" disabled={!text.trim()}>Send</Btn>
+              <Btn type="submit" disabled={!text.trim() || sending}>{sending ? 'Sending…' : 'Send'}</Btn>
             </form>
           )}
         </>}

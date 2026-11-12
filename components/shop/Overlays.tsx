@@ -8,6 +8,7 @@ import { useShop } from './ShopProvider';
 import { naira, nowPrice, inStock, defaultSize, api, waLink } from '@/lib/shop-client';
 import { IClose, ICheck } from './Icons';
 import { ProductImage } from './ProductCard';
+import { BusyButton } from './ui';
 const Spin = () => <span aria-hidden="true" style={{ width: 18, height: 18, flex: 'none', display: 'inline-block', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFFFFF', animation: 'spin .8s linear infinite' }} />;
 
 const X = ({ c = '#1F2A23', s = 18 }: { c?: string; s?: number }) => <IClose size={s} color={c} />;
@@ -60,8 +61,8 @@ export function CartDrawer() {
             <div style={{ padding: '20px 24px 24px', borderTop: '1px solid #ECE8DF', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span>Subtotal</span><span style={{ fontWeight: 600 }}>{naira(subtotal)}</span></div>
               <span style={{ fontSize: 12.5, color: '#4E5A53' }}>Delivery is added at checkout.</span>
-              <button type="button" className="ub btn-solid press" onClick={() => go('/checkout')} style={{ height: 52, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Check out</button>
-              <button type="button" className="ub lnk" onClick={() => go('/cart')} style={{ alignSelf: 'center', fontSize: 14, minHeight: 36 }}>View cart</button>
+              <BusyButton nav className="ub btn-solid press" onClick={() => window.location.assign('/checkout')} busyText="Opening checkout…" style={{ height: 52, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Check out</BusyButton>
+              <BusyButton nav dark className="ub lnk" onClick={() => window.location.assign('/cart')} style={{ alignSelf: 'center', fontSize: 14, minHeight: 36, display: 'flex', alignItems: 'center' }}>View cart</BusyButton>
             </div>
           </div>
         )}
@@ -170,7 +171,7 @@ export function Toasts() {
   );
 }
 
-export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger, onNo, onYes }: { title: string; text: string; list?: { name: string; note: string }[]; noLabel?: string; yesLabel: string; danger?: boolean; onNo: () => void; onYes: () => void }) {
+export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger, onNo, onYes }: { title: string; text: string; list?: { name: string; note: string }[]; noLabel?: string; yesLabel: string; danger?: boolean; onNo: () => void; onYes: () => unknown }) {
   useEscape(true, onNo);
   return (<Portal>
     <div role="alertdialog" aria-modal="true" aria-label={title} style={{ position: 'fixed', inset: 0, zIndex: 86, background: 'rgba(17,32,23,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -180,7 +181,7 @@ export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger
         {list?.length ? <ul style={{ margin: '14px 0 0', padding: 0, listStyle: 'none' }}>{list.map((l, k) => <li key={k} style={{ padding: '10px 0', borderTop: '1px solid #ECE8DF', fontSize: 14, lineHeight: 1.5 }}><strong style={{ fontWeight: 600 }}>{l.name}</strong> <span style={{ color: '#3C4741' }}>{l.note}</span></li>)}</ul> : null}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '6px 18px', marginTop: 22 }}>
           <button type="button" className="ub" onClick={onNo} style={{ minHeight: 44, padding: '0 4px', fontSize: 14.5, fontWeight: 600, color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4 }}>{noLabel}</button>
-          <button type="button" className="ub btn-solid press" onClick={onYes} style={{ height: 46, padding: '0 22px', borderRadius: 4, background: danger ? '#7A2A1B' : '#0B3A23', color: '#FFFFFF', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{yesLabel}</button>
+          <BusyButton className="ub btn-solid press" onClick={onYes} style={{ height: 46, padding: '0 22px', borderRadius: 4, background: danger ? '#7A2A1B' : '#0B3A23', color: '#FFFFFF', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{yesLabel}</BusyButton>
         </div>
       </div>
     </div>

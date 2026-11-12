@@ -54,16 +54,30 @@ export const card: React.CSSProperties = { background: '#FFFFFF', border: '1px s
 export const input: React.CSSProperties = { height: 44, padding: '0 12px', borderRadius: 8, border: '1px solid #DCD6CA', fontSize: 14, background: '#FFFFFF', color: '#1F2A23', width: '100%' };
 export const lab: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#1F2A23' };
 
-export function Btn({ children, onClick, kind = 'solid', small, disabled, type = 'button', danger, style, title }: { children: React.ReactNode; onClick?: () => void; kind?: 'solid' | 'out' | 'soft' | 'text'; small?: boolean; disabled?: boolean; type?: 'button' | 'submit'; danger?: boolean; style?: React.CSSProperties; title?: string }) {
+export function Btn({ children, onClick, kind = 'solid', small, disabled, type = 'button', danger, style, title }: { children: React.ReactNode; onClick?: () => unknown; kind?: 'solid' | 'out' | 'soft' | 'text'; small?: boolean; disabled?: boolean; type?: 'button' | 'submit'; danger?: boolean; style?: React.CSSProperties; title?: string }) {
+  // Every button that does work shows a spinner while it runs: either its onClick returns a promise,
+  // or its label says it's busy ("Saving…", "Sending…").
+  const [running, setRunning] = useState(false);
+  const busyLabel = typeof children === 'string' && children.endsWith('…');
+  const busy = running || busyLabel;
   const h = small ? 36 : 42;
-  const base: React.CSSProperties = { height: h, padding: kind === 'text' ? '0 4px' : `0 ${small ? 12 : 16}px`, borderRadius: 9, fontSize: small ? 12.5 : 13.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : undefined };
+  const off = disabled || running;
+  const base: React.CSSProperties = { height: h, padding: kind === 'text' ? '0 4px' : `0 ${small ? 12 : 16}px`, borderRadius: 9, fontSize: small ? 12.5 : 13.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', opacity: off && !busy ? 0.5 : off ? 0.8 : 1, pointerEvents: off ? 'none' : undefined };
   const look: Record<string, React.CSSProperties> = {
     solid: { background: danger ? '#7A2A1B' : '#0B3A23', color: '#FFFFFF' },
     out: { border: `1px solid ${danger ? '#E7C3B9' : '#DCD6CA'}`, background: '#FFFFFF', color: danger ? '#9E3522' : '#1F2A23' },
     soft: { background: '#F2EFE8', color: '#1F2A23' },
     text: { color: danger ? '#9E3522' : '#0B3A23', textDecoration: 'underline', textUnderlineOffset: 3 },
   };
-  return <button type={type} title={title} className={`ub press ${kind === 'solid' ? 'btn-solid' : kind === 'out' ? 'qbtn' : kind === 'soft' ? 'btn-soft' : ''}`} onClick={onClick} disabled={disabled} style={{ ...base, ...look[kind], ...style }}>{children}</button>;
+  const click = onClick && (() => {
+    const r = onClick();
+    if (r && typeof (r as Promise<unknown>).then === 'function') { setRunning(true); (r as Promise<unknown>).finally(() => setRunning(false)); }
+  });
+  const light = kind === 'solid';
+  return <button type={type} title={title} aria-busy={busy || undefined} className={`ub press ${kind === 'solid' ? 'btn-solid' : kind === 'out' ? 'qbtn' : kind === 'soft' ? 'btn-soft' : ''}`} onClick={click} disabled={off} style={{ ...base, ...look[kind], ...style }}>
+    {busy && <span aria-hidden="true" style={{ width: small ? 13 : 15, height: small ? 13 : 15, flex: 'none', borderRadius: '50%', border: `2px solid ${light ? 'rgba(255,255,255,0.35)' : 'rgba(11,58,35,0.2)'}`, borderTopColor: light ? '#FFFFFF' : danger ? '#9E3522' : '#0B3A23', animation: 'spin .8s linear infinite' }} />}
+    {children}
+  </button>;
 }
 /**
  * On/off switch. It flips the moment it is tapped; if saving fails the screen goes back to what was saved
@@ -117,7 +131,7 @@ export function Drawer({ title, sub, onClose, children, foot, wide }: { title: s
     </div>
   </Portal>);
 }
-export function Confirm({ title, text, yes, danger, onNo, onYes, children }: { title: string; text?: string; yes: string; danger?: boolean; onNo: () => void; onYes: () => void; children?: React.ReactNode }) {
+export function Confirm({ title, text, yes, danger, onNo, onYes, children }: { title: string; text?: string; yes: string; danger?: boolean; onNo: () => void; onYes: () => unknown; children?: React.ReactNode }) {
   useEffect(() => { const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onNo(); }; window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, [onNo]);
   return (<Portal>
     <div role="alertdialog" aria-modal="true" aria-label={title} style={{ position: 'fixed', inset: 0, zIndex: 110, background: 'rgba(17,32,23,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
