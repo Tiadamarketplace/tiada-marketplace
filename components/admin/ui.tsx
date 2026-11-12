@@ -142,7 +142,7 @@ export function Section({ title, sub, right, children, pad = true }: { title?: s
   );
 }
 
-/** Shrink a photo in the browser before upload: square crop for products, 1600px wide for banners. */
+/** Shrink a photo in the browser before upload: square crop for products, up to 1920px wide for banners. */
 export async function prepImage(file: File, mode: 'square' | 'wide'): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
@@ -153,10 +153,11 @@ export async function prepImage(file: File, mode: 'square' | 'wide'): Promise<st
       c.width = c.height = out; x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, out, out);
       x.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, out, out);
     } else {
-      const w = Math.min(1600, img.width); const h = Math.round((img.height / img.width) * w);
+      // banners keep their shape; 1920 wide keeps the words in finished banners sharp
+      const w = Math.min(1920, img.width); const h = Math.round((img.height / img.width) * w);
       c.width = w; c.height = h; x.drawImage(img, 0, 0, w, h);
     }
-    return c.toDataURL('image/jpeg', 0.86);
+    return c.toDataURL('image/jpeg', mode === 'wide' ? 0.9 : 0.86);
   } finally { URL.revokeObjectURL(url); }
 }
 

@@ -99,7 +99,7 @@ function Editor({ c, p, onClose }: { c: Ctx; p: Promo | null; onClose: () => voi
         {f.style !== 'color' && (
           <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12 }}>
             <Btn kind="out" onClick={() => file.current?.click()} disabled={up}>{up ? 'Uploading…' : f.img ? 'Change picture' : f.style === 'image' ? 'Upload your banner' : 'Upload a background photo'}</Btn>
-            <span style={{ fontSize: 12, color: '#66736B' }}>{f.style === 'image' ? 'Wide picture, about 1600 × 500. Your words should be in the picture.' : 'Wide photo. Keep the left side calm so the words are easy to read.'}</span>
+            <span style={{ fontSize: 12, color: '#66736B' }}>{f.style === 'image' ? 'Wide picture, 16:9 (for example 1920 × 1080). Your words and logo should be in the picture. It shows whole, never cropped.' : 'Wide photo. Keep the left side calm so the words are easy to read.'}</span>
             <input ref={file} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e => { const fl = e.target.files?.[0]; if (fl) upload(fl); e.target.value = ''; }} />
           </div>
         )}

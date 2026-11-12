@@ -24,20 +24,22 @@ export default function Slider({ slides, seconds = 6 }: { slides: Slide[]; secon
   }, [cur, tick, paused, n, seconds]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!n) return null;
   const now = slides[cur]; const nt = tone(now.color); const lightDots = now.style === 'color' && nt.light;
+  // banners made with their words and logo already in the picture are shown whole, never cropped (16:9)
+  const pictureOnly = slides.every(x => x.style === 'image');
 
   return (
     <div role="region" aria-roledescription="carousel" aria-label="Offers and news"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}
       onTouchStart={e => { touch.current = e.touches[0].clientX; setPaused(true); }}
       onTouchEnd={e => { const s = touch.current; touch.current = null; setPaused(false); if (s == null) return; const d = e.changedTouches[0].clientX - s; if (Math.abs(d) > 40) to(cur + (d < 0 ? 1 : -1)); }}
-      style={{ position: 'relative', marginTop: 64, height: 'clamp(240px, 34vw, 400px)', borderRadius: 8, overflow: 'hidden', background: '#0B3A23' }}>
+      style={{ position: 'relative', marginTop: 64, ...(pictureOnly ? { aspectRatio: '16 / 9', maxWidth: 1000, marginLeft: 'auto', marginRight: 'auto' } : { height: 'clamp(240px, 34vw, 400px)' }), borderRadius: 8, overflow: 'hidden', background: '#0B3A23' }}>
       {slides.map((x, i) => {
         const t = tone(x.color); const rgba = (a: number) => `rgba(${t.r},${t.g},${t.b},${a})`;
         const light = x.style === 'color' ? t.light : t.light && x.shade > 0.5;
         const on = i === cur; const ext = /^https?:\/\//.test(x.href);
         const inner = (
           <>
-            {x.img && x.style !== 'color' && <img src={x.img} alt={x.style === 'image' ? x.title : ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${on ? 1 : 1.06})`, transition: 'transform 7s ease-out' }} />}
+            {x.img && x.style !== 'color' && <img src={x.img} alt={x.style === 'image' ? x.title : ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: x.style === 'image' && !pictureOnly ? 'contain' : 'cover', transform: x.style === 'image' ? 'none' : `scale(${on ? 1 : 1.06})`, transition: 'transform 7s ease-out' }} />}
             {x.style === 'photo' && <span style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${rgba(x.shade)} 0%, ${rgba(x.shade * 0.78)} 42%, ${rgba(0)} 80%)` }} />}
             {x.style === 'color' && <><span style={{ position: 'absolute', inset: 0, background: x.color }} /><span style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 120% at 90% 30%, rgba(255,255,255,0.16), rgba(255,255,255,0) 60%)' }} /></>}
             {x.style !== 'image' && (
