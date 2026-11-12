@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 export const GET = handle(async (req: Request) => {
   limit('places:' + clientIp(req), 300, 10 * 60000);
   const u = new URL(req.url);
-  const list = await suggest(u.searchParams.get('q') || '', (u.searchParams.get('s') || '').slice(0, 80));
+  const st = u.searchParams.get('st');
+  const list = await suggest(u.searchParams.get('q') || '', (u.searchParams.get('s') || '').slice(0, 80), st === 'Lagos' || st === 'Oyo' ? st : undefined);
   return ok({ list });
 });
 
@@ -21,5 +22,5 @@ export const POST = handle(async (req: Request) => {
   const spot = await resolve({ id: p.id, lat: p.lat, lng: p.lng, session: p.s });
   if (!spot) return ok({ ok: false, reason: 'We couldn’t find that address on the map. Try typing it a little differently, then pick it from the list.' });
   const q = quoteSpot(spot, await regions());
-  return ok(q.ok ? { ok: true, label: spot.label, state: q.region, fee: q.fee, days: q.days } : { ok: false, label: spot.label, reason: q.reason });
+  return ok(q.ok ? { ok: true, label: spot.label, state: q.region, city: spot.city, fee: q.fee, days: q.days } : { ok: false, label: spot.label, reason: q.reason });
 });

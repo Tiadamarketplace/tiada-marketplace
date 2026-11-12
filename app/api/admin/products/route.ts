@@ -39,7 +39,7 @@ async function tellWaiting(id: string, before: SizeRow[], after: SizeRow[]) {
 export const POST = handle(async (req: Request) => {
   const me = await requireStaff(req, 'catalog');
   const b = Save.parse(await req.json());
-  let sizes: SizeRow[] = b.sizes.map(s => ({ label: s.label, price: s.price, sale: s.price && s.sale && s.sale < s.price ? s.sale : null, kg: s.kg, na: !s.price || !!s.na, stock: s.stock ?? null }));
+  let sizes: SizeRow[] = b.sizes.map(s => ({ label: s.label, price: s.price, sale: s.price && s.sale && s.sale < s.price ? s.sale : null, kg: s.kg, na: !s.price, stock: s.stock ?? null })); // a size is for sale exactly when it has a price
   if (!sizes.some(s => !s.na)) return fail('Add a regular price for at least one size.');
   if (new Set(sizes.map(s => s.label.toLowerCase())).size !== sizes.length) return fail('Two sizes have the same name.');
   if (b.img && !/^(https:\/\/|\/img\/)/.test(b.img)) return fail('Upload the photo again.');

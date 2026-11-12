@@ -30,3 +30,14 @@ export function EmptyCart() {
     </div>
   );
 }
+
+/** A checkout box: the label sits inside and moves up when there's text, like most big shops. */
+export function Box({ label, bad, readOnly, ...p }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; bad?: boolean }) {
+  return <div className={`bx${bad ? ' bad' : ''}${readOnly ? ' ro' : ''}`}><input {...p} readOnly={readOnly} placeholder=" " aria-invalid={bad || undefined} aria-label={label} /><span className="bx-l" aria-hidden="true">{label}</span></div>;
+}
+export function BoxSelect({ label, children, bad, ...p }: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string; bad?: boolean }) {
+  return <div className={`bx up${bad ? ' bad' : ''}`}><select {...p} aria-label={label}>{children}</select><span className="bx-l" aria-hidden="true">{label}</span><svg className="bx-c" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></div>;
+}
+export function BoxArea({ label, ...p }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+  return <div className="bx tall"><textarea {...p} placeholder=" " aria-label={label} /><span className="bx-l" aria-hidden="true">{label}</span></div>;
+}

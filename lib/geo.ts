@@ -27,10 +27,15 @@ async function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return v;
 }
 
-export async function suggest(q: string, session: string): Promise<Suggestion[]> {
-  const t = q.trim().slice(0, 120);
+/** State centres, to point suggestions at the state the customer chose. */
+const STATE_BIAS: Record<string, { lat: number; lng: number }> = { Lagos: { lat: 6.55, lng: 3.4 }, Oyo: { lat: 7.75, lng: 3.75 } };
+export async function suggest(q: string, session: string, state?: string): Promise<Suggestion[]> {
+  let t = q.trim().slice(0, 120);
   if (t.length < 3) return [];
-  return cached(`s:${GKEY() ? 'g' : 'o'}:${t.toLowerCase()}`, () => (GKEY() ? googleSuggest(t, session) : osmSuggest(t)));
+  // "Allen Avenue" + chosen state Lagos → search "Allen Avenue, Lagos", unless they already typed the state
+  if (state && !t.toLowerCase().includes(state.toLowerCase())) t = `${t}, ${state}`;
+  const bias = (state && STATE_BIAS[state]) || BIAS;
+  return cached(`s:${GKEY() ? 'g' : 'o'}:${t.toLowerCase()}`, () => (GKEY() ? googleSuggest(t, session, bias) : osmSuggest(t, bias)));
 }
 
 /** Turn a picked suggestion into a Spot. The state always comes from the map service, never from the browser. */
@@ -44,13 +49,13 @@ export async function resolve(p: { id: string; lat?: number | null; lng?: number
 }
 
 // ---------- Google Places (New) ----------
-async function googleSuggest(q: string, session: string): Promise<Suggestion[]> {
+async function googleSuggest(q: string, session: string, bias = BIAS): Promise<Suggestion[]> {
   const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GKEY() },
-    body: JSON.stringify({ input: q, includedRegionCodes: ['ng'], sessionToken: session || undefined, locationBias: { circle: { center: { latitude: BIAS.lat, longitude: BIAS.lng }, radius: 50000 } } }),
+    body: JSON.stringify({ input: q, includedRegionCodes: ['ng'], sessionToken: session || undefined, locationBias: { circle: { center: { latitude: bias.lat, longitude: bias.lng }, radius: 50000 } } }),
   });
-  if (!r.ok) { console.error('google autocomplete', r.status, (await r.text()).slice(0, 300)); return osmSuggest(q); }
+  if (!r.ok) { console.error('google autocomplete', r.status, (await r.text()).slice(0, 300)); return osmSuggest(q, bias); }
   const j = await r.json() as { suggestions?: { placePrediction?: { placeId: string; text?: { text: string }; structuredFormat?: { mainText?: { text: string }; secondaryText?: { text: string } } } }[] };
   return (j.suggestions || []).flatMap(s => {
     const p = s.placePrediction; if (!p) return [];
@@ -78,8 +83,8 @@ const line = (p: PhotonF['properties']) => {
   const rest = [p.name && street !== main ? street : '', p.district || p.locality, p.city || p.county, p.state].filter((x, i, a) => x && x !== main && a.indexOf(x) === i);
   return { main, secondary: rest.join(', ') };
 };
-async function osmSuggest(q: string): Promise<Suggestion[]> {
-  const u = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en&bbox=${NG_BOX}&lat=${BIAS.lat}&lon=${BIAS.lng}`;
+async function osmSuggest(q: string, bias = BIAS): Promise<Suggestion[]> {
+  const u = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en&bbox=${NG_BOX}&lat=${bias.lat}&lon=${bias.lng}`;
   const r = await fetch(u, { headers: { 'User-Agent': UA } });
   if (!r.ok) { console.error('photon search', r.status); return []; }
   const j = await r.json() as { features?: PhotonF[] };

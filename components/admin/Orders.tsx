@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { mapLink, runOf } from './runs';
+import EditOrder from './EditOrder';
 import type { Ctx } from './Desk';
 import type { Order } from './types';
 import { naira, card, Btn, Tabs, Drawer, Confirm, Empty, StatusPill, call, useToast, input, lab, dt, ago, fmtPhone } from './ui';
@@ -93,13 +94,14 @@ export default function Orders({ c }: { c: Ctx }) {
 function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string; onClose: () => void }) {
   const { d, reload } = c;
   const toast = useToast();
-  const [mode, setMode] = useState<'' | 'route' | 'done' | 'issue' | 'refund' | 'cancel' | 'note'>(start === 'issue' ? 'issue' : '');
+  const [mode, setMode] = useState<'' | 'route' | 'done' | 'issue' | 'refund' | 'cancel' | 'note' | 'edit'>(start === 'issue' ? 'issue' : '');
   const [f, setF] = useState({ partner: 'Tiada rider', tracking: '', driver: '', phone: '', cost: '', how: 'Handed to the customer', reason: '', note: '', eta: '', amount: '', full: true });
   const [busy, setBusy] = useState(false);
   const [ask, setAsk] = useState<null | { title: string; text: string; yes: string; body: Record<string, unknown> }>(null);
   const set = (k: keyof typeof f, v: string | boolean) => setF(x => ({ ...x, [k]: v }));
   const z = d.zones.find(x => x.id === o.zone_id);
   const refunded = (o.refunds || []).reduce((a, r) => a + r.amount, 0);
+  const paidAmt = o.paid ?? o.total;
   const emails = d.messages.filter(m => m.order_id === o.id);
   const act = async (body: Record<string, unknown>, msg: string) => {
     setBusy(true);
@@ -126,6 +128,8 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
     <Drawer title={`${o.id} · ${naira(o.total)}`} sub={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><StatusPill s={o.status} /> Paid {dt(o.paid_at || o.created_at)}</span>} onClose={onClose} foot={['refunded', 'cancelled'].includes(o.status) ? undefined : foot}>
       {o.status === 'issue' && o.issue && <div style={{ padding: '12px 14px', borderRadius: 10, background: '#FBEFEB', color: '#7A2A1B', fontSize: 13.5, lineHeight: 1.55, marginBottom: 14 }}><strong>{o.issue.reason}</strong> {o.issue.note}{o.issue.eta ? ` · New date: ${o.issue.eta}` : ''}</div>}
 
+      {!['done', 'refunded', 'cancelled'].includes(o.status) && mode !== 'edit' && <div style={{ display: 'flex', justifyContent: 'flex-end' }}><Btn kind="out" small onClick={() => setMode('edit')}>Edit order</Btn></div>}
+      {mode === 'edit' && <EditOrder c={c} o={o} onDone={() => setMode('')} />}
       {mode === 'route' && (
         <div style={box} className="fade">
           <strong>Send it out</strong>
@@ -157,7 +161,7 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
           <label style={lab}>New delivery date (optional)<input value={f.eta} onChange={e => set('eta', e.target.value)} placeholder="e.g. Thursday 12 November" style={input} /></label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
             <Btn kind="text" onClick={() => setMode('')}>Cancel</Btn>
-            <Btn kind="out" danger onClick={() => setAsk({ title: `Cancel ${o.id}?`, text: `${o.name} gets the full ${naira(o.total - refunded)} back through Paystack, and an email saying why. This can’t be undone.`, yes: 'Cancel and refund', body: { action: 'cancel', reason: f.reason || 'We couldn’t fill your order', note: f.note || undefined } })}>Cancel and refund all</Btn>
+            <Btn kind="out" danger onClick={() => setAsk({ title: `Cancel ${o.id}?`, text: `${o.name} gets the full ${naira(paidAmt - refunded)} back through Paystack, and an email saying why. This can’t be undone.`, yes: 'Cancel and refund', body: { action: 'cancel', reason: f.reason || 'We couldn’t fill your order', note: f.note || undefined } })}>Cancel and refund all</Btn>
             <Btn disabled={busy || f.reason.trim().length < 2} onClick={() => act({ action: 'issue', reason: f.reason, note: f.note || undefined, eta: f.eta || undefined }, 'Problem saved and customer told.')}>Save and tell the customer</Btn>
           </div>
         </div>
@@ -165,11 +169,11 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
       {mode === 'refund' && (
         <div style={box} className="fade">
           <strong>Refund</strong>
-          <p style={{ margin: 0, fontSize: 13, color: '#4D5A52' }}>Paid {naira(o.total)}{refunded ? `, already refunded ${naira(refunded)}` : ''}. Money goes back through Paystack to the card or account they paid with.</p>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><input type="radio" checked={f.full} onChange={() => set('full', true)} />Everything left ({naira(o.total - refunded)})</label>
+          <p style={{ margin: 0, fontSize: 13, color: '#4D5A52' }}>Paid {naira(paidAmt)}{refunded ? `, already refunded ${naira(refunded)}` : ''}. Money goes back through Paystack to the card or account they paid with.</p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><input type="radio" checked={f.full} onChange={() => set('full', true)} />Everything left ({naira(paidAmt - refunded)})</label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><input type="radio" checked={!f.full} onChange={() => set('full', false)} />Part of it<input value={f.amount} onChange={e => { set('amount', e.target.value.replace(/\D/g, '')); set('full', false); }} inputMode="numeric" placeholder="₦" style={{ ...input, width: 120, height: 36 }} /></label>
           <label style={lab}>Reason<input value={f.reason} onChange={e => set('reason', e.target.value)} placeholder="e.g. One Coco Pops pack was missing" style={input} /></label>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}><Btn kind="text" onClick={() => setMode('')}>Cancel</Btn><Btn disabled={f.reason.trim().length < 2 || (!f.full && !Number(f.amount))} onClick={() => setAsk({ title: `Refund ${f.full ? naira(o.total - refunded) : naira(Number(f.amount))}?`, text: 'This sends money back through Paystack straight away and emails the customer. It can’t be undone.', yes: 'Refund now', body: { action: 'refund', full: f.full, amount: f.full ? undefined : Number(f.amount), reason: f.reason } })}>Refund</Btn></div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}><Btn kind="text" onClick={() => setMode('')}>Cancel</Btn><Btn disabled={f.reason.trim().length < 2 || (!f.full && !Number(f.amount))} onClick={() => setAsk({ title: `Refund ${f.full ? naira(paidAmt - refunded) : naira(Number(f.amount))}?`, text: 'This sends money back through Paystack straight away and emails the customer. It can’t be undone.', yes: 'Refund now', body: { action: 'refund', full: f.full, amount: f.full ? undefined : Number(f.amount), reason: f.reason } })}>Refund</Btn></div>
         </div>
       )}
       {mode === 'note' && (
@@ -191,7 +195,8 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
       <div style={{ fontSize: 13.5, padding: '10px 0', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#66736B' }}>Delivery · {o.speed_label}</span><span>{naira(o.delivery_fee)}</span></span>
         {o.discount > 0 && <span style={{ display: 'flex', justifyContent: 'space-between', color: '#0B3A23' }}><span>Discount {o.voucher}</span><span>−{naira(o.discount)}</span></span>}
-        <span style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}><span>Paid</span><span>{naira(o.total)}</span></span>
+        {o.paid != null && o.paid !== o.total && <span style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>Order total now</span><span>{naira(o.total)}</span></span>}
+        <span style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}><span>Paid</span><span>{naira(o.paid ?? o.total)}</span></span>
         {refunded > 0 && <span style={{ display: 'flex', justifyContent: 'space-between', color: '#9E3522' }}><span>Refunded</span><span>−{naira(refunded)}</span></span>}
       </div>
 

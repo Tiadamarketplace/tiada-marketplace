@@ -83,7 +83,7 @@ body{overflow-x:hidden}
 .hero-img{animation:settle 9s cubic-bezier(.2,.7,.2,1) both}
 @keyframes settle{from{transform:scale(1.07)}to{transform:scale(1)}}
 /* phones: the tall phone picture behind the words, darker at the bottom so they stay readable */
-@media (max-width:760px){.hero-img{object-position:center top!important}.hero-shade{background:linear-gradient(0deg,rgba(7,34,20,.96) 0%,rgba(7,34,20,.86) 42%,rgba(7,34,20,.5) 62%,rgba(7,34,20,0) 80%)}.hero-kick{text-shadow:0 1px 10px rgba(0,0,0,.55)}.hero-box{min-height:max(660px,calc(100svh - 140px))!important;align-items:flex-end!important}.hero-box>.fade{padding:0 0 40px!important}}
+@media (max-width:760px){.hero-img{object-position:center top!important}.hero-shade{background:linear-gradient(0deg,rgba(7,34,20,.96) 0%,rgba(7,34,20,.86) 42%,rgba(7,34,20,.5) 62%,rgba(7,34,20,0) 80%)}.hero-kick{text-shadow:0 1px 10px rgba(0,0,0,.55)}.hero-box{min-height:min(540px,68svh)!important;align-items:flex-end!important}.hero-box>.fade{padding:0 0 26px!important;gap:12px!important}.hero-box h1{font-size:34px!important}.hero-box p{font-size:14.5px!important;line-height:1.55!important}}
 /* phones: 16px text in boxes so iPhone doesn't zoom in when you tap one */
 @media (max-width:900px),(pointer:coarse){input,select,textarea{font-size:16px!important}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -123,3 +123,15 @@ body{overflow-x:hidden}
 .acct-row{grid-template-columns:1fr auto!important;grid-template-areas:"code tot" "items st" "date date";row-gap:4px!important}.acct-row>span:nth-child(1){grid-area:date;font-size:12.5px}.acct-row>span:nth-child(2){grid-area:code}.acct-row>span:nth-child(3){grid-area:items;font-size:13px}.acct-row>span:nth-child(4){grid-area:st;text-align:right;font-size:13px}.acct-row>span:nth-child(5){grid-area:tot}.acct-head{display:none!important}}
 @media (max-width:640px){.rp-card{flex-direction:column}.rp-pic{flex:0 0 190px!important}}
 @media (max-width:760px){.how-row{grid-template-columns:44px 1fr!important;gap:6px 14px!important}.how-row>div{grid-column:2}}
+/* checkout boxes: label sits inside the box and moves up when there's text */
+.bx{position:relative;display:block;border:1px solid #CFC8BA;border-radius:10px;background:#FFFFFF;height:58px;transition:border-color .15s ease,box-shadow .15s ease}
+.bx:focus-within{border-color:#0B3A23;box-shadow:0 0 0 1px #0B3A23}
+.bx.bad{border-color:#B3261E;box-shadow:0 0 0 1px #B3261E}
+.bx.ro{background:#F7F5F0}
+.bx>input,.bx>select{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;padding:22px 14px 4px;font-size:16px;color:#1F2A23;outline:none;border-radius:10px;appearance:none;-webkit-appearance:none}
+.bx>select{padding-right:40px;cursor:pointer}
+.bx>.bx-l{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:15.5px;color:#7A857E;pointer-events:none;transition:top .15s ease,font-size .15s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 30px)}
+.bx>input:focus~.bx-l,.bx>input:not(:placeholder-shown)~.bx-l,.bx.up>.bx-l{top:17px;font-size:12px}
+.bx>.bx-c{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4D5A52}
+.bx.tall{height:auto;min-height:88px}.bx.tall>textarea{display:block;width:100%;min-height:88px;border:0;background:transparent;padding:26px 14px 10px;font-size:16px;outline:none;resize:vertical;border-radius:10px}
+.bx.tall>.bx-l{top:22px}.bx.tall>textarea:focus~.bx-l,.bx.tall>textarea:not(:placeholder-shown)~.bx-l{top:13px;font-size:12px}

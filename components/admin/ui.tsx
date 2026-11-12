@@ -65,10 +65,25 @@ export function Btn({ children, onClick, kind = 'solid', small, disabled, type =
   };
   return <button type={type} title={title} className={`ub press ${kind === 'solid' ? 'btn-solid' : kind === 'out' ? 'qbtn' : kind === 'soft' ? 'btn-soft' : ''}`} onClick={onClick} disabled={disabled} style={{ ...base, ...look[kind], ...style }}>{children}</button>;
 }
-export function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+/**
+ * On/off switch. It flips the moment it is tapped; if saving fails the screen goes back to what was saved
+ * (the parent reloads or keeps the old value), at the latest after 10 seconds.
+ */
+export function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => unknown; label: string }) {
+  const [pending, setPending] = useState<boolean | null>(null);
+  const shown = pending ?? on;
+  useEffect(() => { setPending(null); }, [on]);
+  useEffect(() => { if (pending === null) return; const t = setTimeout(() => setPending(null), 10000); return () => clearTimeout(t); }, [pending]);
+  const tap = () => {
+    const v = !shown;
+    setPending(v);
+    const r = onChange(v) as Promise<unknown> | undefined;
+    // when the save finishes (and the page has the saved value), show the real value again
+    if (r && typeof r.then === 'function') r.then(() => setPending(null), () => setPending(null));
+  };
   return (
-    <button type="button" className="ub" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} style={{ width: 40, height: 24, borderRadius: 999, background: on ? '#0B3A23' : '#C9CFC9', position: 'relative', flex: 'none' }}>
-      <span className="knob" style={{ position: 'absolute', top: 3, left: 3, width: 18, height: 18, borderRadius: '50%', background: '#FFFFFF', transform: `translateX(${on ? 16 : 0}px)` }} />
+    <button type="button" className="ub" role="switch" aria-checked={shown} aria-label={label} onClick={tap} style={{ width: 40, height: 24, borderRadius: 999, background: shown ? '#0B3A23' : '#C9CFC9', position: 'relative', flex: 'none', transition: 'background .15s ease' }}>
+      <span className="knob" style={{ position: 'absolute', top: 3, left: 3, width: 18, height: 18, borderRadius: '50%', background: '#FFFFFF', transform: `translateX(${shown ? 16 : 0}px)`, transition: 'transform .15s ease' }} />
     </button>
   );
 }

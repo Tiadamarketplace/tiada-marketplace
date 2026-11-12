@@ -5,12 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../ShopProvider';
 import { Dialog } from '../Overlays';
 import { naira, api, waLink, whereWeDeliver } from '@/lib/shop-client';
-import { EmptyCart, Thumb, btnSolid, btnOut, field, labelStyle } from '../ui';
+import { Box, BoxArea, BoxSelect, EmptyCart, Thumb, btnSolid, btnOut } from '../ui';
 import { ILock } from '../Icons';
 import AddressSearch, { Pick, PlaceRef } from '../AddressSearch';
 
 type Quote = { subtotal: number; discount: number; voucher: string | null; fee: number | null; total: number; kg: number; speed: string | null; min: number; days: string | null; area: string | null; reason: string | null };
-type Form = { name: string; phone: string; email: string; address: string; landmark: string; note: string; place: PlaceRef | null; speed: 'next' | 'same'; save: boolean };
+type Form = { name: string; phone: string; email: string; address: string; landmark: string; city: string; state: string; note: string; place: PlaceRef | null; speed: 'next' | 'same'; save: boolean };
 declare global { interface Window { PaystackPop?: new () => { resumeTransaction: (code: string, cb: { onSuccess?: (t: unknown) => void; onCancel?: () => void; onError?: (e: { message?: string }) => void }) => void } } }
 
 const SAVE_KEY = 'tiada_checkout';
@@ -24,9 +24,10 @@ const loadPaystack = () => new Promise<void>((res, rej) => {
 export default function Checkout() {
   const { priced, data, user, userReady, addresses, notify, setCartOpen } = useShop();
   const [step, setStep] = useState<'details' | 'pay'>('details');
-  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', address: '', landmark: '', note: '', place: null, speed: 'next', save: true });
+  const [f, setF] = useState<Form>({ name: '', phone: '', email: '', address: '', landmark: '', city: '', state: 'Lagos', note: '', place: null, speed: 'next', save: true });
   const [spot, setSpot] = useState<Pick | null>(null);
   const [start, setStart] = useState<{ text: string; place: PlaceRef | null } | null>(null);
+  const [addrKey, setAddrKey] = useState(0);
   const [err, setErr] = useState<{ field?: string; text: string } | null>(null);
   const [q, setQ] = useState<Quote | null>(null);
   const [code, setCode] = useState('');
@@ -75,7 +76,10 @@ export default function Checkout() {
   const fee = q && f.place ? q.fee : estFee;
   const total = q ? q.total : sub + (estFee || 0);
   const arrive = q?.days || (good ? (f.speed === 'same' ? 'today or next morning where we can' : good.days) : '');
-  const onPick = (p: Pick | null, text: string) => { setSpot(p); setF(x => ({ ...x, address: text, place: p?.ok ? p.place : null })); if (err?.field === 'address') setErr(null); };
+  // the picked address decides the state; the city fills itself in (they can change it)
+  const onPick = (p: Pick | null, text: string) => { setSpot(p); setF(x => ({ ...x, address: text, place: p?.ok ? p.place : null, ...(p?.ok ? { state: p.state || x.state, city: p.city || x.city } : {}) })); if (err?.field === 'address') setErr(null); };
+  // what the rider reads: the address, plus the city and state if the address doesn't already say them
+  const fullAddress = () => { let a = f.address.trim(); for (const x of [f.city.trim(), f.state]) if (x && !a.toLowerCase().includes(x.toLowerCase())) a += ', ' + x; return a; };
 
   const applyCode = async () => {
     const c = code.trim().toUpperCase(); setCodeErr('');
@@ -95,7 +99,7 @@ export default function Checkout() {
     if (bad) { setErr({ field: bad[0], text: bad[2] }); document.getElementById('co-' + bad[0])?.focus(); return; }
     if (sub < data.fees.min) { setErr({ text: `The minimum order for delivery is ${naira(data.fees.min)}. Add ${naira(data.fees.min - sub)} more.` }); return; }
     setErr(null);
-    try { const { name, phone, email, address, landmark, place, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, place: place ? { id: place.id, lat: place.lat, lng: place.lng } : null, speed })); } catch { /* */ }
+    try { const { name, phone, email, address, landmark, city, state, place, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, city, state, place: place ? { id: place.id, lat: place.lat, lng: place.lng } : null, speed })); } catch { /* */ }
     setStep('pay'); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -103,7 +107,7 @@ export default function Checkout() {
     setPhase('opening');
     let r: { order: { id: string; total: number }; ref: string; access_code: string; authorization_url: string };
     try {
-      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: f.address.trim(), landmark: f.landmark.trim() || null, place: f.place, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
+      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: fullAddress(), landmark: f.landmark.trim() || null, place: f.place, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
     } catch (e) {
       const m = (e as Error).message; const st = (e as { status?: number }).status;
       if (st === 409) { setPhase('idle'); setChanged(m); return; }
@@ -128,7 +132,6 @@ export default function Checkout() {
   if (!priced.length && phase !== 'confirming') return <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px clamp(16px, 3vw, 28px) 0' }}><EmptyCart /></div>;
 
   const steps = [['Cart', 'done'], ['Details', step === 'details' ? 'on' : 'done'], ['Payment', step === 'pay' ? 'on' : 'off']];
-  const inp = (k: keyof Form): React.CSSProperties => ({ ...field, borderColor: err?.field === k ? '#B8402B' : '#DCD6CA' });
 
   return (
     <div className="fade" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px clamp(16px, 3vw, 28px) 0' }}>
@@ -149,25 +152,25 @@ export default function Checkout() {
                   {userReady && !user && <span style={{ fontSize: 13, color: '#66736B' }}>Have an account? <Link href="/account?next=/checkout" className="lnk" style={{ color: '#0B3A23' }}>Sign in</Link></span>}
                   {user && <span style={{ fontSize: 13, color: '#0B3A23', display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: '#2E9E5B' }} />Signed in as {user.email}</span>}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-                  <label style={labelStyle}>Full name<input id="co-name" type="text" autoComplete="name" value={f.name} onChange={e => set('name', e.target.value)} aria-invalid={err?.field === 'name'} style={inp('name')} /></label>
-                  <label style={labelStyle}>Phone number<input id="co-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0803 000 0000" value={f.phone} onChange={e => set('phone', e.target.value)} aria-invalid={err?.field === 'phone'} style={inp('phone')} /></label>
-                </div>
-                <label style={labelStyle}>Email for your receipt<input id="co-email" type="email" autoComplete="email" value={f.email} onChange={e => set('email', e.target.value)} readOnly={!!user} aria-invalid={err?.field === 'email'} style={{ ...inp('email'), ...(user ? { background: '#F7F5F0', color: '#4D5A52' } : {}) }} /></label>
+                <Box id="co-name" label="Full name" type="text" autoComplete="name" value={f.name} onChange={e => set('name', e.target.value)} bad={err?.field === 'name'} />
+                <Box id="co-phone" label="Phone number" type="tel" inputMode="tel" autoComplete="tel" value={f.phone} onChange={e => set('phone', e.target.value)} bad={err?.field === 'phone'} />
+                <Box id="co-email" label="Email for your receipt" type="email" autoComplete="email" value={f.email} onChange={e => set('email', e.target.value)} readOnly={!!user} bad={err?.field === 'email'} />
               </section>
 
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
-                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>We deliver in {whereWeDeliver(data.zones)}. Start typing and pick your address from the list. The delivery fee depends on the distance.</p>
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>We deliver in {whereWeDeliver(data.zones)}. Choose your state, start typing your address and pick it from the list. The delivery fee depends on the distance.</p>
                 {addresses.some(a => a.spot?.place) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {addresses.filter(a => a.spot?.place).map(a => <button key={a.id} type="button" className="ub chip" onClick={() => { set('landmark', a.landmark || ''); setStart({ text: a.street, place: { id: a.spot!.place, lat: a.spot!.lat, lng: a.spot!.lng } }); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 12.5 }}>{a.label}: {a.street.slice(0, 28)}</button>)}
                   </div>
                 )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <label htmlFor="co-address" style={{ fontSize: 13, fontWeight: 600 }}>Delivery address</label>
-                  <AddressSearch key={start?.text || 'new'} id="co-address" initial={start} onPick={onPick} invalid={err?.field === 'address'} />
-                </div>
+                <BoxSelect label="State" value={f.state} onChange={e => { const v = e.target.value; set('state', v); if (spot && spot.ok && spot.state !== v) { setSpot(null); setStart(null); setF(x => ({ ...x, address: '', city: '', place: null })); setAddrKey(k => k + 1); } }}>
+                  {data.zones.map(z => <option key={z.id} value={z.state || z.label}>{z.state || z.label}</option>)}
+                </BoxSelect>
+                <AddressSearch key={`${start?.text || 'new'}-${addrKey}`} id="co-address" boxLabel="Address" state={f.state} initial={start} onPick={onPick} invalid={err?.field === 'address'} />
+                <Box label="Apartment, house number or landmark (optional)" type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} maxLength={120} />
+                <Box label="City or town" type="text" autoComplete="address-level2" value={f.city} onChange={e => set('city', e.target.value)} maxLength={60} />
                 {good && (
                   <div role="radiogroup" aria-label="Delivery speed" className="fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 8 }}>
                     {([['next', 'Standard', `Usually ${good.days}`, 0], ['same', 'Priority', 'Today or next morning where we can', data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
@@ -177,8 +180,7 @@ export default function Checkout() {
                       </button>); })}
                   </div>
                 )}
-                <label style={labelStyle}><span>House number, flat or landmark <span style={{ fontWeight: 400, color: '#66736B' }}>(helps the rider)</span></span><input type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} placeholder="e.g. No. 14, Flat 3, opposite the filling station" maxLength={120} style={field} /></label>
-                <label style={labelStyle}><span>Note for us <span style={{ fontWeight: 400, color: '#66736B' }}>(optional)</span></span><textarea rows={2} value={f.note} onChange={e => set('note', e.target.value)} maxLength={300} placeholder="Gate code, best time to call…" style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical' }} /></label>
+                <BoxArea label="Note for us (optional): gate code, best time to call…" rows={2} value={f.note} onChange={e => set('note', e.target.value)} maxLength={300} />
                 {user && <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5 }}><input type="checkbox" checked={f.save} onChange={e => set('save', e.target.checked)} style={{ width: 18, height: 18, accentColor: '#0B3A23' }} />Save this address to my account</label>}
               </section>
               {err && <p role="alert" className="shake" style={{ margin: 0, padding: '12px 14px', borderRadius: 6, background: '#F8E6E1', color: '#7A2A1B', fontSize: 14, fontWeight: 500 }}>{err.text}</p>}
@@ -191,7 +193,7 @@ export default function Checkout() {
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13.5, lineHeight: 1.5, minWidth: 0 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#66736B' }}>Delivering to</span>
                   <span style={{ fontWeight: 600 }}>{f.name} · {f.phone}</span>
-                  <span>{f.address}</span>{f.landmark.trim() && <span style={{ color: '#66736B' }}>{f.landmark.trim()}</span>}
+                  <span>{fullAddress()}</span>{f.landmark.trim() && <span style={{ color: '#66736B' }}>{f.landmark.trim()}</span>}
                   <span style={{ color: '#66736B' }}>Arrives {arrive}</span>
                 </span>
                 <button type="button" className="ub lnk" onClick={() => { setStep('details'); setPhase('idle'); }} style={{ alignSelf: 'flex-start', fontSize: 13.5, color: '#0B3A23' }}>Change</button>

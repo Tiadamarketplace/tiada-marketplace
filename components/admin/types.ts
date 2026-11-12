@@ -1,9 +1,9 @@
 export type Size = { label: string; price: number | null; sale: number | null; kg: number; na: boolean; stock?: number | null };
 export type Product = { id: string; name: string; cat: string; items: string[] | null; sizes: Size[]; status: string; stock: number; low: number; hidden: boolean; img: string | null; sort: number; updated_at?: string };
-export type Item = { pid?: string; name: string; size: string; qty: number; price: number; img?: string | null; swaps?: { from: string; to: string }[] };
+export type Item = { pid?: string; name: string; size: string; qty: number; price: number; img?: string | null; kg?: number | null; was?: number | null; swaps?: { from: string; to: string }[] };
 export type Order = {
   id: string; customer_id: string | null; email: string; name: string; phone: string; address: string; landmark: string | null; zone_id: string | null; spot?: { lat: number; lng: number; label?: string; region?: string; km?: number } | null; area_label: string | null;
-  speed: string; speed_label: string | null; items: Item[]; subtotal: number; discount: number; voucher: string | null; delivery_fee: number; total: number; kg: number; status: string;
+  speed: string; speed_label: string | null; items: Item[]; subtotal: number; discount: number; voucher: string | null; delivery_fee: number; total: number; paid?: number | null; kg: number; status: string;
   prev_status: string | null; paid_at: string | null; rider: { partner?: string; tracking?: string; driver?: string; phone?: string; cost?: number } | null; confirm: { how?: string; note?: string; by?: string; at?: string } | null;
   issue: { reason?: string; note?: string; eta?: string } | null; refunds: { amount: number; reason: string; at: string; by?: string }[] | null; note: string | null; created_at: string; updated_at: string;
 };
@@ -27,4 +27,4 @@ export type Data = {
   vouchers: Voucher[]; contact: Contact[]; waiting: Record<string, number>; subscribers: number;
   staff: Staff[]; testMode: boolean; testPending: { id: string; name: string; total: number; created_at: string }[]; now: number;
 };
-export type Sec = 'dash' | 'orders' | 'products' | 'banners' | 'discounts' | 'emails' | 'reviews' | 'chat' | 'customers' | 'messages' | 'settings' | 'delivery' | 'team';
+export type Sec = 'dash' | 'orders' | 'products' | 'banners' | 'discounts' | 'emails' | 'reviews' | 'chat' | 'customers' | 'messages' | 'settings' | 'delivery' | 'team' | 'guide';

@@ -18,8 +18,15 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('refund'), full: z.boolean(), amount: z.number().int().positive().optional(), reason: txt(120).min(2), note: txt(500).optional() }),
   z.object({ action: z.literal('cancel'), reason: txt(120).min(2), note: txt(500).optional() }),
   z.object({ action: z.literal('note'), note: txt(1000).min(2, 'Write a message.') }),
+  z.object({
+    action: z.literal('edit'),
+    name: txt(80).min(2, 'Add the customer’s name.'), phone: txt(20).min(7, 'Add a phone number.'), email: z.string().trim().toLowerCase().email('Enter a valid email.'),
+    address: txt(240).min(6, 'Add the address.'), landmark: txt(120).optional().nullable(), note: txt(500).optional().nullable(),
+    delivery_fee: z.number().int().min(0).max(1_000_000),
+    items: z.array(z.object({ pid: z.string().max(40).optional().nullable(), name: txt(120).min(1), size: txt(40).min(1), qty: z.number().int().min(1).max(999), price: z.number().int().min(0).max(10_000_000), kg: z.number().min(0).max(500).optional().nullable(), img: z.string().max(500).optional().nullable(), swaps: z.array(z.unknown()).optional().nullable(), was: z.number().optional().nullable() })).min(1, 'An order needs at least one item. To drop everything, cancel the order.').max(60),
+  }),
 ]);
-type O = Order & { stock_taken: boolean; customer_id: string | null; updated_at: string };
+type O = Order & { stock_taken: boolean; customer_id: string | null; updated_at: string; paid?: number | null };
 
 /** Take stock off (or put it back on) the exact size that was ordered. */
 async function stock(o: O, dir: -1 | 1) {
@@ -39,6 +46,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
   if (!o) return fail('Order not found.', 404);
   if (['pending', 'expired'].includes(o.status)) return fail('This order hasn’t been paid.');
   if (['refunded', 'cancelled'].includes(o.status) && b.action !== 'note') return fail('This order is closed.');
+  if (b.action === 'edit' && o.status === 'done') return fail('This order is delivered, so it can’t be changed. Use Refund if something was wrong.');
   const now = new Date().toISOString();
   // claim the order first: if two people act at once, only one gets through, before any stock or money moves
   const claimed = must(await db().from('orders').update({ updated_at: now }).eq('id', o.id).eq('updated_at', o.updated_at).select('id')) as unknown[];
@@ -67,7 +75,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
       log = `Marked the problem on ${o.id} as sorted`; break;
     case 'refund':
     case 'cancel': {
-      const done = (o.refunds || []).reduce((a, r) => a + r.amount, 0), left = o.total - done;
+      const done = (o.refunds || []).reduce((a, r) => a + r.amount, 0), left = (o.paid ?? o.total) - done;
       const full = b.action === 'cancel' || b.full;
       const amount = full ? left : (b.amount || 0);
       if (b.action === 'refund' && (amount <= 0 || amount > left)) return fail(`Enter an amount up to ${naira(left)}.`);
@@ -90,8 +98,27 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
     }
     case 'note':
       kind = 'note'; data = { note: b.note }; log = `Emailed ${o.name} about ${o.id}`; break;
+    case 'edit': {
+      // if stock was already taken off, put back the old items and take off the new ones
+      const items = b.items.map(it => ({ ...it, pid: it.pid || undefined, kg: it.kg || 0 }));
+      if (o.stock_taken) { await stock(o, 1); await stock({ ...o, items } as O, -1); }
+      const subtotal = items.reduce((a, it) => a + it.price * it.qty, 0);
+      const discount = Math.min(o.discount || 0, subtotal);
+      if (o.paid == null) upd.paid = o.total; // keep what they actually paid before the first change
+      Object.assign(upd, {
+        name: b.name, phone: b.phone.replace(/[^\d+]/g, ''), email: b.email, address: b.address, landmark: b.landmark || null, note: b.note || null,
+        items, subtotal, discount, delivery_fee: b.delivery_fee, total: subtotal - discount + b.delivery_fee,
+        kg: Math.round(items.reduce((a, it) => a + (it.kg || 0) * it.qty, 0) * 10) / 10,
+      });
+      const diff = subtotal - discount + b.delivery_fee - o.total;
+      log = `Edited ${o.id}${diff ? ` (total ${diff > 0 ? 'up' : 'down'} ${naira(Math.abs(diff))})` : ''}`;
+      break;
+    }
   }
-  const fresh = must(await db().from('orders').update(upd).eq('id', o.id).select('*')) as O[];
+  let res = await db().from('orders').update(upd).eq('id', o.id).select('*');
+  // the "paid" column comes with 2026-11-orders.sql; until it's run, save without it
+  if (res.error && /paid/.test(res.error.message) && 'paid' in upd) { delete upd.paid; res = await db().from('orders').update(upd).eq('id', o.id).select('*'); }
+  const fresh = must(res) as O[];
   let email: { ok: boolean; error?: string } | null = null;
   if (kind) email = await notifyOrder(fresh[0], kind, data);
   await logAct(me.name, log);

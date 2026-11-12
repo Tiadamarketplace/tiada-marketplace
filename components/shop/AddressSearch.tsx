@@ -5,7 +5,7 @@ import { field } from './ui';
 
 export type PlaceRef = { id: string; lat?: number | null; lng?: number | null; s?: string | null };
 type Sug = { id: string; main: string; secondary: string; lat?: number; lng?: number };
-export type Pick = { text: string; place: PlaceRef; ok: true; label: string; state: string; fee: number; days: string } | { text: string; place: PlaceRef; ok: false; label?: string; reason: string };
+export type Pick = { text: string; place: PlaceRef; ok: true; label: string; state: string; city: string; fee: number; days: string } | { text: string; place: PlaceRef; ok: false; label?: string; reason: string };
 
 const newSession = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
 
@@ -13,8 +13,9 @@ const newSession = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypt
  * Address box with map suggestions. As soon as the customer picks one, it asks the server
  * whether we deliver there: green with the fee, or a red note saying we don't reach that place yet.
  */
-export default function AddressSearch({ id, initial, onPick, invalid, showFee = true, placeholder }: {
+export default function AddressSearch({ id, initial, onPick, invalid, showFee = true, placeholder, boxLabel, state }: {
   id?: string; initial?: { text: string; place: PlaceRef | null } | null; onPick: (p: Pick | null, text: string) => void; invalid?: boolean; showFee?: boolean; placeholder?: string;
+  /** show as a checkout box with this label inside */ boxLabel?: string; /** the state the customer chose, to point suggestions there */ state?: string;
 }) {
   const [text, setText] = useState(initial?.text || '');
   const [list, setList] = useState<Sug[]>([]);
@@ -31,8 +32,8 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
   const choose = async (place: PlaceRef, label: string) => {
     skip.current = true; setText(label); setOpen(false); setList([]); setChecking(true);
     try {
-      const r = await api<{ ok: boolean; label?: string; state?: string; fee?: number; days?: string; reason?: string }>('/api/places', { json: { ...place, s: session.current } });
-      const p: Pick = r.ok ? { text: label, place: { ...place, s: session.current }, ok: true, label: r.label || '', state: r.state || '', fee: r.fee || 0, days: r.days || '' } : { text: label, place, ok: false, label: r.label, reason: r.reason || 'We don’t deliver there yet.' };
+      const r = await api<{ ok: boolean; label?: string; state?: string; city?: string; fee?: number; days?: string; reason?: string }>('/api/places', { json: { ...place, s: session.current } });
+      const p: Pick = r.ok ? { text: label, place: { ...place, s: session.current }, ok: true, label: r.label || '', state: r.state || '', city: r.city || '', fee: r.fee || 0, days: r.days || '' } : { text: label, place, ok: false, label: r.label, reason: r.reason || 'We don’t deliver there yet.' };
       setPick(p); onPick(p, label);
     } catch (e) {
       const p: Pick = { text: label, place, ok: false, reason: (e as Error).message || 'We couldn’t check that address. Please try again.' };
@@ -49,13 +50,13 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
     if (q.length < 3) { setList([]); return; }
     let on = true; setBusy(true);
     const t = setTimeout(() => {
-      api<{ list: Sug[] }>(`/api/places?q=${encodeURIComponent(q)}&s=${session.current}`)
+      api<{ list: Sug[] }>(`/api/places?q=${encodeURIComponent(q)}&s=${session.current}${state ? '&st=' + encodeURIComponent(state) : ''}`)
         .then(r => { if (on) { setList(r.list); setOpen(true); setHi(-1); } })
         .catch(() => on && setList([]))
         .finally(() => on && setBusy(false));
     }, 300);
     return () => { on = false; clearTimeout(t); };
-  }, [text]);
+  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const h = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
@@ -74,16 +75,17 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
 
   return (
     <div ref={box} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ position: 'relative' }}>
+      <div className={boxLabel ? `bx${bad ? ' bad' : ''}` : undefined} style={boxLabel ? undefined : { position: 'relative' }}>
         <input id={id} type="text" role="combobox" aria-expanded={open && list.length > 0} aria-controls={listId} aria-autocomplete="list" autoComplete="off" spellCheck={false}
-          value={text} placeholder={placeholder || 'Start typing your address, e.g. 12 Allen Avenue, Ikeja'}
-          onChange={e => { setText(e.target.value); if (pick) { setPick(null); onPick(null, e.target.value); } else onPick(null, e.target.value); }}
+          value={text} placeholder={boxLabel ? ' ' : placeholder || 'Start typing your address, e.g. 12 Allen Avenue, Ikeja'} aria-label={boxLabel}
+          onChange={e => { setText(e.target.value); if (pick) setPick(null); onPick(null, e.target.value); }}
           onFocus={() => list.length && setOpen(true)} onKeyDown={key} aria-invalid={!!bad}
-          style={{ ...field, paddingRight: 40, borderColor: bad ? '#B8402B' : pick?.ok ? '#2E7D4F' : '#DCD6CA' }} />
-        {(busy || checking) && <span aria-hidden="true" style={{ position: 'absolute', right: 14, top: 16, width: 18, height: 18, borderRadius: '50%', border: '2px solid #E6E0D2', borderTopColor: '#0B3A23', animation: 'spin .8s linear infinite' }} />}
+          style={boxLabel ? { paddingRight: 44 } : { ...field, paddingRight: 40, borderColor: bad ? '#B8402B' : pick?.ok ? '#2E7D4F' : '#DCD6CA' }} />
+        {boxLabel && <span className="bx-l" aria-hidden="true">{boxLabel}</span>}
+        {(busy || checking) && <span aria-hidden="true" style={{ position: 'absolute', right: 14, top: boxLabel ? 19 : 16, width: 18, height: 18, borderRadius: '50%', border: '2px solid #E6E0D2', borderTopColor: '#0B3A23', animation: 'spin .8s linear infinite' }} />}
       </div>
       {open && list.length > 0 && (
-        <div id={listId} role="listbox" className="drop-in" style={{ position: 'absolute', left: 0, right: 0, top: 54, zIndex: 40, background: '#FFFFFF', borderRadius: 6, border: '1px solid #ECE8DF', boxShadow: '0 20px 50px rgba(17,32,23,.16)', padding: 6, maxHeight: 340, overflowY: 'auto' }}>
+        <div id={listId} role="listbox" className="drop-in" style={{ position: 'absolute', left: 0, right: 0, top: boxLabel ? 62 : 54, zIndex: 40, background: '#FFFFFF', borderRadius: 6, border: '1px solid #ECE8DF', boxShadow: '0 20px 50px rgba(17,32,23,.16)', padding: 6, maxHeight: 340, overflowY: 'auto' }}>
           {list.map((s, i) => (
             <button key={s.id + i} type="button" role="option" aria-selected={hi === i} className="ub drop-row" onMouseDown={e => e.preventDefault()} onClick={() => choose({ id: s.id, lat: s.lat, lng: s.lng }, [s.main, s.secondary].filter(Boolean).join(', '))}
               style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 10px', borderRadius: 4, background: hi === i ? '#F6F2E9' : 'transparent' }}>
