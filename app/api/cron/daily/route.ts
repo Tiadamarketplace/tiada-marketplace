@@ -1,4 +1,5 @@
 import { db, must } from '@/lib/db';
+import { sweepCarts, closeIdleChats } from '@/lib/carts';
 import { ownerDaily, ownerLowStock, notPaid, Order } from '@/lib/notify';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,9 @@ export async function GET(req: Request) {
     }
     out.expired = stale.length; out.nudged = nudged;
   } catch (e) { out.expiredError = (e as Error).message; }
+
+  // cart reminders that are due, and chats nobody is in any more
+  try { out.carts = await sweepCarts(); await closeIdleChats(); } catch (e) { out.cartError = (e as Error).message; }
 
   // 2. low stock
   const low: { name: string; meta: string; waiting: number }[] = [];

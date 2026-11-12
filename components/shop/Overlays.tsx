@@ -197,51 +197,80 @@ export function Lightbox({ src, name, onClose }: { src: string; name: string; on
 }
 
 type Msg = { id: number; who: string; text: string };
-const BOT: Record<string, string> = {
-  track: 'Put your order code (it starts with TD-) on the Track page and you’ll see where it is. Signed in? Your orders are under My account.',
-  days: 'We deliver in Lagos and Oyo State. Type your address at checkout and you’ll see the fee before you pay: it depends on the distance. Lagos orders usually arrive the next day; Oyo orders go out from our Iseyin branch and usually take 1 to 3 days.',
-  swap: 'On any combo, tap “Swap items” and change what you don’t want. The price stays the same.',
-  person: 'Okay, I’ve asked the team to join this chat. Someone will reply here shortly.',
+const CHIPS: [string, string][] = [['Where’s my order?', 'Where is my order?'], ['Delivery fees', 'How much is delivery to my area?'], ['What’s in the combos?', 'What combos do you have?'], ['Talk to a person', 'I would like to talk to a person, please.']];
+const KEY = 'tiada_chat';
+/** after this long with no messages, the next visit starts a fresh chat (the server closes it after an hour too) */
+const IDLE = 30 * 60000;
+const hello = (name?: string | null) => {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return `${g}${name ? ', ' + name.split(' ')[0] : ''}! 👋 I’m the Tiada helper. Ask me about prices, sizes, delivery fees or your order, or tap one below. If I can’t help, I’ll bring in someone from our team.`;
 };
 export function Chat() {
-  const { chatOpen, setChatOpen, notify, data } = useShop();
-  const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, who: 'bot', text: 'Hi! How can we help today?' }]);
+  const { chatOpen, setChatOpen, notify, data, user } = useShop();
+  const greet = (): Msg => ({ id: 0, who: 'bot', text: hello(user?.name) });
+  const [msgs, setMsgs] = useState<Msg[]>(() => [greet()]);
   const [draft, setDraft] = useState('');
-  const sess = useRef<{ id: string; token: string } | null>(null);
+  const [typing, setTyping] = useState(false);
+  const [status, setStatus] = useState('bot');
+  const sess = useRef<{ id: string; token: string; at?: number } | null>(null);
   const last = useRef(0);
   const box = useRef<HTMLDivElement>(null);
-  useEffect(() => { try { const s = localStorage.getItem('tiada_chat'); if (s) sess.current = JSON.parse(s); } catch { /* */ } }, []);
-  useEffect(() => { box.current?.scrollTo({ top: 1e6, behavior: 'smooth' }); }, [msgs, chatOpen]);
+  const save = () => { try { if (sess.current) localStorage.setItem(KEY, JSON.stringify({ ...sess.current, at: Date.now() })); else localStorage.removeItem(KEY); } catch { /* */ } };
+  useEffect(() => {
+    try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && Date.now() - (s.at || 0) < IDLE) sess.current = s; else localStorage.removeItem(KEY); } catch { /* */ }
+  }, []);
+  // greet by name once we know who's signed in, if the chat hasn't started
+  useEffect(() => { setMsgs(m => (m.length === 1 && m[0].id === 0 ? [greet()] : m)); }, [user?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { box.current?.scrollTo({ top: 1e6, behavior: 'smooth' }); }, [msgs, chatOpen, typing]);
 
+  const reset = (note?: string) => {
+    sess.current = null; last.current = 0; save(); setStatus('bot');
+    setMsgs(m => note ? m.concat([{ id: -Date.now(), who: 'sys', text: note }]) : m);
+  };
   const start = async () => {
     if (sess.current) return sess.current;
     const s = await api<{ id: string; token: string }>('/api/chat', { json: { action: 'start' } });
-    sess.current = s; try { localStorage.setItem('tiada_chat', JSON.stringify(s)); } catch { /* */ }
+    sess.current = s; last.current = 0; save();
     return s;
   };
   const poll = async () => {
     const s = sess.current; if (!s) return;
+    if (Date.now() - (s.at || Date.now()) > IDLE) { reset('This chat ended after a while with no messages. Type below to start again.'); return; }
     try {
       const r = await api<{ status: string; messages: Msg[] }>(`/api/chat?id=${s.id}&token=${s.token}&after=${last.current}`);
-      if (r.messages.length) { last.current = r.messages[r.messages.length - 1].id; setMsgs(m => { const seen = new Set(m.map(x => x.id)); return m.concat(r.messages.filter(x => !seen.has(x.id))); }); }
-      if (r.status === 'closed') { sess.current = null; localStorage.removeItem('tiada_chat'); }
-    } catch (e) { if ((e as { status?: number }).status === 404) { sess.current = null; try { localStorage.removeItem('tiada_chat'); } catch { /* */ } } }
+      if (r.messages.length) {
+        last.current = r.messages[r.messages.length - 1].id;
+        setMsgs(m => { const seen = new Set(m.map(x => x.id)); const fresh = r.messages.filter(x => !seen.has(x.id)); const mine = new Set(fresh.filter(x => x.who === 'me').map(x => x.text)); return m.filter(x => !(x.id < 0 && x.who === 'me' && mine.has(x.text))).concat(fresh); });
+        if (r.messages.some(x => x.who === 'agent' || x.who === 'sys')) setTyping(false);
+      }
+      setStatus(r.status);
+      if (r.status === 'closed') reset();
+    } catch (e) { if ((e as { status?: number }).status === 404) reset(); }
   };
   useEffect(() => { if (!chatOpen) return; poll(); const t = setInterval(poll, 4000); return () => clearInterval(t); }, [chatOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = async (who: 'me' | 'bot', text: string) => {
-    const s = await start();
-    const r = await api<{ id: number }>('/api/chat', { json: { action: 'send', id: s.id, token: s.token, who, text } });
-    last.current = Math.max(last.current, r.id);
-    setMsgs(m => m.concat([{ id: r.id, who, text }]));
-  };
-  const say = async (text: string, topic?: string) => {
+  const say = async (text: string, again = true): Promise<void> => {
+    const temp = -Date.now();
+    setMsgs(m => m.concat([{ id: temp, who: 'me', text }]));
+    setTyping(true);
+    const t0 = Date.now();
     try {
-      await send('me', text);
-      if (topic) { await send('bot', BOT[topic]); if (topic === 'person' && sess.current) await api('/api/chat', { json: { action: 'escalate', ...sess.current } }); }
-    } catch (e) { notify('err', 'Your message didn’t send.', (e as Error).message); }
+      const s = await start();
+      const r = await api<{ status: string }>('/api/chat', { json: { action: 'ask', id: s.id, token: s.token, text } });
+      sess.current = { ...s, at: Date.now() }; save();
+      if (Date.now() - t0 < 900) await new Promise(res => setTimeout(res, 900 - (Date.now() - t0))); // let the dots show a moment
+      await poll();
+      setStatus(r.status);
+    } catch (e) {
+      const st = (e as { status?: number }).status;
+      setMsgs(m => m.filter(x => x.id !== temp));
+      if ((st === 409 || st === 404) && again) { reset(); return say(text, false); }
+      notify('err', 'Your message didn’t send.', (e as Error).message);
+    } finally { setTyping(false); }
   };
-  const submit = () => { const t = draft.trim(); if (!t) return; setDraft(''); say(t); };
+  const submit = () => { const t = draft.trim(); if (!t || typing) return; setDraft(''); say(t); };
+  const waiting = status === 'waiting' || status === 'agent';
 
   return (
     <>
@@ -249,17 +278,19 @@ export function Chat() {
         <div role="dialog" aria-label="Tiada help" className="chat-panel pop" style={{ position: 'fixed', right: 20, bottom: 92, zIndex: 66, width: 'min(370px, calc(100vw - 24px))', height: 'min(520px, calc(100vh - 140px))', background: '#FFFFFF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ background: '#0B3A23', color: '#FFFFFF', padding: '16px 14px 16px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: '#FBF9F4', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><img src="/logo-icon.png" alt="" style={{ width: 30, height: 'auto' }} /></span>
-            <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 15, fontWeight: 600 }}>Tiada help</span><span style={{ fontSize: 12, color: 'rgba(236,241,237,0.8)' }}>We usually reply within minutes</span></span>
+            <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 15, fontWeight: 600 }}>Tiada help</span><span style={{ fontSize: 12, color: 'rgba(236,241,237,0.8)' }}>{status === 'agent' ? 'Chatting with our team' : waiting ? 'Bringing in our team…' : 'Replies straight away'}</span></span>
             <button type="button" className="ub" aria-label="Close help" onClick={() => setChatOpen(false)} style={{ width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X c="#FFFFFF" /></button>
           </div>
           <div ref={box} className="thin" style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10, background: '#FBF9F4' }}>
             {msgs.map(m => m.who === 'sys'
               ? <div key={m.id} style={{ alignSelf: 'center', fontSize: 12, color: '#4E5A53' }}>{m.text}</div>
               : <div key={m.id} className="fade" style={{ alignSelf: m.who === 'me' ? 'flex-end' : 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 14, background: m.who === 'me' ? '#0B3A23' : '#FFFFFF', color: m.who === 'me' ? '#FFFFFF' : '#1F2A23', fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{m.text}</div>)}
-            {msgs.length <= 1 && (
+            {typing && !waiting && <div aria-label="Tiada is typing" role="status" className="fade" style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: 14, background: '#FFFFFF' }}><span className="typing"><i /><i /><i /></span></div>}
+            {status === 'waiting' && <div className="fade" style={{ alignSelf: 'center', textAlign: 'center', fontSize: 12.5, lineHeight: 1.5, color: '#4E5A53', padding: '6px 10px' }}>Waiting for someone from the team. Keep this chat open; you can also reach us on WhatsApp below.</div>}
+            {msgs.length <= 1 && !typing && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                {[['Where’s my order?', 'track'], ['Delivery and fees', 'days'], ['Swapping combo items', 'swap'], ['Talk to a person', 'person']].map(([l, t]) => (
-                  <button key={t} type="button" className="ub chip" onClick={() => say(l, t)} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', background: '#FFFFFF', fontSize: 13, display: 'flex', alignItems: 'center' }}>{l}</button>
+                {CHIPS.map(([l, t]) => (
+                  <button key={l} type="button" className="ub chip" onClick={() => say(t)} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', background: '#FFFFFF', fontSize: 13, display: 'flex', alignItems: 'center' }}>{l}</button>
                 ))}
               </div>
             )}
@@ -267,7 +298,7 @@ export function Chat() {
           <a href={waLink(data.business.whatsapp)} target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 42, background: '#E9F5EE', color: '#0B3A23', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Prefer WhatsApp? {data.business.phone}</a>
           <form onSubmit={e => { e.preventDefault(); submit(); }} style={{ display: 'flex', gap: 8, padding: 10, borderTop: '1px solid #ECE8DF' }}>
             <label htmlFor="chat-in" style={{ position: 'absolute', left: -9999 }}>Message</label>
-            <input id="chat-in" type="text" value={draft} onChange={e => setDraft(e.target.value)} placeholder="Type a message…" maxLength={1500} style={{ flex: 1, minWidth: 0, height: 44, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 14 }} />
+            <input id="chat-in" type="text" value={draft} onChange={e => setDraft(e.target.value)} placeholder={typing ? 'Typing…' : 'Type a message…'} maxLength={1500} enterKeyHint="send" style={{ flex: 1, minWidth: 0, height: 44, padding: '0 14px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 14 }} />
             <button type="submit" className="ub btn-solid" aria-label="Send" style={{ width: 44, height: 44, borderRadius: '50%', background: '#0B3A23', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
           </form>
         </div>

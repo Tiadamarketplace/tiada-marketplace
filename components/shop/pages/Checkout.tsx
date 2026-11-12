@@ -68,6 +68,13 @@ export default function Checkout() {
     }, 250);
     return () => { on = false; clearTimeout(t); };
   }, [itemsKey, f.place?.id, f.place?.lat, f.speed, codeApplied, f.email]); // eslint-disable-line react-hooks/exhaustive-deps
+  // guests: once a full email is typed, keep a copy of the cart for one reminder email if they don't finish
+  const { cart } = useShop();
+  useEffect(() => {
+    if (user || !/^\S+@\S+\.\S+$/.test(f.email.trim()) || !cart.length) return;
+    const t = setTimeout(() => api('/api/cart', { json: { items: cart, email: f.email.trim(), name: f.name.trim() || undefined } }).catch(() => {}), 1500);
+    return () => clearTimeout(t);
+  }, [f.email, itemsKey, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sub = priced.reduce((a, l) => a + l.line, 0);
   const good = spot?.ok ? spot : null;

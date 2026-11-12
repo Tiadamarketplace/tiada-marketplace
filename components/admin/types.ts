@@ -1,3 +1,5 @@
+import type { Popup } from '@/lib/popups';
+export type { Popup };
 export type Size = { label: string; price: number | null; sale: number | null; kg: number; na: boolean; stock?: number | null };
 export type Product = { id: string; name: string; cat: string; items: string[] | null; sizes: Size[]; status: string; stock: number; low: number; hidden: boolean; img: string | null; sort: number; updated_at?: string };
 export type Item = { pid?: string; name: string; size: string; qty: number; price: number; img?: string | null; kg?: number | null; was?: number | null; swaps?: { from: string; to: string }[] };
@@ -25,7 +27,7 @@ export type Data = {
   settings: { oyo: Partial<import('@/lib/regions-core').RegionCfg> | null; lagos: Partial<import('@/lib/regions-core').RegionCfg> | null; fees: Fees; business: Partial<Business>; hours: [string, boolean, string, string][]; alerts: Partial<Alerts>; policies: Partial<{ returns: string; delivery: string }>; slider: Partial<{ on: boolean; seconds: number }> };
   openStates: string[];
   vouchers: Voucher[]; contact: Contact[]; waiting: Record<string, number>; subscribers: number;
-  staff: Staff[]; riders: Rider[]; testMode: boolean; testPending: { id: string; name: string; total: number; created_at: string }[]; now: number;
+  staff: Staff[]; riders: Rider[]; popups: Popup[]; testMode: boolean; testPending: { id: string; name: string; total: number; created_at: string }[]; now: number;
 };
 export type Rider = { id: string; name: string; phone: string | null; token: string; active: boolean; created_at: string };
-export type Sec = 'dash' | 'orders' | 'products' | 'banners' | 'discounts' | 'emails' | 'reviews' | 'chat' | 'customers' | 'messages' | 'settings' | 'delivery' | 'team' | 'guide' | 'riders';
+export type Sec = 'dash' | 'orders' | 'products' | 'banners' | 'discounts' | 'emails' | 'reviews' | 'chat' | 'customers' | 'messages' | 'settings' | 'delivery' | 'team' | 'guide' | 'riders' | 'popups';

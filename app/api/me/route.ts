@@ -1,3 +1,4 @@
+import { maybeSweep } from '@/lib/carts';
 import { z } from 'zod';
 import { handle, ok } from '@/lib/http';
 import { db, must } from '@/lib/db';
@@ -6,6 +7,7 @@ import { clearSession, readSession, setSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 export const GET = handle(async () => {
+  maybeSweep();
   const c = await currentCustomer();
   if (!c) return ok({ user: null });
   // stay signed in while you keep using the shop: renew the 30-day sign-in once a day

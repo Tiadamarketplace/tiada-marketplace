@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { requireStaff } from '@/lib/staff';
 
 export const dynamic = 'force-dynamic';
-const Body = z.object({ dataUrl: z.string().max(4_000_000), folder: z.enum(['products', 'banners']).default('products') });
+const Body = z.object({ dataUrl: z.string().max(4_000_000), folder: z.enum(['products', 'banners', 'popups']).default('products') });
 
 /** Saves a photo (already cropped in the browser) to Supabase Storage and returns its public link. */
 export const POST = handle(async (req: Request) => {

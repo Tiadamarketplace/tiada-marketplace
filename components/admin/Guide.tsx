@@ -74,10 +74,11 @@ const PARTS: Part[] = [
     ],
   },
   {
-    id: 'sell', title: 'Banners, discount codes, emails and reviews', open: 'banners',
+    id: 'sell', title: 'Banners, pop-ups, discount codes, emails and reviews', open: 'banners',
     intro: 'Tools for getting more orders.',
     steps: [
       ['Banners', 'The slides in the middle of the home page. Each needs a wide photo, a title and where it links to. Use the switch to show or hide one, and the arrows to change the order.'],
+      ['Pop-ups', 'A picture that pops up over the shop: a sale, a discount code, a holiday notice. Upload a square or upright picture, choose who sees it (everyone, visitors who aren’t signed in, or signed-in customers), how often (once, once a day or every visit), and when it starts and ends. It switches itself off at the end time.'],
       ['Discount codes', 'Make a code like FIRST10: a percentage or an amount off, a minimum order, an end date, and whether each customer can use it once. Pause it with the switch.'],
       ['Emails', 'Send news, a deal or a restock note to customers who agreed to get emails. They can unsubscribe from any email. Only the owner can send.'],
       ['Reviews', 'New reviews wait for you. Approve the real ones and they show on the product page.'],
@@ -87,7 +88,10 @@ const PARTS: Part[] = [
     id: 'customers', title: 'Chat, messages and customers', open: 'chat',
     intro: 'Where customers talk to you.',
     steps: [
-      ['Chat', 'When the website helper can’t answer, customers can ask for a person. Their questions wait here, and you get an email. Reply here and they see it in the chat on the website while it’s open; if they’ve left, reply by email or WhatsApp.'],
+      ['The chat helper', 'The chat on the website answers customers straight away: prices, sizes, delivery fees, combos and where their order is (from the order code). It only uses your real prices and settings, so change a price in Products and the helper knows. It never shares delivery codes, addresses or card details.'],
+      ['When it hands over', 'If a customer asks for a person, has a payment or delivery problem, or the helper can’t answer, it tells them someone will join and the chat appears here with an email to you. Reply here and they see it in the chat on the website while it’s open; if they’ve left, reply by email or WhatsApp.'],
+      ['Quiet chats close', 'A chat with no messages for an hour closes by itself. The customer just starts a new one.'],
+      ['Cart reminders', 'If a signed-in customer, or someone who typed their email at checkout, leaves items in their cart, they get one friendly email about 3 hours later with a button that puts the items back. Never more than one per cart, and never if they paid.'],
       ['Website messages', 'Sent from the Contact us form on the Help page. Reply by email or WhatsApp, then mark it handled.'],
       ['Customers', 'Everyone with an account or an order: their orders, how much they’ve spent, and how to reach them.'],
     ],

@@ -1,3 +1,4 @@
+import { clearCart } from './carts';
 import { randomInt } from 'crypto';
 import { db, must } from './db';
 import { notifyOrder, ownerNewOrder, Order } from './notify';
@@ -19,6 +20,7 @@ export async function markPaid(orderId: string, amountKobo: number, paidAt?: str
   await countVoucherUse(paid.voucher).catch(e => console.error('voucher count', e));
   await notifyOrder(paid, 'placed');
   await ownerNewOrder(paid).catch(e => console.error('owner order email', e));
+  await clearCart(paid.email).catch(() => {});
   return { ok: true };
 }
 

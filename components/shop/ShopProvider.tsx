@@ -54,6 +54,27 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
     window.addEventListener('pagehide', save); return () => window.removeEventListener('pagehide', save);
   }, [ready]);
 
+  // signed in: keep a copy of the cart on our side, for the one "you left something in your cart" email
+  const synced = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !user) return;
+    const now = JSON.stringify(cart);
+    if (synced.current === now) return;
+    const t = setTimeout(() => { synced.current = now; api('/api/cart', { json: { items: cart } }).catch(() => { synced.current = null; }); }, 2500);
+    return () => clearTimeout(t);
+  }, [cart, user, ready]);
+  // the link in that email (?cart=…) puts the saved items back
+  useEffect(() => {
+    if (!ready) return;
+    const u = new URL(window.location.href); const t = u.searchParams.get('cart');
+    if (!t) return;
+    u.searchParams.delete('cart'); window.history.replaceState(null, '', u.pathname + u.search + u.hash);
+    api<{ items: CartLine[] }>('/api/cart?t=' + encodeURIComponent(t)).then(r => {
+      setCart(c => { const m = new Map(c.map(x => [x.key, x])); for (const l of r.items) { const prev = m.get(l.key); m.set(l.key, prev ? { ...prev, qty: Math.max(prev.qty, l.qty) } : l); } return Array.from(m.values()); });
+      setCartOpen(true);
+    }).catch(() => notify('warn', 'That saved cart has expired.', 'Your items may still be in your cart, or add them again.'));
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const dismiss = useCallback((id: number) => { clearTimeout(timers.current[id]); setNotes(n => n.filter(x => x.id !== id)); }, []);
   const notify = useCallback<Ctx['notify']>((kind, title, text, action) => {
     const id = ++nid.current; const dur = kind === 'err' ? 0 : action ? 7000 : 4500;
