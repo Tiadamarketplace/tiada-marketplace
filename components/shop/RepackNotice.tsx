@@ -8,6 +8,7 @@ const KEY = 'tiada_repack_ok_v1';
 /** Shown on a customer's first visit: Tiada repacks from bulk, so items arrive in Tiada bags, not the brand's own box. */
 export default function RepackNotice() {
   const [open, setOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     let seen = false; try { seen = !!localStorage.getItem(KEY); } catch { /* private mode: show it */ }
     if (seen) return;
@@ -15,10 +16,10 @@ export default function RepackNotice() {
     return () => clearTimeout(t);
   }, []);
   useEffect(() => { document.body.style.overflow = open ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [open]);
-  const accept = () => { try { localStorage.setItem(KEY, new Date().toISOString()); } catch { /* */ } setOpen(false); };
+  const accept = () => { try { localStorage.setItem(KEY, new Date().toISOString()); } catch { /* */ } setLeaving(true); setTimeout(() => { setOpen(false); setLeaving(false); }, 300); };
   if (!open) return null;
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-labelledby="rp-h" aria-describedby="rp-b" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'rgba(17,32,23,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'fadeIn .25s ease' }}>
+    <div role="dialog" aria-modal="true" aria-labelledby="rp-h" aria-describedby="rp-b" className={'dr-back' + (leaving ? ' out' : '')} style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'rgba(17,32,23,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div className="pop rp-card" style={{ width: 'min(760px, 100%)', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', background: '#FFFFFF', borderRadius: 6, display: 'flex', boxShadow: '0 30px 80px rgba(0,0,0,0.3)' }}>
         <div className="rp-pic" style={{ position: 'relative', flex: '0 0 300px', background: '#F7F4EC' }}>
           <img src="/img/repack.jpg" alt="Oats repacked into a clear Tiada Marketplace bag with the Tiada label" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />

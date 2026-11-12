@@ -9,6 +9,7 @@ import { naira, nowPrice, inStock, defaultSize, api, waLink } from '@/lib/shop-c
 import { IClose, ICheck } from './Icons';
 import { ProductImage } from './ProductCard';
 import { BusyButton } from './ui';
+import { useLeave } from './useLeave';
 const Spin = () => <span aria-hidden="true" style={{ width: 18, height: 18, flex: 'none', display: 'inline-block', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFFFFF', animation: 'spin .8s linear infinite' }} />;
 
 const X = ({ c = '#1F2A23', s = 18 }: { c?: string; s?: number }) => <IClose size={s} color={c} />;
@@ -25,12 +26,14 @@ export function CartDrawer() {
   const { cartOpen, setCartOpen, priced, subtotal, setQty, remove, count } = useShop();
   const close = () => setCartOpen(false);
   useEscape(cartOpen, close);
-  if (!cartOpen) return null;
+  const lv = useLeave(cartOpen);
+  if (!lv.show) return null;
+  const o = lv.out ? ' out' : '';
   const go = (h: string) => { close(); window.location.assign(h); };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 70 }}>
-      <button type="button" className="ub" aria-label="Close cart" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />
-      <aside aria-label="Your cart" role="dialog" aria-modal="true" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(420px, 92vw)', background: '#FFFFFF', display: 'flex', flexDirection: 'column', animation: 'slideR .32s cubic-bezier(.2,.8,.2,1)' }}>
+      <button type="button" className={'ub dr-back' + o} aria-label="Close cart" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)' }} />
+      <aside aria-label="Your cart" role="dialog" aria-modal="true" className={'dr-right' + o} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(420px, 92vw)', background: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 12px 14px 24px', borderBottom: '1px solid #ECE8DF' }}>
           <h2 style={{ margin: 0, fontWeight: 700, fontSize: 20 }}>Your cart{count ? ` (${count})` : ''}</h2>
           <button type="button" className="ub icn" aria-label="Close cart" onClick={close} style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X s={20} /></button>
@@ -83,21 +86,23 @@ export function Stepper({ qty, dec, inc, h = 38 }: { qty: number; dec: () => voi
 
 export function ChooseSize() {
   const { choose, setChoose, byId, addLive, adding } = useShop();
-  const p = choose ? byId[choose] : null;
+  const lv = useLeave(choose);
+  const p = lv.last ? byId[lv.last] : null;
   const [i, setI] = useState(0);
   const [qty, setQ] = useState(1);
-  useEffect(() => { if (p) { setI(defaultSize(p)); setQ(1); } }, [p]);
+  useEffect(() => { if (choose && byId[choose]) { setI(defaultSize(byId[choose])); setQ(1); } }, [choose]); // eslint-disable-line react-hooks/exhaustive-deps
   const close = () => setChoose(null);
-  useEscape(!!p, close);
-  if (!p) return null;
+  useEscape(!!choose, close);
+  if (!lv.show || !p) return null;
+  const o = lv.out ? ' out' : '';
   const s = p.sizes[i];
   const ok = s && inStock(p, s);
   const cap = s?.left != null ? s.left : 50;
   const details = () => { close(); window.location.assign('/p/' + p.id); };
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 75 }}>
-      <button type="button" className="ub" aria-label="Close" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />
-      <div role="dialog" aria-modal="true" aria-label={`Choose a size of ${p.name}`} className="sheet pop" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'min(560px, 92vw)', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: 8, padding: 24, display: 'flex', flexDirection: 'column', gap: 18, boxShadow: '0 30px 80px rgba(17,32,23,0.25)' }}>
+      <button type="button" className={'ub dr-back' + o} aria-label="Close" onClick={close} style={{ position: 'absolute', inset: 0, width: '100%', background: 'rgba(17,32,23,0.42)' }} />
+      <div role="dialog" aria-modal="true" aria-label={`Choose a size of ${p.name}`} className={'sheet dr-pop' + o} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'min(560px, 92vw)', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: 8, padding: 24, display: 'flex', flexDirection: 'column', gap: 18, boxShadow: '0 30px 80px rgba(17,32,23,0.25)' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <Thumb pid={p.id} size={92} />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -275,11 +280,12 @@ export function Chat() {
   };
   const submit = () => { const t = draft.trim(); if (!t || typing) return; setDraft(''); say(t); };
   const waiting = status === 'waiting' || status === 'agent';
+  const chatLv = useLeave(chatOpen, 280);
 
   return (
     <>
-      {chatOpen && (
-        <div role="dialog" aria-label="Tiada help" className="chat-panel pop" style={{ position: 'fixed', right: 20, bottom: 92, zIndex: 66, width: 'min(370px, calc(100vw - 24px))', height: 'min(520px, calc(100vh - 140px))', background: '#FFFFFF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {chatLv.show && (
+        <div role="dialog" aria-label="Tiada help" className={'chat-panel dr-chat' + (chatLv.out ? ' out' : '')} style={{ position: 'fixed', right: 20, bottom: 92, zIndex: 66, width: 'min(370px, calc(100vw - 24px))', height: 'min(520px, calc(100vh - 140px))', background: '#FFFFFF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ background: '#0B3A23', color: '#FFFFFF', padding: '16px 14px 16px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: '#FBF9F4', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><img src="/logo-icon.png" alt="" style={{ width: 30, height: 'auto' }} /></span>
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 15, fontWeight: 600 }}>Tiada help</span><span style={{ fontSize: 12, color: 'rgba(236,241,237,0.8)' }}>{status === 'agent' ? 'Chatting with our team' : waiting ? 'Bringing in our team…' : 'Replies straight away'}</span></span>

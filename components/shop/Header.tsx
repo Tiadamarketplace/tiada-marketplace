@@ -3,6 +3,7 @@ import Link from '@/components/shop/Link';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from './ShopProvider';
+import { useLeave } from './useLeave';
 import { AISLES, naira, minPrice, aisleLabel, waLink, isCombo, whereWeDeliver } from '@/lib/shop-client';
 import { IBag, IChevron, IClose, IMenu, ISearch, IUser, IWhatsApp } from './Icons';
 
@@ -12,6 +13,7 @@ const MEGA = [...AISLES.map(a => ({ id: a.id, label: a.label, lower: a.lower }))
 export default function Header() {
   const { data, count, setCartOpen, user, added } = useShop();
   const [menu, setMenu] = useState(false);
+  const menuLv = useLeave(menu);
   const [sub, setSub] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [focus, setFocus] = useState(false);
@@ -107,10 +109,10 @@ export default function Header() {
         </nav>
       </header>
 
-      {menu && (
+      {menuLv.show && (
         <div role="dialog" aria-modal="true" aria-label="Menu" style={{ position: 'fixed', inset: 0, zIndex: 70 }}>
-          <div onClick={() => setMenu(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(17,32,23,0.45)', animation: 'fadeIn .2s ease' }} />
-          <div className="thin" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(360px, 88vw)', background: '#FFFFFF', overflowY: 'auto', animation: 'slideL .3s cubic-bezier(.2,.8,.2,1)', display: 'flex', flexDirection: 'column' }}>
+          <div className={'dr-back' + (menuLv.out ? ' out' : '')} onClick={() => setMenu(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(17,32,23,0.45)' }} />
+          <div className={'thin dr-left' + (menuLv.out ? ' out' : '')} style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(360px, 88vw)', background: '#FFFFFF', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 10px 10px 20px', borderBottom: '1px solid #ECE8DF' }}>
               <img src="/logo-sm.png" alt="Tiada Marketplace" style={{ height: 46 }} />
               <button type="button" className="ub icn" aria-label="Close menu" onClick={() => setMenu(false)} style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IClose /></button>

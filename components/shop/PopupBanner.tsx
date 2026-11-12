@@ -21,6 +21,7 @@ function due(p: PubPopup) {
 export default function PopupBanner() {
   const { data, user, userReady } = useShop();
   const [p, setP] = useState<PubPopup | null>(null);
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     if (!userReady) return;
     const list = (data.popups || []).filter(x => (x.audience === 'all' || (x.audience === 'customers') === !!user) && Date.parse(x.ends_at) > Date.now() && due(x));
@@ -38,7 +39,7 @@ export default function PopupBanner() {
   const close = () => {
     if (!p) return;
     if (p.freq === 'visit') put(sessionStorage, seenKey(p.id), '1'); else put(localStorage, seenKey(p.id), String(Date.now()));
-    setP(null);
+    setLeaving(true); setTimeout(() => { setP(null); setLeaving(false); }, 300);
   };
   useEffect(() => {
     if (!p) return;
@@ -50,7 +51,7 @@ export default function PopupBanner() {
   const go = () => { close(); if (p.href) { if (/^https:/.test(p.href)) window.open(p.href, '_blank', 'noopener'); else window.location.assign(p.href); } };
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={p.title} onClick={e => { if (e.target === e.currentTarget) close(); }} style={{ position: 'fixed', inset: 0, zIndex: 94, background: 'rgba(17,32,23,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'fadeIn .25s ease' }}>
+    <div role="dialog" aria-modal="true" aria-label={p.title} onClick={e => { if (e.target === e.currentTarget) close(); }} style={{ position: 'fixed', inset: 0, zIndex: 94, background: 'rgba(17,32,23,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} className={'dr-back' + (leaving ? ' out' : '')}>
       <div className="pop" style={{ position: 'relative', width: p.img ? 'min(480px, 100%)' : 'min(400px, 100%)', maxHeight: 'calc(100vh - 32px)', display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: 8, overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.35)' }}>
         <button type="button" className="ub" autoFocus onClick={close} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.94)', boxShadow: '0 2px 10px rgba(0,0,0,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F2A23" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>

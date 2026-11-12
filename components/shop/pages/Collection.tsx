@@ -2,6 +2,7 @@
 import Link from '@/components/shop/Link';
 import { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../ShopProvider';
+import { useLeave } from '../useLeave';
 import ProductCard from '../ProductCard';
 import { AISLE_COPY } from '@/lib/aisles';
 import { minPrice, maxOff, isSoldOut } from '@/lib/shop-client';
@@ -26,6 +27,7 @@ export default function Collection({ aisle, q = '' }: { aisle: string; q?: strin
   const [list, setList] = useState(false);
   const [pg, setPg] = useState(1);
   const [open, setOpen] = useState(false);
+  const fLv = useLeave(open);
   useEffect(() => { setA(aisle); setPg(1); }, [aisle, q]);
   useEffect(() => { try { setList(localStorage.getItem('tiada_view') === 'list'); } catch { /* */ } }, []);
   useEffect(() => { document.body.style.overflow = open ? 'hidden' : ''; }, [open]);
@@ -62,8 +64,8 @@ export default function Collection({ aisle, q = '' }: { aisle: string; q?: strin
         <p style={{ margin: '10px auto 0', maxWidth: 560, fontSize: 14.5, lineHeight: 1.65, color: '#4E5A53' }}>{q ? `${total} product${total === 1 ? '' : 's'} found` : AISLE_COPY[aisle][1]}</p>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 40, marginTop: 28 }}>
-        {open && <button type="button" className="ub" aria-label="Close filters" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 71, width: '100%', background: 'rgba(17,32,23,0.42)', animation: 'fadeIn .2s' }} />}
-        <aside aria-label="Filters" className={'sidebar thin' + (open ? ' open' : '')}>
+        {fLv.show && <button type="button" className={'ub dr-back hide-wide' + (fLv.out ? ' out' : '')} aria-label="Close filters" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 71, width: '100%', background: 'rgba(17,32,23,0.42)' }} />}
+        <aside aria-label="Filters" className={'sidebar thin' + (fLv.show ? ' open' : '') + (fLv.out ? ' out' : '')}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
             <span style={{ fontSize: 16, fontWeight: 600 }}>Filters</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
