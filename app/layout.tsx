@@ -10,10 +10,13 @@ const site = (process.env.SITE_URL || 'https://tiadamarketplace.com').replace(/\
 
 export const metadata: Metadata = {
   metadataBase: new URL(site),
-  title: { default: 'Tiada Marketplace · Foodstuffs and cereals in Lagos', template: '%s · Tiada Marketplace' },
+  title: { default: 'Tiada Marketplace · Foodstuffs and cereals in Lagos and Oyo', template: '%s · Tiada Marketplace' },
   description: 'Your trusted plug for quality foodstuff, cereals, groceries and everyday kitchen essentials. Sized for your home and delivered in Lagos and Oyo State.',
-  openGraph: { type: 'website', siteName: 'Tiada Marketplace', images: [{ url: '/img/og.jpg', width: 1200, height: 675 }] },
-  icons: { icon: '/icon-sm.png', apple: '/logo-icon.png' },
+  // the picture shown when the link is shared on WhatsApp, Facebook, X and in messages
+  openGraph: { type: 'website', siteName: 'Tiada Marketplace', images: [{ url: '/img/share.jpg', width: 1200, height: 630, alt: 'Tiada Marketplace: foodstuffs and cereals, packed for your home' }] },
+  twitter: { card: 'summary_large_image', images: ['/img/share.jpg'] },
+  // tab icon and phone home-screen icon: just the Tiada bag, clean at small sizes
+  icons: { icon: [{ url: '/favicon.ico', sizes: 'any' }, { url: '/icon.png', type: 'image/png', sizes: '64x64' }], apple: '/apple-icon.png' },
 };
 export const viewport: Viewport = { themeColor: '#0B3A23', width: 'device-width', initialScale: 1 };
 
