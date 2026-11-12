@@ -50,6 +50,7 @@ function Inner() {
   const [q, setQ] = useState('');
   const [qOpen, setQOpen] = useState(false);
   const [bell, setBell] = useState(false);
+  const [acct, setAcct] = useState(false);
   const [newMenu, setNewMenu] = useState(false);
   const known = useRef<Set<string> | null>(null);
   const search = useRef<HTMLInputElement>(null);
@@ -149,8 +150,9 @@ function Inner() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 4px 0 6px' }}>
               <span style={{ width: 34, height: 34, borderRadius: '50%', background: '#D49B41', color: '#0B3A23', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{d.me.name[0]}</span>
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}><span style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.me.name}</span><span style={{ fontSize: 11.5 }}>{d.me.role}</span></span>
-              <button type="button" className="ub navi" aria-label="Sign out" title="Sign out" onClick={signOut} style={{ width: 34, height: 34, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></svg></button>
+              
             </div>
+            <button type="button" className="ub navi" onClick={signOut} style={{ height: 40, borderRadius: 10, border: '1px solid rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: '#FFFFFF' }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></svg>Log out</button>
           </div>
         </aside>
 
@@ -177,7 +179,7 @@ function Inner() {
               {d.testMode && <span className="adesk" style={{ padding: '6px 10px', borderRadius: 999, background: '#F6E9CF', color: '#8A5F1C', fontSize: 11, fontWeight: 700 }}>Test mode</span>}
               <a href="/" target="_blank" rel="noopener" className="ub qbtn adesk" style={{ height: 42, padding: '0 14px', borderRadius: 10, border: '1px solid #E4DFD3', background: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: '#1F2A23', textDecoration: 'none' }}>View shop ↗</a>
               <div style={{ position: 'relative' }}>
-                <button type="button" className="ub qbtn" aria-label={`Notifications${bells.length ? ', ' + bells.length : ''}`} aria-expanded={bell} onClick={() => { setBell(!bell); setNewMenu(false); }} style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid #E4DFD3', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <button type="button" className="ub qbtn" aria-label={`Notifications${bells.length ? ', ' + bells.length : ''}`} aria-expanded={bell} onClick={() => { setBell(!bell); setNewMenu(false); setAcct(false); }} style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid #E4DFD3', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F2A23" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" /></svg>
                   {bells.some(b => b.hot) && <span className="pulse" style={{ position: 'absolute', top: 8, right: 9, width: 9, height: 9, borderRadius: '50%', background: '#D49B41', border: '2px solid #FFFFFF' }} />}
                 </button>
@@ -190,12 +192,22 @@ function Inner() {
                 )}
               </div>
               <div style={{ position: 'relative' }}>
-                <button type="button" className="ub btn-solid press" aria-haspopup="menu" aria-expanded={newMenu} onClick={() => { setNewMenu(!newMenu); setBell(false); }} style={{ height: 42, padding: '0 16px', borderRadius: 10, background: '#0B3A23', color: '#FFFFFF', fontWeight: 600, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8 }}>+ <span className="adesk">New</span></button>
+                <button type="button" className="ub btn-solid press" aria-haspopup="menu" aria-expanded={newMenu} onClick={() => { setNewMenu(!newMenu); setBell(false); setAcct(false); }} style={{ height: 42, padding: '0 16px', borderRadius: 10, background: '#0B3A23', color: '#FFFFFF', fontWeight: 600, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8 }}>+ <span className="adesk">New</span></button>
                 {newMenu && (
                   <div className="menu-in" role="menu" style={{ position: 'absolute', right: 0, top: 50, width: 250, background: '#FFFFFF', border: '1px solid #ECE8DF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.16)', padding: 6, zIndex: 5 }}>
                     {([['Add a product', 'Name, sizes, prices and photo', () => go('products', 'product=new')], ['Add a banner', 'A new slide for the home page', () => go('banners', 'banner=new')], ['Create a discount code', 'For checkout', () => go('discounts', 'discount=new')], ['Email your customers', 'News, deals or a restock', () => go('emails')]] as [string, string, () => void][]).map(([l, s, fn]) => (
                       <button key={l} type="button" role="menuitem" className="ub tdrow" onClick={() => { setNewMenu(false); fn(); }} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1, padding: '10px 12px', borderRadius: 8 }}><span style={{ fontSize: 13.5, fontWeight: 600 }}>{l}</span><span style={{ fontSize: 12, color: '#66736B' }}>{s}</span></button>
                     ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <button type="button" className="ub press" aria-label={`Your account: ${d.me.name}`} aria-haspopup="menu" aria-expanded={acct} onClick={() => { setAcct(!acct); setBell(false); setNewMenu(false); }} style={{ width: 42, height: 42, borderRadius: '50%', background: '#D49B41', color: '#0B3A23', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{d.me.name[0]}</button>
+                {acct && (
+                  <div className="menu-in" role="menu" style={{ position: 'absolute', right: 0, top: 50, width: 240, background: '#FFFFFF', border: '1px solid #ECE8DF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.16)', padding: 6, zIndex: 5 }}>
+                    <div style={{ padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}><span style={{ fontSize: 13.5, fontWeight: 600 }}>{d.me.name}</span><span style={{ fontSize: 12, color: '#66736B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.me.email} · {d.me.role}</span></div>
+                    <button type="button" role="menuitem" className="ub tdrow" onClick={() => { setAcct(false); go('team'); }} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, textAlign: 'left', fontSize: 13.5 }}>Password and authenticator</button>
+                    <button type="button" role="menuitem" className="ub tdrow" onClick={() => { setAcct(false); signOut(); }} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, textAlign: 'left', fontSize: 13.5, fontWeight: 600, color: '#B3261E' }}>Log out</button>
                   </div>
                 )}
               </div>
