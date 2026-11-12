@@ -95,7 +95,7 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
   const { d, reload } = c;
   const toast = useToast();
   const [mode, setMode] = useState<'' | 'route' | 'done' | 'issue' | 'refund' | 'cancel' | 'note' | 'edit'>(start === 'issue' ? 'issue' : '');
-  const [f, setF] = useState({ partner: 'Tiada rider', tracking: '', driver: '', phone: '', cost: '', how: 'Handed to the customer', reason: '', note: '', eta: '', amount: '', full: true });
+  const [f, setF] = useState({ rider: c.d.riders.find(r => r.active)?.id || '', partner: 'Tiada rider', tracking: '', driver: '', phone: '', cost: '', how: 'Handed to the customer', reason: '', note: '', eta: '', amount: '', full: true });
   const [busy, setBusy] = useState(false);
   const [ask, setAsk] = useState<null | { title: string; text: string; yes: string; body: Record<string, unknown> }>(null);
   const set = (k: keyof typeof f, v: string | boolean) => setF(x => ({ ...x, [k]: v }));
@@ -133,14 +133,15 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
       {mode === 'route' && (
         <div style={box} className="fade">
           <strong>Send it out</strong>
+          {d.riders.some(r => r.active) && <label style={lab}>Who’s delivering?<select value={f.rider} onChange={e => set('rider', e.target.value)} style={input}>{d.riders.filter(r => r.active).map(r => <option key={r.id} value={r.id}>{r.name} (our rider)</option>)}<option value="">Someone else or a courier</option></select>{f.rider && <span style={{ fontWeight: 400, fontSize: 12.5, color: '#4E5A53' }}>It shows on their rider page. They mark it delivered with the customer’s code.</span>}</label>}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-            <label style={lab}>{isCourier ? 'Courier company' : 'Rider or company'}<input value={f.partner} onChange={e => set('partner', e.target.value)} style={input} list="partners" /></label>
+            {!f.rider && <><label style={lab}>{isCourier ? 'Courier company' : 'Rider or company'}<input value={f.partner} onChange={e => set('partner', e.target.value)} style={input} list="partners" /></label>
             <datalist id="partners"><option value="Tiada rider" /><option value="GIG Logistics" /><option value="Red Star Express" /><option value="DHL Nigeria" /><option value="Gokada" /></datalist>
             <label style={lab}>{isCourier ? 'Tracking number' : 'Booking or run number'}<input value={f.tracking} onChange={e => set('tracking', e.target.value)} placeholder={isCourier ? 'From the courier receipt' : `RUN-${new Date().toISOString().slice(5, 10)}`} style={input} /></label>
-            {!isCourier && <><label style={lab}>Rider’s name<input value={f.driver} onChange={e => set('driver', e.target.value)} style={input} /></label><label style={lab}>Rider’s phone<input value={f.phone} onChange={e => set('phone', e.target.value)} inputMode="tel" style={input} /></label></>}
+            {!isCourier && <><label style={lab}>Rider’s name<input value={f.driver} onChange={e => set('driver', e.target.value)} style={input} /></label><label style={lab}>Rider’s phone<input value={f.phone} onChange={e => set('phone', e.target.value)} inputMode="tel" style={input} /></label></>}</>}
             <label style={lab}>What you paid for delivery (optional)<input value={f.cost} onChange={e => set('cost', e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="₦" style={input} /></label>
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}><Btn kind="text" onClick={() => setMode('')}>Cancel</Btn><Btn disabled={busy} onClick={() => act({ action: 'route', partner: f.partner, tracking: f.tracking || `RUN-${new Date().toISOString().slice(0, 10)}`, driver: f.driver || undefined, phone: f.phone || undefined, cost: f.cost ? Number(f.cost) : undefined }, `${o.id} is on the way.`)}>Send and email the customer</Btn></div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}><Btn kind="text" onClick={() => setMode('')}>Cancel</Btn><Btn disabled={busy} onClick={() => act({ action: 'route', partner: f.rider ? 'Tiada rider' : f.partner, tracking: f.tracking || `RUN-${new Date().toISOString().slice(0, 10)}`, driver: f.rider ? undefined : f.driver || undefined, phone: f.rider ? undefined : f.phone || undefined, cost: f.cost ? Number(f.cost) : undefined, rider_id: f.rider || undefined }, `${o.id} is on the way.`)}>Send and email the customer</Btn></div>
         </div>
       )}
       {mode === 'done' && (
@@ -208,6 +209,7 @@ function OrderDrawer({ c, o, start, onClose }: { c: Ctx; o: Order; start: string
         <div style={{ color: '#66736B' }}>{o.area_label} · {runOf(o, z)} · {o.speed_label}{o.spot?.km != null ? ` · about ${Math.round(o.spot.km)} km` : ''}</div>
         {o.spot && <a href={mapLink(o.spot)} target="_blank" rel="noopener" style={{ color: '#0B3A23', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>Open in Google Maps</a>}
         {o.note && <div style={{ marginTop: 6, padding: '8px 12px', borderRadius: 8, background: '#FBF2DE', fontSize: 13 }}><strong>Their note:</strong> {o.note}</div>}
+        {o.drop_code && !['done', 'refunded', 'cancelled'].includes(o.status) && <div style={{ marginTop: 6, fontSize: 13, color: '#4D5A52' }}>Delivery code: <strong style={{ letterSpacing: '0.08em', color: '#1F2A23' }}>{o.drop_code}</strong> <span style={{ color: '#8B958E' }}>(the customer has it; only give it to the rider after checking it’s really them)</span></div>}
         {o.rider?.partner && <div style={{ marginTop: 6, color: '#4D5A52' }}>Sent with {o.rider.partner}{o.rider.tracking ? ` · ${o.rider.tracking}` : ''}{o.rider.driver ? ` · ${o.rider.driver}` : ''}</div>}
         {o.confirm?.how && <div style={{ color: '#4D5A52' }}>Delivered: {o.confirm.how}{o.confirm.by ? ` (${o.confirm.by})` : ''}</div>}
       </div>
@@ -226,13 +228,14 @@ function RunSheet({ c, day, dayOf, onClose }: { c: Ctx; day: string; dayOf: (o: 
   const days = Array.from(new Set(d.orders.filter(o => ['new', 'packed', 'route'].includes(o.status)).map(dayOf)));
   const [pick, setPick] = useState(day && days.includes(day) ? day : days[0] || '');
   const [busy, setBusy] = useState(false);
+  const [rider, setRider] = useState(d.riders.find(r => r.active)?.id || '');
   const list = d.orders.filter(o => ['new', 'packed', 'route'].includes(o.status) && dayOf(o) === pick);
   const text = `*Tiada ${pick} run* (${list.length} drops)\n\n` + list.map((o, i) => `${i + 1}. ${o.id} · ${o.name} · ${fmtPhone(o.phone)}\n${o.address}${o.landmark ? ' (near ' + o.landmark + ')' : ''}, ${o.area_label}${o.spot ? '\n' + mapLink(o.spot) : ''}\n${o.items.map(it => `${it.qty} × ${it.name}${it.size !== 'Package' ? ' ' + it.size : ''}`).join(', ')}`).join('\n\n');
   const copy = async () => { try { await navigator.clipboard.writeText(text); toast('ok', 'Copied.', 'Paste it into WhatsApp for the rider.'); } catch { toast('err', 'Couldn’t copy.', 'Select the text and copy it instead.'); } };
   const all = async (action: 'route' | 'done') => {
     setBusy(true); let n = 0;
     for (const o of list.filter(x => (action === 'route' ? x.status === 'packed' || x.status === 'new' : x.status === 'route'))) {
-      try { await call(`/api/admin/orders/${o.id}`, action === 'route' ? { action: 'route', partner: 'Tiada rider', tracking: `RUN-${new Date().toISOString().slice(0, 10)}` } : { action: 'done', how: 'Handed to the customer' }); n++; } catch { /* keep going */ }
+      try { await call(`/api/admin/orders/${o.id}`, action === 'route' ? { action: 'route', partner: 'Tiada rider', tracking: `RUN-${new Date().toISOString().slice(0, 10)}`, rider_id: rider || undefined } : { action: 'done', how: 'Handed to the customer' }); n++; } catch { /* keep going */ }
     }
     setBusy(false); await reload(); toast('ok', `${n} order${n === 1 ? '' : 's'} ${action === 'route' ? 'sent out' : 'marked delivered'}.`, 'Customers were emailed.');
   };
@@ -242,6 +245,7 @@ function RunSheet({ c, day, dayOf, onClose }: { c: Ctx; day: string; dayOf: (o: 
       {list.some(o => o.status !== 'route') && <Btn disabled={busy} onClick={() => all('route')}>Send all out</Btn>}
       {list.some(o => o.status === 'route') && <Btn disabled={busy} onClick={() => all('done')}>Mark all delivered</Btn>}
     </>}>
+      {d.riders.some(r => r.active) && list.some(o => o.status !== 'route') && <label style={{ ...lab, maxWidth: 320, marginBottom: 12 }}>Rider for this run<select value={rider} onChange={e => setRider(e.target.value)} style={input}>{d.riders.filter(r => r.active).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}<option value="">No rider page (send the list on WhatsApp)</option></select></label>}
       <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14 }}>
         {days.map(x => <button key={x} type="button" className="ub chip" onClick={() => setPick(x)} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: `1px solid ${pick === x ? '#0B3A23' : '#DCD6CA'}`, background: pick === x ? '#0B3A23' : '#FFFFFF', color: pick === x ? '#FFFFFF' : '#1F2A23', fontSize: 12.5, fontWeight: 600 }}>{x}</button>)}
       </div>

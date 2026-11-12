@@ -5,7 +5,7 @@ import { photoFor } from './photos';
 
 export type Order = {
   id: string; customer_id: string | null; email: string; name: string; phone: string; address: string; landmark: string | null;
-  zone_id: string | null; spot?: { days?: string; lat: number; lng: number } | null; area_label: string | null; speed: string; speed_label: string | null;
+  zone_id: string | null; drop_code?: string | null; spot?: { days?: string; lat: number; lng: number } | null; area_label: string | null; speed: string; speed_label: string | null;
   items: { pid?: string; name: string; size: string; qty: number; price: number; img?: string | null; swaps?: { from: string; to: string }[] }[];
   subtotal: number; discount: number; voucher: string | null; delivery_fee: number; total: number; kg: number; status: string; prev_status: string | null;
   pay_ref: string | null; pay_account: unknown; paid_at: string | null; rider: { partner?: string; tracking?: string; driver?: string; phone?: string; cost?: number } | null;
@@ -33,6 +33,9 @@ const whenText = (o: Order, z: Awaited<ReturnType<typeof zoneOf>>) =>
   o.speed === 'same' ? 'Today or tomorrow morning' : o.spot?.days ? `Usually ${o.spot.days}` : z?.state ? `By courier, ${z.days || '2–5 working days'}` : z?.day ? `On ${z.day}` : 'Usually the next day';
 
 /** The customer email for each step of an order. */
+/** The delivery code, shown big in the confirmation and on-the-way emails. */
+const codeBlock = (o: Order): Block[] => o.drop_code ? [{ kind: 'note', strong: `Your delivery code: ${o.drop_code}`, text: 'Give this code to our rider when your order arrives. Only share it at the door, once you have your order.', tone: 'gold' }] : [];
+
 export async function compose(o: Order, kind: Kind, d: Data = {}): Promise<{ subject: string; title: string; inbox: string; mail: Mail }> {
   const z = await zoneOf(o);
   const when = whenText(o, z);
@@ -43,7 +46,7 @@ export async function compose(o: Order, kind: Kind, d: Data = {}): Promise<{ sub
     case 'placed': return {
       subject: `Order ${o.id} is confirmed`, title: 'Order confirmed', inbox: `We received ${naira(o.total)} for ${o.id}. We’re getting it ready.`,
       mail: { kicker: `Order confirmed · ${o.id}`, title: `Thank you, ${first(o.name)}.`, intro: 'We’ve got your payment and we’re getting your order ready. Here’s everything in one place.', preheader: `${naira(o.total)} received. Arrives ${when.toLowerCase()}.`, blocks: [
-        { kind: 'boxes', boxes: [['Tracking code', o.id], ['Arrives', when]] }, { kind: 'tracker', at: 0 }, itemsBlock(o), totalsBlock(o),
+        { kind: 'boxes', boxes: [['Tracking code', o.id], ['Arrives', when]] }, ...codeBlock(o), { kind: 'tracker', at: 0 }, itemsBlock(o), totalsBlock(o),
         { kind: 'info', rows: [['Delivering to', `${esc(o.name)} · ${fmtPhone(o.phone)}<br>${addr}${o.landmark ? `<br><span style="color:#66736B">Near ${esc(o.landmark)}</span>` : ''}`]] },
         { kind: 'button', label: 'Track my order', url: track, sub: 'We’ll email you again when it’s packed and when it leaves our hub.' }] } };
     case 'packed': return {
@@ -56,6 +59,7 @@ export async function compose(o: Order, kind: Kind, d: Data = {}): Promise<{ sub
         subject: r.driver ? `${r.driver} is on the way with your order` : `Your order ${o.id} is on the way`, title: 'Your order is on the way',
         inbox: `${o.id} is on the way with ${r.driver || r.partner || 'our rider'}${r.tracking ? ' (' + r.tracking + ')' : ''}.`,
         mail: { kicker: `On the way · ${o.id}`, title: r.driver ? 'Your rider is on the way.' : 'Your order is on the way.', intro: r.driver ? `${r.driver} left our hub with your order. They’ll call when they’re close, so keep your phone nearby.` : `We’ve handed your order to ${r.partner || 'the courier'}.`, blocks: [
+          ...codeBlock(o),
           { kind: 'tracker', at: 2 },
           { kind: 'info', rows: [
             ...(r.driver ? [['Rider', `${esc(r.driver)}${r.phone ? ` · <a href="tel:${esc(r.phone)}" style="color:#0B3A23">${fmtPhone(r.phone)}</a>` : ''}`] as [string, string]] : []),

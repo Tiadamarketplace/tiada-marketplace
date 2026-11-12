@@ -6,12 +6,13 @@ import { notifyOrder, Order } from '@/lib/notify';
 import { refund as paystackRefund } from '@/lib/paystack';
 import { naira } from '@/lib/email';
 import { refreshShop } from '@/lib/refresh';
+import { newDropCode } from '@/lib/orders';
 
 export const dynamic = 'force-dynamic';
 const txt = (max: number) => z.string().trim().max(max);
 const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('packed') }),
-  z.object({ action: z.literal('route'), partner: txt(60).min(2), tracking: txt(60).min(2, 'Add the booking or tracking number.'), driver: txt(60).optional(), phone: txt(20).optional(), cost: z.number().int().min(0).max(1_000_000).optional() }),
+  z.object({ action: z.literal('route'), partner: txt(60).min(2), tracking: txt(60).min(2, 'Add the booking or tracking number.'), driver: txt(60).optional(), phone: txt(20).optional(), cost: z.number().int().min(0).max(1_000_000).optional(), rider_id: z.string().uuid().optional() }),
   z.object({ action: z.literal('done'), how: txt(80).min(2), note: txt(200).optional() }),
   z.object({ action: z.literal('issue'), reason: txt(120).min(2), note: txt(500).optional(), eta: txt(80).optional() }),
   z.object({ action: z.literal('resume') }),
@@ -60,7 +61,13 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
       await takeStock(); upd.status = 'packed'; kind = 'packed'; log = `Packed ${o.id} for ${o.name}`; break;
     case 'route':
       await takeStock(); upd.status = 'route';
-      upd.rider = { partner: b.partner, tracking: b.tracking, driver: b.driver || '', phone: (b.phone || '').replace(/\D/g, ''), cost: b.cost || 0 };
+      if (!o.drop_code) upd.drop_code = newDropCode(); // older orders: make the code now, it goes in the on-the-way email
+      if (b.rider_id) {
+        // one of our riders: their name and phone go in the customer's email, and the order shows on their rider page
+        const rd = (await db().from('riders').select('id,name,phone,active').eq('id', b.rider_id).maybeSingle()).data as { id: string; name: string; phone: string | null; active: boolean } | null;
+        if (!rd || !rd.active) return fail('That rider isn’t available. Pick another one.');
+        upd.rider = { partner: 'Tiada rider', tracking: b.tracking, driver: rd.name, phone: (rd.phone || '').replace(/\D/g, ''), cost: b.cost || 0, rider_id: rd.id };
+      } else upd.rider = { partner: b.partner, tracking: b.tracking, driver: b.driver || '', phone: (b.phone || '').replace(/\D/g, ''), cost: b.cost || 0 };
       kind = 'route'; log = `Sent ${o.id} with ${b.partner} (${b.tracking})${b.cost ? ' · paid ' + naira(b.cost) : ''}`; break;
     case 'done':
       await takeStock(); upd.status = 'done'; upd.confirm = { how: b.how, note: b.note || '', by: me.name, at: now };
@@ -116,8 +123,8 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
     }
   }
   let res = await db().from('orders').update(upd).eq('id', o.id).select('*');
-  // the "paid" column comes with 2026-11-orders.sql; until it's run, save without it
-  if (res.error && /paid/.test(res.error.message) && 'paid' in upd) { delete upd.paid; res = await db().from('orders').update(upd).eq('id', o.id).select('*'); }
+  // "paid" and "drop_code" come with the November SQL updates; until they're run, save without them
+  if (res.error && /\b(paid|drop_code)\b/.test(res.error.message)) { delete upd.paid; delete upd.drop_code; res = await db().from('orders').update(upd).eq('id', o.id).select('*'); }
   const fresh = must(res) as O[];
   let email: { ok: boolean; error?: string } | null = null;
   if (kind) email = await notifyOrder(fresh[0], kind, data);

@@ -31,15 +31,15 @@ export default function Policy({ kind }: { kind: 'privacy' | 'terms' }) {
   return (
     <div className="fade" style={{ maxWidth: 760, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0' }}>
       <div role="tablist" aria-label="Policies" style={{ display: 'flex', gap: 20, marginBottom: 24, fontSize: 14 }}>
-        <Link href="/privacy" role="tab" aria-selected={kind === 'privacy'} style={{ fontWeight: 600, color: kind === 'privacy' ? '#0B3A23' : '#66736B', textDecoration: kind === 'privacy' ? 'underline' : 'none', textUnderlineOffset: 6 }}>Privacy policy</Link>
-        <Link href="/terms" role="tab" aria-selected={kind === 'terms'} style={{ fontWeight: 600, color: kind === 'terms' ? '#0B3A23' : '#66736B', textDecoration: kind === 'terms' ? 'underline' : 'none', textUnderlineOffset: 6 }}>Terms of sale</Link>
+        <Link href="/privacy" role="tab" aria-selected={kind === 'privacy'} style={{ fontWeight: 600, color: kind === 'privacy' ? '#0B3A23' : '#4E5A53', textDecoration: kind === 'privacy' ? 'underline' : 'none', textUnderlineOffset: 6 }}>Privacy policy</Link>
+        <Link href="/terms" role="tab" aria-selected={kind === 'terms'} style={{ fontWeight: 600, color: kind === 'terms' ? '#0B3A23' : '#4E5A53', textDecoration: kind === 'terms' ? 'underline' : 'none', textUnderlineOffset: 6 }}>Terms of sale</Link>
       </div>
       <H1>{kind === 'privacy' ? 'Privacy policy' : 'Terms of sale'}</H1>
-      <p style={{ margin: '10px 0 0', fontSize: 13.5, color: '#66736B' }}>{b.name}, {b.address}. Last updated November 2026.</p>
+      <p style={{ margin: '10px 0 0', fontSize: 13.5, color: '#4E5A53' }}>{b.name}, {b.address}. Last updated November 2026.</p>
       {list.map(([h, t]) => (
         <section key={h} style={{ marginTop: 28 }}>
           <h2 style={{ margin: '0 0 8px', fontWeight: 600, fontSize: 17 }}>{h}</h2>
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.8, color: '#4D5A52', whiteSpace: 'pre-line' }}>{t}</p>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.8, color: '#3C4741', whiteSpace: 'pre-line' }}>{t}</p>
         </section>
       ))}
     </div>

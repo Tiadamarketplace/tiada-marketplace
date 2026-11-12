@@ -136,7 +136,7 @@ export default function Checkout() {
   return (
     <div className="fade" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px clamp(16px, 3vw, 28px) 0' }}>
       <ol aria-label="Checkout steps" style={{ listStyle: 'none', margin: '0 0 28px', padding: 0, display: 'flex', flexWrap: 'wrap', gap: '8px 22px', fontSize: 13 }}>
-        {steps.map(([l, st], i) => { const c = st === 'off' ? '#8B958E' : '#0B3A23'; return (
+        {steps.map(([l, st], i) => { const c = st === 'off' ? '#66736B' : '#0B3A23'; return (
           <li key={l} aria-current={st === 'on' ? 'step' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 8, color: c, fontWeight: st === 'on' ? 600 : 500 }}>
             <span style={{ width: 24, height: 24, borderRadius: '50%', border: `1.5px solid ${c}`, background: st === 'done' ? '#0B3A23' : '#FFFFFF', color: st === 'done' ? '#FFFFFF' : c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>{st === 'done' ? '✓' : i + 1}</span>
             {i === 0 ? <Link href="/cart" style={{ color: 'inherit', textDecoration: 'none' }}>{l}</Link> : l}
@@ -149,7 +149,7 @@ export default function Checkout() {
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                   <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Contact</h2>
-                  {userReady && !user && <span style={{ fontSize: 13, color: '#66736B' }}>Have an account? <Link href="/account?next=/checkout" className="lnk" style={{ color: '#0B3A23' }}>Sign in</Link></span>}
+                  {userReady && !user && <span style={{ fontSize: 13, color: '#4E5A53' }}>Have an account? <Link href="/account?next=/checkout" className="lnk" style={{ color: '#0B3A23' }}>Sign in</Link></span>}
                   {user && <span style={{ fontSize: 13, color: '#0B3A23', display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: '50%', background: '#2E9E5B' }} />Signed in as {user.email}</span>}
                 </div>
                 <Box id="co-name" label="Full name" type="text" autoComplete="name" value={f.name} onChange={e => set('name', e.target.value)} bad={err?.field === 'name'} />
@@ -159,7 +159,7 @@ export default function Checkout() {
 
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
-                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#4D5A52' }}>We deliver in {whereWeDeliver(data.zones)}. Choose your state, start typing your address and pick it from the list. The delivery fee depends on the distance.</p>
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#3C4741' }}>We deliver in {whereWeDeliver(data.zones)}. Choose your state, start typing your address and pick it from the list. The delivery fee depends on the distance.</p>
                 {addresses.some(a => a.spot?.place) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {addresses.filter(a => a.spot?.place).map(a => <button key={a.id} type="button" className="ub chip" onClick={() => { set('landmark', a.landmark || ''); setStart({ text: a.street, place: { id: a.spot!.place, lat: a.spot!.lat, lng: a.spot!.lng } }); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 12.5 }}>{a.label}: {a.street.slice(0, 28)}</button>)}
@@ -176,7 +176,7 @@ export default function Checkout() {
                     {([['next', 'Standard', `Usually ${good.days}`, 0], ['same', 'Priority', 'Today or next morning where we can', data.fees.same]] as const).map(([k, l, d, extra]) => { const on = f.speed === k; return (
                       <button key={k} type="button" className="ub opt" role="radio" aria-checked={on} onClick={() => set('speed', k)} style={{ padding: '12px 14px', borderRadius: 6, border: `1.5px solid ${on ? '#0B3A23' : '#E2DDD0'}`, background: on ? '#F1F5F1' : '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <span style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 600 }}><span>{l}</span><span>{extra ? '+' + naira(extra) : ''}</span></span>
-                        <span style={{ fontSize: 12.5, color: '#66736B' }}>{d}</span>
+                        <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{d}</span>
                       </button>); })}
                   </div>
                 )}
@@ -191,10 +191,10 @@ export default function Checkout() {
               <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Payment</h2>
               <div style={{ padding: '14px 16px', borderRadius: 6, border: '1px solid #ECE8DF', display: 'flex', justifyContent: 'space-between', gap: 14 }}>
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13.5, lineHeight: 1.5, minWidth: 0 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#66736B' }}>Delivering to</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4E5A53' }}>Delivering to</span>
                   <span style={{ fontWeight: 600 }}>{f.name} · {f.phone}</span>
-                  <span>{fullAddress()}</span>{f.landmark.trim() && <span style={{ color: '#66736B' }}>{f.landmark.trim()}</span>}
-                  <span style={{ color: '#66736B' }}>Arrives {arrive}</span>
+                  <span>{fullAddress()}</span>{f.landmark.trim() && <span style={{ color: '#4E5A53' }}>{f.landmark.trim()}</span>}
+                  <span style={{ color: '#4E5A53' }}>Arrives {arrive}</span>
                 </span>
                 <button type="button" className="ub lnk" onClick={() => { setStep('details'); setPhase('idle'); }} style={{ alignSelf: 'flex-start', fontSize: 13.5, color: '#0B3A23' }}>Change</button>
               </div>
@@ -212,16 +212,16 @@ export default function Checkout() {
                 <div role="status" className="fade" style={{ padding: 26, borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
                   <span style={{ width: 34, height: 34, borderRadius: '50%', border: '3px solid #E6E0D2', borderTopColor: '#0B3A23', animation: 'spin .9s linear infinite' }} />
                   <strong style={{ fontSize: 16, fontWeight: 600 }}>Confirming your payment…</strong>
-                  <span style={{ fontSize: 14, color: '#66736B' }}>This takes a few seconds. Please don’t close this page.</span>
+                  <span style={{ fontSize: 14, color: '#4E5A53' }}>This takes a few seconds. Please don’t close this page.</span>
                 </div>
               )}
               {(phase === 'idle' || phase === 'opening') && (
                 <div className="fade" style={{ border: '1px solid #ECE8DF', borderRadius: 8, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 16, fontWeight: 600 }}>Pay online · {naira(total)}</span><span style={{ fontSize: 12.5, color: '#66736B', display: 'flex', alignItems: 'center', gap: 6 }}><ILock size={14} />Secured by Paystack</span></div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#4D5A52' }}>Pay whichever way suits you in Paystack’s secure window. Your order confirms on its own once payment goes through.</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 16, fontWeight: 600 }}>Pay online · {naira(total)}</span><span style={{ fontSize: 12.5, color: '#4E5A53', display: 'flex', alignItems: 'center', gap: 6 }}><ILock size={14} />Secured by Paystack</span></div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#3C4741' }}>Pay whichever way suits you in Paystack’s secure window. Your order confirms on its own once payment goes through.</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{['Card', 'Bank transfer', 'USSD', 'Visa', 'Mastercard', 'Verve'].map(t => <span key={t} style={{ padding: '5px 10px', borderRadius: 3, border: '1px solid #E2DDD0', fontSize: 12 }}>{t}</span>)}</div>
-                  <ol style={{ margin: 0, paddingLeft: 20, fontSize: 13.5, lineHeight: 1.75, color: '#4D5A52' }}><li>Tap the button below. Paystack’s secure window opens over this page.</li><li>Choose card, bank transfer or USSD and finish the payment.</li><li>You come straight back here with your order confirmed and a tracking code.</li></ol>
-                  <p style={{ margin: 0, fontSize: 12.5, color: '#66736B', display: 'flex', gap: 8 }}><ILock size={14} />Your payment details go straight to Paystack. Tiada never sees or stores your card number.</p>
+                  <ol style={{ margin: 0, paddingLeft: 20, fontSize: 13.5, lineHeight: 1.75, color: '#3C4741' }}><li>Tap the button below. Paystack’s secure window opens over this page.</li><li>Choose card, bank transfer or USSD and finish the payment.</li><li>You come straight back here with your order confirmed and a tracking code.</li></ol>
+                  <p style={{ margin: 0, fontSize: 12.5, color: '#4E5A53', display: 'flex', gap: 8 }}><ILock size={14} />Your payment details go straight to Paystack. Tiada never sees or stores your card number.</p>
                   <button type="button" className="ub btn-solid press" disabled={phase === 'opening'} onClick={pay} style={{ ...btnSolid, opacity: phase === 'opening' ? 0.7 : 1 }}>
                     {phase === 'opening' ? <><span style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFFFFF', animation: 'spin .8s linear infinite' }} />Opening secure payment…</> : <><ILock size={17} />Pay {naira(total)} securely</>}
                   </button>
@@ -235,22 +235,22 @@ export default function Checkout() {
           {priced.map(it => (
             <div key={it.key} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <Thumb pid={it.pid} size={58} qty={it.qty} />
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{it.product.name}</span><span style={{ fontSize: 12.5, color: '#66736B' }}>{it.size}{it.swaps?.length ? ' · swaps' : ''}</span></span>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{it.product.name}</span><span style={{ fontSize: 12.5, color: '#4E5A53' }}>{it.size}{it.swaps?.length ? ' · swaps' : ''}</span></span>
               <span style={{ fontSize: 14, fontWeight: 500 }}>{naira(it.line)}</span>
             </div>
           ))}
           <div style={{ height: 1, background: '#E4DFD3' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Subtotal</span><span>{naira(q?.subtotal ?? sub)}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#66736B' }}> · {q.speed}</span> : null}</span><span>{fee != null ? naira(fee) : <span style={{ color: '#66736B', fontSize: 13 }}>Add your address</span>}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}><span>Delivery{q?.speed ? <span style={{ fontSize: 12, color: '#4E5A53' }}> · {q.speed}</span> : null}</span><span>{fee != null ? naira(fee) : <span style={{ color: '#4E5A53', fontSize: 13 }}>Add your address</span>}</span></div>
           {!!q?.discount && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14.5, color: '#0B3A23' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Discount <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 4, border: '1px dashed #D49B41', background: '#FFFFFF' }}>{q.voucher}</span>
-                {step === 'details' && <button type="button" className="ub quiet" aria-label="Remove code" onClick={() => { setCodeApplied(''); setCode(''); }} style={{ fontSize: 12, color: '#66736B', textDecoration: 'underline' }}>Remove</button>}</span>
+                {step === 'details' && <button type="button" className="ub quiet" aria-label="Remove code" onClick={() => { setCodeApplied(''); setCode(''); }} style={{ fontSize: 12, color: '#4E5A53', textDecoration: 'underline' }}>Remove</button>}</span>
               <span>−{naira(q.discount)}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 8, borderTop: '1px solid #E4DFD3' }}><span style={{ fontSize: 16, fontWeight: 600 }}>Total</span><span style={{ fontSize: 24, fontWeight: 600 }}>{naira(total)}</span></div>
-          <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: '#66736B' }}>Items arrive repacked in sealed Tiada bags, unless the size says tin or sealed pack.</p>
+          <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: '#4E5A53' }}>Items arrive repacked in sealed Tiada bags, unless the size says tin or sealed pack.</p>
           {step === 'details' && !codeApplied && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
               {!codeOpen ? <button type="button" className="ub" onClick={() => setCodeOpen(true)} style={{ alignSelf: 'flex-start', fontSize: 13.5, fontWeight: 600, color: '#0B3A23', textDecoration: 'underline', textUnderlineOffset: 4, minHeight: 32 }}>Have a discount code?</button> : (

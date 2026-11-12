@@ -63,11 +63,11 @@ export default function Header() {
                     <span style={{ width: 42, height: 42, borderRadius: 4, overflow: 'hidden', background: '#F8F6F1', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {p.img ? <img src={p.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span className="serif" style={{ color: '#8A5F1C' }}>{p.name[0]}</span>}
                     </span>
-                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span><span style={{ fontSize: 12, color: '#66736B' }}>{aisleLabel(p.cat)}</span></span>
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}><span style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span><span style={{ fontSize: 12, color: '#4E5A53' }}>{aisleLabel(p.cat)}</span></span>
                     <span style={{ fontSize: 13.5, fontWeight: 600, whiteSpace: 'nowrap', flex: 'none' }}>{isCombo(p) ? '' : 'From '}{naira(minPrice(p))}</span>
                   </button>
                 ))}
-                {!sugg.length && <p style={{ margin: 0, padding: '14px 10px', fontSize: 13.5, color: '#66736B' }}>Nothing matches “{q.trim()}”. Try “rice” or “combo”.</p>}
+                {!sugg.length && <p style={{ margin: 0, padding: '14px 10px', fontSize: 13.5, color: '#4E5A53' }}>Nothing matches “{q.trim()}”. Try “rice” or “combo”.</p>}
                 <button type="button" className="ub drop-row" onClick={() => submit()} style={{ width: '100%', padding: '10px', borderTop: '1px solid #F0ECE3', fontSize: 13.5, fontWeight: 600, color: '#0B3A23' }}>See all results for “{q.trim()}” →</button>
               </div>
             )}
@@ -75,7 +75,7 @@ export default function Header() {
 
           <a href={waLink(biz.whatsapp)} target="_blank" rel="noopener" className="help-chip desk-only" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#1F2A23', marginRight: 8, flex: 'none' }}>
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: '#F1F5F1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B3A23' }}><IWhatsApp size={19} /></span>
-            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}><span style={{ fontSize: 11.5, color: '#66736B' }}>Order or ask on WhatsApp</span><span style={{ fontSize: 14, fontWeight: 600 }}>{biz.phone}</span></span>
+            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}><span style={{ fontSize: 11.5, color: '#4E5A53' }}>Order or ask on WhatsApp</span><span style={{ fontSize: 14, fontWeight: 600 }}>{biz.phone}</span></span>
           </a>
           <nav aria-label="Shortcuts" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, flex: 'none' }}>
             {user ? (
@@ -119,7 +119,7 @@ export default function Header() {
               <div className="fade" style={{ padding: '8px 0' }}>
                 {MEGA.map(m => (
                   <button key={m.id} type="button" className="ub drop-row" onClick={() => setSub(m.id)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', fontSize: 15.5, fontWeight: 500 }}>
-                    <span>{m.label}</span><IChevron dir="right" size={16} color="#66736B" />
+                    <span>{m.label}</span><IChevron dir="right" size={16} color="#4E5A53" />
                   </button>
                 ))}
                 <div style={{ height: 1, background: '#ECE8DF', margin: '8px 20px' }} />
@@ -130,7 +130,7 @@ export default function Header() {
               </div>
             ) : (
               <div className="fade" style={{ padding: '8px 0' }}>
-                <button type="button" className="ub" onClick={() => setSub(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', fontSize: 13.5, fontWeight: 600, color: '#66736B' }}><IChevron dir="left" size={16} /> All aisles</button>
+                <button type="button" className="ub" onClick={() => setSub(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', fontSize: 13.5, fontWeight: 600, color: '#4E5A53' }}><IChevron dir="left" size={16} /> All aisles</button>
                 <p style={{ margin: '4px 20px 10px', fontSize: 20, fontWeight: 500 }}>{MEGA.find(m => m.id === sub)?.label}</p>
                 {items(sub).map(p => <button key={p.id} type="button" className="ub drop-row" onClick={() => go('/p/' + p.id)} style={{ width: '100%', padding: '12px 20px', fontSize: 14.5 }}>{p.name}</button>)}
                 <button type="button" className="ub drop-row" onClick={() => go('/aisle/' + sub)} style={{ width: '100%', padding: '14px 20px', fontSize: 14.5, fontWeight: 600, color: '#0B3A23' }}>Shop all {MEGA.find(m => m.id === sub)?.lower} →</button>

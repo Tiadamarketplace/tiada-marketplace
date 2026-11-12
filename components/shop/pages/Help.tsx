@@ -3,9 +3,10 @@ import { useState } from 'react';
 import AddressSearch from '../AddressSearch';
 import { useShop } from '../ShopProvider';
 import { api, naira, waLink } from '@/lib/shop-client';
-import { H1, btnSolid, field, labelStyle } from '../ui';
+import { H1, btnSolid, field, labelStyle, Spin } from '../ui';
 
 const FAQ: [string, string][] = [
+  ['What is my delivery code?', 'When you pay, we email you a 4-digit delivery code. It’s in the email again when your order is on the way, and on your order page in My account. Give it to our rider at the door, once you have your order: that’s how we confirm it reached you. Only share it with the rider.'],
   ['Why does my order come in a Tiada bag?', 'We buy in large original cartons and bags, then measure each product into smaller, sealed, food-grade bags at our hub. That lets you buy 250g, 500g, 1kg or a paint instead of a whole carton, for less. The brand pictures show what’s inside; it’s the same product, repacked by us. Anything sold sealed in its original pack says so in its size, like “400g tin”.'],
   ['How do I order?', 'Pick a product, choose its size and tap Add to cart. Combos go in as one package. When you’re ready, open your cart and check out. You don’t need an account.'],
   ['How do combo swaps work?', 'Open any combo and use the menus under “What’s inside” to swap an item, for example Beans for Spaghetti. The price stays the same and our packers see your swaps.'],
@@ -67,16 +68,16 @@ export default function Help() {
   return (
     <div className="fade" style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0', display: 'flex', flexDirection: 'column', gap: 56 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 680 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#66736B' }}>Help</span>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#4E5A53' }}>Help</span>
         <H1>How Tiada works</H1>
-        <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: '#4D5A52' }}>Tiada Marketplace is a family food shop that sells breakfast cereals, milk and everyday foodstuffs in the amount your home actually needs. Here is everything that happens between you tapping “Add to cart” and the bag landing at your door.</p>
+        <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: '#3C4741' }}>Tiada Marketplace is a family food shop that sells breakfast cereals, milk and everyday foodstuffs in the amount your home actually needs. Here is everything that happens between you tapping “Add to cart” and the bag landing at your door.</p>
       </div>
       <section aria-label="How it works, step by step" style={{ borderTop: '1px solid #1F2A23' }}>
         {HOW.map(([h, body], i) => (
           <div key={h} className="how-row" style={{ display: 'grid', gridTemplateColumns: '64px minmax(0, 240px) minmax(0, 1fr)', gap: 24, padding: '28px 0', borderBottom: '1px solid #ECE8DF' }}>
             <span className="serif" style={{ fontSize: 26, color: '#D49B41', lineHeight: 1.1 }}>{String(i + 1).padStart(2, '0')}</span>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, lineHeight: 1.35 }}>{h}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15.5, lineHeight: 1.8, color: '#4D5A52' }}>{body.map((t, k) => <p key={k} style={{ margin: 0 }}>{t}</p>)}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15.5, lineHeight: 1.8, color: '#3C4741' }}>{body.map((t, k) => <p key={k} style={{ margin: 0 }}>{t}</p>)}</div>
           </div>
         ))}
       </section>
@@ -86,31 +87,31 @@ export default function Help() {
           {FAQ.map(([q, a], i) => (
             <div key={q} style={{ borderBottom: '1px solid #ECE8DF' }}>
               <button type="button" className="ub" aria-expanded={!!open[i]} onClick={() => setOpen(o => ({ ...o, [i]: !o[i] }))} style={{ width: '100%', minHeight: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', fontSize: 15, fontWeight: 600 }}>{q}<span aria-hidden="true" style={{ fontSize: 20, fontWeight: 400, transition: 'transform .2s', transform: `rotate(${open[i] ? 45 : 0}deg)` }}>+</span></button>
-              {open[i] && <p className="fade" style={{ margin: '0 0 18px', fontSize: 14.5, lineHeight: 1.75, color: '#4D5A52', maxWidth: 720 }}>{a}</p>}
+              {open[i] && <p className="fade" style={{ margin: '0 0 18px', fontSize: 14.5, lineHeight: 1.75, color: '#3C4741', maxWidth: 720 }}>{a}</p>}
             </div>
           ))}
         </div>
       </section>
       <section id="delivery" aria-labelledby="del-h" style={{ scrollMarginTop: 140 }}>
         <h2 id="del-h" style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 24 }}>Where and when we deliver</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#66736B' }}>The fee depends on the distance from us. Heavy orders over 5 kg cost a little more; your exact fee always shows at checkout before you pay.</p>
+        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#4E5A53' }}>The fee depends on the distance from us. Heavy orders over 5 kg cost a little more; your exact fee always shows at checkout before you pay.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
-          {data.zones.map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.state === 'Lagos' ? 'Lagos' : `${z.state} State`}</strong><span style={{ fontSize: 13, color: '#4D5A52' }}>{naira(z.fee)} to {naira(z.max)} · usually {z.days}</span></div>)}
+          {data.zones.map(z => <div key={z.id} style={{ padding: '14px 16px', borderRadius: 8, background: '#FBF9F4', display: 'flex', flexDirection: 'column', gap: 4 }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{z.state === 'Lagos' ? 'Lagos' : `${z.state} State`}</strong><span style={{ fontSize: 13, color: '#3C4741' }}>{naira(z.fee)} to {naira(z.max)} · usually {z.days}</span></div>)}
         </div>
         <div style={{ marginTop: 22, maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label htmlFor="fee-check" style={{ fontSize: 15, fontWeight: 600 }}>Check your delivery fee</label>
           <AddressSearch id="fee-check" onPick={() => {}} />
         </div>
-        <p style={{ margin: '12px 0 0', fontSize: 13, color: '#66736B' }}>We don’t deliver to other states yet.</p>
-        {data.policies.delivery && <p style={{ margin: '16px 0 0', fontSize: 14, lineHeight: 1.7, color: '#4D5A52' }}>{data.policies.delivery}</p>}
+        <p style={{ margin: '12px 0 0', fontSize: 13, color: '#4E5A53' }}>We don’t deliver to other states yet.</p>
+        {data.policies.delivery && <p style={{ margin: '16px 0 0', fontSize: 14, lineHeight: 1.7, color: '#3C4741' }}>{data.policies.delivery}</p>}
       </section>
       <section id="contact" aria-labelledby="ct-h" style={{ scrollMarginTop: 140, display: 'flex', flexWrap: 'wrap', gap: 40 }}>
         <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h2 id="ct-h" style={{ margin: 0, fontWeight: 500, fontSize: 24 }}>Contact us</h2>
-          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: '#4D5A52' }}>The fastest way is WhatsApp. You can also send a message here and we’ll reply by email.</p>
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: '#3C4741' }}>The fastest way is WhatsApp. You can also send a message here and we’ll reply by email.</p>
           <a href={waLink(b.whatsapp)} target="_blank" rel="noopener" style={{ fontSize: 15, fontWeight: 600, color: '#0B3A23' }}>WhatsApp {b.phone}</a>
           <a href={'mailto:' + b.email} style={{ fontSize: 14.5, color: '#0B3A23' }}>{b.email}</a>
-          <span style={{ fontSize: 14, lineHeight: 1.6, color: '#66736B' }}>{b.address}</span>
+          <span style={{ fontSize: 14, lineHeight: 1.6, color: '#4E5A53' }}>{b.address}</span>
         </div>
         <div style={{ flex: '999 1 400px' }}>
           {sent ? <p className="pop" role="status" style={{ margin: 0, padding: 22, borderRadius: 8, background: '#E6EEE8', color: '#0B3A23', fontSize: 15, lineHeight: 1.6 }}><strong>Thanks, {m.name.split(' ')[0]}.</strong> Your message is with us and we’ll reply to {m.email}.</p> : (
@@ -120,7 +121,7 @@ export default function Help() {
               <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Phone (optional)<input type="tel" value={m.phone} onChange={e => setM({ ...m, phone: e.target.value })} style={field} /></label>
               <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Message<textarea rows={5} value={m.text} onChange={e => setM({ ...m, text: e.target.value })} maxLength={1500} style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical' }} /></label>
               {err && <p role="alert" className="shake" style={{ gridColumn: '1 / -1', margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-              <button type="submit" disabled={busy} className="ub btn-solid press" style={{ ...btnSolid, gridColumn: '1 / -1', opacity: busy ? 0.7 : 1 }}>{busy ? 'Sending…' : 'Send message'}</button>
+              <button type="submit" disabled={busy} className="ub btn-solid press" style={{ ...btnSolid, gridColumn: '1 / -1', opacity: busy ? 0.7 : 1 }}>{busy ? <><Spin />Sending…</> : 'Send message'}</button>
             </form>
           )}
         </div>

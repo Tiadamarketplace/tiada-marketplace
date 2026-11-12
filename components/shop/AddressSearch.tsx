@@ -90,16 +90,16 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
             <button key={s.id + i} type="button" role="option" aria-selected={hi === i} className="ub drop-row" onMouseDown={e => e.preventDefault()} onClick={() => choose({ id: s.id, lat: s.lat, lng: s.lng }, [s.main, s.secondary].filter(Boolean).join(', '))}
               style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 10px', borderRadius: 4, background: hi === i ? '#F6F2E9' : 'transparent' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5F1C" strokeWidth="2" style={{ flex: 'none', marginTop: 2 }} aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.5" /></svg>
-              <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 14, fontWeight: 500, color: '#1F2A23' }}>{s.main}</span>{s.secondary && <span style={{ fontSize: 12.5, color: '#66736B' }}>{s.secondary}</span>}</span>
+              <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 14, fontWeight: 500, color: '#1F2A23' }}>{s.main}</span>{s.secondary && <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{s.secondary}</span>}</span>
             </button>
           ))}
-          <div style={{ padding: '6px 10px 2px', fontSize: 11, color: '#8B958E', textAlign: 'right' }}>{google ? 'Powered by Google' : '© OpenStreetMap'}</div>
+          <div style={{ padding: '6px 10px 2px', fontSize: 11, color: '#66736B', textAlign: 'right' }}>{google ? 'Powered by Google' : '© OpenStreetMap'}</div>
         </div>
       )}
       {open && !busy && text.trim().length >= 3 && list.length === 0 && !pick && (
-        <p style={{ margin: 0, fontSize: 13, color: '#66736B' }}>No match yet. Try your street and area, like “Allen Avenue, Ikeja”.</p>
+        <p style={{ margin: 0, fontSize: 13, color: '#4E5A53' }}>No match yet. Try your street and area, like “Allen Avenue, Ikeja”.</p>
       )}
-      {checking && <p role="status" style={{ margin: 0, fontSize: 13.5, color: '#66736B' }}>Checking delivery to this address…</p>}
+      {checking && <p role="status" style={{ margin: 0, fontSize: 13.5, color: '#4E5A53' }}>Checking delivery to this address…</p>}
       {!checking && pick && (pick.ok
         ? <p role="status" className="fade" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver here{pick.label ? <> · <strong style={{ fontWeight: 600 }}>{pick.label}</strong></> : null}{showFee ? <> · delivery {naira(pick.fee)}, usually {pick.days}</> : null}</p>
         : <p role="alert" className="shake" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, fontWeight: 600, color: '#B3261E' }}>{pick.reason}</p>)}

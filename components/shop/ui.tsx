@@ -25,7 +25,7 @@ export function EmptyCart() {
   return (
     <div style={{ textAlign: 'center', padding: '72px 0 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
       <p style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Your cart is empty</p>
-      <p style={{ margin: 0, fontSize: 14, color: '#66736B' }}>Cereals by weight, combos and pantry staples are waiting.</p>
+      <p style={{ margin: 0, fontSize: 14, color: '#4E5A53' }}>Cereals by weight, combos and pantry staples are waiting.</p>
       <Link href="/aisle/all" className="ub btn-solid press" style={btnSolid}>Start shopping</Link>
     </div>
   );
@@ -40,4 +40,9 @@ export function BoxSelect({ label, children, bad, ...p }: React.SelectHTMLAttrib
 }
 export function BoxArea({ label, ...p }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
   return <div className="bx tall"><textarea {...p} placeholder=" " aria-label={label} /><span className="bx-l" aria-hidden="true">{label}</span></div>;
+}
+
+/** A small turning circle for buttons that are waiting. White on dark buttons, green on light ones. */
+export function Spin({ dark, size = 18 }: { dark?: boolean; size?: number }) {
+  return <span aria-hidden="true" style={{ width: size, height: size, flex: 'none', display: 'inline-block', borderRadius: '50%', border: `2px solid ${dark ? 'rgba(11,58,35,0.2)' : 'rgba(255,255,255,0.35)'}`, borderTopColor: dark ? '#0B3A23' : '#FFFFFF', animation: 'spin .8s linear infinite' }} />;
 }

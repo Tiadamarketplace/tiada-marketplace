@@ -32,7 +32,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
 
   const action = (
     <div style={{ marginTop: list ? 0 : 'auto', paddingTop: list ? 0 : 4, width: list ? 200 : undefined }}>
-      {sold ? <span style={{ width: '100%', height: 44, borderRadius: 4, background: '#EDEBE5', color: '#66736B', fontSize: 13.5, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Sold out</span>
+      {sold ? <span style={{ width: '100%', height: 44, borderRadius: 4, background: '#EDEBE5', color: '#4E5A53', fontSize: 13.5, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Sold out</span>
         : combo && qty > 0 ? (
           <div className="pop" onClick={e => e.stopPropagation()} style={{ height: 44, borderRadius: 4, border: '1px solid #0B3A23', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <button type="button" className="ub icn" aria-label={`One less ${p.name}`} onClick={stop(() => setQty(key, qty - 1))} style={{ width: 44, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, color: '#0B3A23' }}>−</button>
@@ -57,7 +57,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
   const price = (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '2px 8px' }}>
       <span style={{ fontSize: 16, fontWeight: 700, color: off > 0 ? '#9A4E12' : '#0B3A23' }}>{many ? 'From ' : ''}{naira(minPrice(p))}</span>
-      {p.rating && <span style={{ fontSize: 12, color: '#66736B' }}>★ {p.rating.avg} ({p.rating.n})</span>}
+      {p.rating && <span style={{ fontSize: 12, color: '#4E5A53' }}>★ {p.rating.avg} ({p.rating.n})</span>}
     </div>
   );
 
@@ -66,7 +66,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
       <div className="pimg" style={{ position: 'relative', width: 120, aspectRatio: '1 / 1', borderRadius: 5, overflow: 'hidden', background: '#F8F6F1', flex: 'none' }}><ProductImage p={p} size={15} />{sold && <span style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.72)' }} />}</div>
       <div style={{ flex: '1 1 220px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <Link href={href} className="pname" onClick={e => e.stopPropagation()} style={{ fontSize: 15.5, fontWeight: 500, color: '#1F2A23', textDecoration: 'none' }}>{p.name}</Link>
-        <span style={{ fontSize: 12.5, color: '#66736B' }}>{cardMeta(p)}</span>
+        <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{cardMeta(p)}</span>
         {price}
         {low != null && <span style={{ fontSize: 12, fontWeight: 600, color: '#B8402B' }}>Only {low} left</span>}
       </div>
@@ -82,7 +82,7 @@ export default function ProductCard({ p, list }: { p: PubProduct; list?: boolean
         {sold && <span style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><span style={{ background: '#1F2A23', color: '#FFFFFF', fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', padding: '7px 14px' }}>SOLD OUT</span></span>}
       </div>
       <Link href={href} className="pname" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'flex-start', fontSize: 14, fontWeight: 500, lineHeight: 1.42, color: '#1F2A23', minHeight: 40, textDecoration: 'none' }}>{p.name}</Link>
-      <span style={{ fontSize: 12.5, color: '#66736B', marginTop: -4 }}>{cardMeta(p)}</span>
+      <span style={{ fontSize: 12.5, color: '#4E5A53', marginTop: -4 }}>{cardMeta(p)}</span>
       {price}
       {low != null && <span style={{ fontSize: 12, fontWeight: 600, color: '#B8402B' }}>Only {low} left</span>}
       {action}

@@ -46,11 +46,11 @@ export function CartDrawer() {
                   <Thumb pid={it.pid} size={76} />
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ fontSize: 14.5, fontWeight: 500 }}>{it.product.name}</span><span style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{naira(it.line)}</span></div>
-                    <span style={{ fontSize: 12.5, color: '#66736B' }}>{it.size} · {naira(it.price)}{it.was ? <s style={{ marginLeft: 6 }}>{naira(it.was)}</s> : null}</span>
-                    {it.swaps?.length ? <span style={{ fontSize: 12, color: '#66736B' }}>Swapped: {it.swaps.map(w => `${w.from} → ${w.to}`).join(', ')}</span> : null}
+                    <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{it.size} · {naira(it.price)}{it.was ? <s style={{ marginLeft: 6 }}>{naira(it.was)}</s> : null}</span>
+                    {it.swaps?.length ? <span style={{ fontSize: 12, color: '#4E5A53' }}>Swapped: {it.swaps.map(w => `${w.from} → ${w.to}`).join(', ')}</span> : null}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                       <Stepper qty={it.qty} dec={() => setQty(it.key, it.qty - 1)} inc={() => setQty(it.key, it.qty + 1)} />
-                      <button type="button" className="ub quiet" onClick={() => remove(it.key)} style={{ minHeight: 38, fontSize: 13, color: '#66736B', textDecoration: 'underline', textUnderlineOffset: 3 }}>Remove</button>
+                      <button type="button" className="ub quiet" onClick={() => remove(it.key)} style={{ minHeight: 38, fontSize: 13, color: '#4E5A53', textDecoration: 'underline', textUnderlineOffset: 3 }}>Remove</button>
                     </div>
                   </div>
                 </div>
@@ -58,7 +58,7 @@ export function CartDrawer() {
             </div>
             <div style={{ padding: '20px 24px 24px', borderTop: '1px solid #ECE8DF', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span>Subtotal</span><span style={{ fontWeight: 600 }}>{naira(subtotal)}</span></div>
-              <span style={{ fontSize: 12.5, color: '#66736B' }}>Delivery is added at checkout.</span>
+              <span style={{ fontSize: 12.5, color: '#4E5A53' }}>Delivery is added at checkout.</span>
               <button type="button" className="ub btn-solid press" onClick={() => go('/checkout')} style={{ height: 52, borderRadius: 4, background: '#0B3A23', color: '#FFFFFF', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Check out</button>
               <button type="button" className="ub lnk" onClick={() => go('/cart')} style={{ alignSelf: 'center', fontSize: 14, minHeight: 36 }}>View cart</button>
             </div>
@@ -100,7 +100,7 @@ export function ChooseSize() {
           <Thumb pid={p.id} size={92} />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 19, fontWeight: 500 }}>{p.name}</span>
-            {s && <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}><span style={{ fontSize: 18, fontWeight: 600, color: s.sale ? '#9A4E12' : '#0B3A23' }}>{naira(nowPrice(s))}</span>{s.sale && s.price && s.sale < s.price ? <s style={{ fontSize: 13.5, color: '#8B958E' }}>{naira(s.price)}</s> : null}</span>}
+            {s && <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}><span style={{ fontSize: 18, fontWeight: 600, color: s.sale ? '#9A4E12' : '#0B3A23' }}>{naira(nowPrice(s))}</span>{s.sale && s.price && s.sale < s.price ? <s style={{ fontSize: 13.5, color: '#66736B' }}>{naira(s.price)}</s> : null}</span>}
           </div>
           <button type="button" className="ub icn" aria-label="Close" onClick={close} style={{ width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><X /></button>
         </div>
@@ -111,8 +111,8 @@ export function ChooseSize() {
             return (
               <button key={z.label} type="button" className="ub opt" role="radio" aria-checked={sel} onClick={() => { setI(j); setQ(1); }}
                 style={{ minHeight: 58, padding: '10px 14px', borderRadius: 4, border: `1.5px ${out ? 'dashed' : 'solid'} ${sel ? '#0B3A23' : '#DCD6CA'}`, background: sel ? '#F1F5F1' : '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: out ? '#8B958E' : '#1F2A23' }}>{z.label}</span>
-                <span style={{ fontSize: 13, color: out ? '#B8402B' : z.sale ? '#9A4E12' : '#4D5A52' }}>{out ? 'Sold out' : z.left != null ? `${naira(nowPrice(z))} · ${z.left} left` : naira(nowPrice(z))}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: out ? '#66736B' : '#1F2A23' }}>{z.label}</span>
+                <span style={{ fontSize: 13, color: out ? '#B8402B' : z.sale ? '#9A4E12' : '#3C4741' }}>{out ? 'Sold out' : z.left != null ? `${naira(nowPrice(z))} · ${z.left} left` : naira(nowPrice(z))}</span>
               </button>
             );
           })}
@@ -137,11 +137,11 @@ export function AddedPopup() {
     <div role="status" className="drop-in" style={{ position: 'fixed', top: 16, right: 'clamp(12px, 3vw, 28px)', zIndex: 72, width: 'min(360px, calc(100vw - 24px))', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 20px 50px rgba(17,32,23,0.2)', padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}><ICheck size={18} color="#0B3A23" stroke={2.4} />Added to your cart</span>
-        <button type="button" className="ub icn" aria-label="Dismiss" onClick={dismissAdded} style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X c="#66736B" s={16} /></button>
+        <button type="button" className="ub icn" aria-label="Dismiss" onClick={dismissAdded} style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X c="#4E5A53" s={16} /></button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Thumb pid={p.id} size={56} />
-        <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</span><span style={{ fontSize: 12.5, color: '#66736B' }}>{added.size} · Qty {added.qty}</span></span>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</span><span style={{ fontSize: 12.5, color: '#4E5A53' }}>{added.size} · Qty {added.qty}</span></span>
       </div>
       <button type="button" className="ub btn-out" onClick={() => { dismissAdded(); setCartOpen(true); }} style={{ height: 44, borderRadius: 4, border: '1.5px solid #0B3A23', color: '#0B3A23', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>View cart ({count})</button>
     </div>
@@ -173,8 +173,8 @@ export function Dialog({ title, text, list, noLabel = 'Cancel', yesLabel, danger
     <div role="alertdialog" aria-modal="true" aria-label={title} style={{ position: 'fixed', inset: 0, zIndex: 86, background: 'rgba(17,32,23,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div className="pop" style={{ width: 'min(420px, 100%)', background: '#FFFFFF', borderRadius: 8, boxShadow: '0 24px 60px rgba(0,0,0,0.22)', padding: '28px 26px 22px' }}>
         <h2 style={{ margin: 0, fontWeight: 600, fontSize: 20, letterSpacing: '-0.01em' }}>{title}</h2>
-        <p style={{ margin: '10px 0 0', fontSize: 14.5, lineHeight: 1.65, color: '#4D5A52' }}>{text}</p>
-        {list?.length ? <ul style={{ margin: '14px 0 0', padding: 0, listStyle: 'none' }}>{list.map((l, k) => <li key={k} style={{ padding: '10px 0', borderTop: '1px solid #ECE8DF', fontSize: 14, lineHeight: 1.5 }}><strong style={{ fontWeight: 600 }}>{l.name}</strong> <span style={{ color: '#4D5A52' }}>{l.note}</span></li>)}</ul> : null}
+        <p style={{ margin: '10px 0 0', fontSize: 14.5, lineHeight: 1.65, color: '#3C4741' }}>{text}</p>
+        {list?.length ? <ul style={{ margin: '14px 0 0', padding: 0, listStyle: 'none' }}>{list.map((l, k) => <li key={k} style={{ padding: '10px 0', borderTop: '1px solid #ECE8DF', fontSize: 14, lineHeight: 1.5 }}><strong style={{ fontWeight: 600 }}>{l.name}</strong> <span style={{ color: '#3C4741' }}>{l.note}</span></li>)}</ul> : null}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '6px 18px', marginTop: 22 }}>
           <button type="button" className="ub" onClick={onNo} style={{ minHeight: 44, padding: '0 4px', fontSize: 14.5, fontWeight: 600, color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4 }}>{noLabel}</button>
           <button type="button" className="ub btn-solid press" onClick={onYes} style={{ height: 46, padding: '0 22px', borderRadius: 4, background: danger ? '#7A2A1B' : '#0B3A23', color: '#FFFFFF', fontWeight: 600, display: 'flex', alignItems: 'center' }}>{yesLabel}</button>
@@ -254,7 +254,7 @@ export function Chat() {
           </div>
           <div ref={box} className="thin" style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10, background: '#FBF9F4' }}>
             {msgs.map(m => m.who === 'sys'
-              ? <div key={m.id} style={{ alignSelf: 'center', fontSize: 12, color: '#66736B' }}>{m.text}</div>
+              ? <div key={m.id} style={{ alignSelf: 'center', fontSize: 12, color: '#4E5A53' }}>{m.text}</div>
               : <div key={m.id} className="fade" style={{ alignSelf: m.who === 'me' ? 'flex-end' : 'flex-start', maxWidth: '82%', padding: '10px 14px', borderRadius: 14, background: m.who === 'me' ? '#0B3A23' : '#FFFFFF', color: m.who === 'me' ? '#FFFFFF' : '#1F2A23', fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{m.text}</div>)}
             {msgs.length <= 1 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>

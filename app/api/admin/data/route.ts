@@ -4,6 +4,7 @@ import { requireStaff, staffList, ROLE_LABEL } from '@/lib/staff';
 import { DEFAULT_FEES, DEFAULT_OPEN_STATES } from '@/lib/catalog';
 import { env } from '@/lib/env';
 import { photoFor } from '@/lib/photos';
+import { listRiders } from '@/lib/riders';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,7 @@ export const GET = handle(async (req: Request) => {
     settings: { oyo: set.oyo || null, lagos: set.lagos || null, fees: set.fees || DEFAULT_FEES, business: set.business || {}, hours: set.hours || [], alerts: set.alerts || {}, policies: set.policies || {}, slider: set.slider || { on: true, seconds: 6 } },
     vouchers: vouchers.data || [], contact: contact.data || [], waiting, subscribers: subs.count || 0,
     staff: me.role === 'owner' ? (await staffList()).map(s => ({ ...s, role: ROLE_LABEL[s.role] })) : [],
+    riders: seesOrders ? await listRiders() : [],
     testMode: env.paystackKey.startsWith('sk_test_'),
     testPending: me.role === 'owner' && env.paystackKey.startsWith('sk_test_')
       ? must(await db().from('orders').select('id,name,total,created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(10)) : [],

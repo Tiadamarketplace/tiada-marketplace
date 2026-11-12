@@ -12,5 +12,5 @@ export const POST = handle(async (req: Request) => {
   const o = (await db().from('orders').select('*').eq('id', b.code).not('status', 'in', '(pending,expired)').maybeSingle()).data as Order | null;
   if (!o) return fail('We couldn’t find an order with that code. Check it against your confirmation email.', 404);
   const p = publicOrder(o) as Record<string, unknown>;
-  return ok({ order: { ...p, email: '', phone: '', name: '', address: '', landmark: null, pay_account: null } });
+  return ok({ order: { ...p, email: '', phone: '', name: '', address: '', landmark: null, pay_account: null, drop_code: null } });
 });

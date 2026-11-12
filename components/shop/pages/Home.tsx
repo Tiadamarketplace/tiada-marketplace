@@ -25,7 +25,7 @@ export default function Home() {
         <div className="noscroll" style={{ maxWidth: 1240, margin: '0 auto', padding: '16px clamp(16px, 3vw, 28px)', display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(250px, 1fr)', gap: 20, overflowX: 'auto', scrollSnapType: 'x mandatory' }}>
           {WHY.map(w => (
             <div key={w.t} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, scrollSnapAlign: 'start' }}>
-              {w.i}<span style={{ display: 'flex', flexDirection: 'column' }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{w.t}</strong><span style={{ fontSize: 13, color: '#66736B' }}>{w.s}</span></span>
+              {w.i}<span style={{ display: 'flex', flexDirection: 'column' }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{w.t}</strong><span style={{ fontSize: 13, color: '#4E5A53' }}>{w.s}</span></span>
             </div>
           ))}
         </div>

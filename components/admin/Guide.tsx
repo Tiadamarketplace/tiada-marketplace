@@ -23,7 +23,8 @@ const PARTS: Part[] = [
     intro: 'Every paid order lands here. Tap an order to open it.',
     steps: [
       ['New → Packed', 'Pack the items on the pack list, then press Mark packed. Stock comes off at this point, and the customer gets a “packed” email.'],
-      ['Packed → On the way', 'Press Send it out. Write the rider’s name and phone, or the courier and tracking number. The customer gets the rider’s details by email.'],
+      ['Packed → On the way', 'Press Send it out and pick which of your riders is taking it (or type a courier and tracking number). The customer gets the rider’s name and phone by email, plus their 4-digit delivery code.'],
+      ['On the way → Delivered by the rider', 'Your rider opens their private link, asks the customer for the delivery code at the door and types it in. The order turns Delivered by itself. Without the right code it can’t be marked delivered.'],
       ['On the way → Delivered', 'Press Mark delivered and say how it was handed over. The customer is emailed and can leave a review.'],
       ['Run sheet', 'For many orders at once, open Run sheet. It lists every drop with addresses and Google Maps links. Copy it into WhatsApp for the rider, and send out or mark delivered the whole run in one tap.'],
       ['Open in Google Maps', 'Every new order has an Open in Google Maps link, from the address the customer picked at checkout.'],
@@ -46,6 +47,18 @@ const PARTS: Part[] = [
       ['Photos', 'Square, on a white background, works best. Press the photo box to upload; it’s resized for you.'],
       ['Add a product', 'Press + Add product, fill in the name, aisle, sizes and prices, add a photo and save.'],
       ['People waiting', 'A small gold number next to a size means that many people asked to be told when it’s back. Adding stock emails them.'],
+    ],
+  },
+  {
+    id: 'riders', title: 'Riders and delivery codes', open: 'riders',
+    intro: 'Each rider gets a private page on their phone with their deliveries.',
+    steps: [
+      ['Add a rider', 'Open Riders, type their name and phone and press Add rider. Then press Send on WhatsApp to give them their link. They don’t need a password.'],
+      ['Give them orders', 'When you press Send it out on an order, or Send all out on a run sheet, choose the rider. The orders appear on their page with a Map button, Call and WhatsApp buttons, the items and any note.'],
+      ['Delivery codes', 'Every customer gets a 4-digit code by email when they pay, and again when the order is on the way. It’s also on their order page. At the door, the rider types the code and the order is marked delivered.'],
+      ['Customer can’t find the code', 'The code is shown on the order in Orders. Call the customer to check it’s really them, then give the rider the code.'],
+      ['Rider can’t deliver', 'The rider taps Can’t deliver and picks a reason. You get an email straight away so you can call the customer.'],
+      ['Lost phone or rider leaves', 'In Riders, switch them off, or press New link. The old link stops working at once.'],
     ],
   },
   {

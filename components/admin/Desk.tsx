@@ -15,13 +15,14 @@ import Messages from './Messages';
 import Settings from './Settings';
 import Delivery from './Delivery';
 import Guide from './Guide';
+import Riders from './Riders';
 import Team from './Team';
 
 export type Ctx = { d: Data; reload: () => Promise<void>; go: (s: Sec, extra?: string) => void; hash: string; setD: React.Dispatch<React.SetStateAction<Data | null>> };
 
 const NAV: [string, [Sec, string, string][]][] = [
   ['Help', [['guide', 'How to use', 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01']]],
-  ['Run the shop', [['dash', 'Today', 'M4 11l8-7 8 7v9h-5v-6H9v6H4z'], ['orders', 'Orders', 'M6 4h12l1 16H5zM9 8a3 3 0 0 0 6 0'], ['products', 'Products', 'M4 8l8-4 8 4-8 4zM4 8v8l8 4 8-4V8M12 12v8']]],
+  ['Run the shop', [['dash', 'Today', 'M4 11l8-7 8 7v9h-5v-6H9v6H4z'], ['orders', 'Orders', 'M6 4h12l1 16H5zM9 8a3 3 0 0 0 6 0'], ['products', 'Products', 'M4 8l8-4 8 4-8 4zM4 8v8l8 4 8-4V8M12 12v8'], ['riders', 'Riders', 'M5 17a2 2 0 1 0 0 .01M19 17a2 2 0 1 0 0 .01M7 17h8l2-6h-4l-2-3H8M15 11l-2-5h3']]],
   ['Sell more', [['banners', 'Banners', 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6'], ['discounts', 'Discount codes', 'M3 12V4h8l10 10-8 8zM7.5 8.5h.01'], ['emails', 'Emails', 'M3 6h18v12H3zM3 7l9 6 9-6'], ['reviews', 'Reviews', 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z']]],
   ['Customers', [['chat', 'Chat', 'M5 5h14v10H9l-4 4z'], ['messages', 'Website messages', 'M4 4h16v13H7l-3 3zM8 9h8M8 12h5'], ['customers', 'Customers', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c.8-3.8 3.6-6 7-6s6.2 2.2 7 6M17 11a3 3 0 1 0 0-6M22 21c-.5-2.6-2-4.4-4-5.2']]],
   ['Settings', [['settings', 'Shop settings', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.4 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.1 13.9H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z'], ['delivery', 'Delivery', 'M3 7h11v9H3zM14 10h4l3 3v3h-7M7 18.5h.01M17 18.5h.01'], ['team', 'Team & security', 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z']]],
@@ -33,6 +34,7 @@ const TITLES: Record<Sec, [string, string]> = {
   messages: ['Website messages', 'Sent from the Contact us form on the Help page.'], customers: ['Customers', 'Everyone who has an account or has ordered.'],
   settings: ['Shop settings', 'Business details, opening hours, alerts and policies.'], delivery: ['Delivery', 'Fees by distance from your pins in Lagos and Oyo.'], team: ['Team & security', 'Who can open this desk, and what they’ve done.'],
   guide: ['How to use', 'Every page of this desk explained, step by step.'],
+  riders: ['Riders', 'Each rider gets a private link with their drops. They confirm each delivery with the customer’s code.'],
 };
 
 export default function Desk() { return <Toasts><Inner /></Toasts>; }
@@ -214,6 +216,7 @@ function Inner() {
               {sec === 'delivery' && <Delivery c={ctx} />}
               {sec === 'team' && <Team c={ctx} />}
               {sec === 'guide' && <Guide c={ctx} />}
+              {sec === 'riders' && <Riders c={ctx} />}
             </div>
           </main>
         </div>

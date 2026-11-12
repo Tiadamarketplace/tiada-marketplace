@@ -1,4 +1,5 @@
 'use client';
+import { Spin } from './ui';
 import Link from '@/components/shop/Link';
 import { useState } from 'react';
 import { useShop } from './ShopProvider';
@@ -56,7 +57,7 @@ export default function Footer() {
             <form onSubmit={join} style={{ display: 'flex', height: 48, borderBottom: '1px solid rgba(236,241,237,0.5)' }}>
               <label htmlFor="nl" style={{ position: 'absolute', left: -9999 }}>Email</label>
               <input id="nl" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" autoComplete="email" style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', color: '#FFFFFF', fontSize: 14, outline: 'none' }} />
-              <button type="submit" disabled={busy} className="ub" aria-label="Subscribe" style={{ width: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F6E9CF', opacity: busy ? 0.5 : 1 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
+              <button type="submit" disabled={busy} className="ub" aria-label="Subscribe" style={{ width: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F6E9CF', opacity: busy ? 0.5 : 1 }}>{busy ? <Spin size={16} /> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>}</button>
             </form>
           ) : <p className="pop" role="status" style={{ margin: 0, fontSize: 14, color: '#F6E9CF' }}>You’re on the list. Thank you.</p>}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>

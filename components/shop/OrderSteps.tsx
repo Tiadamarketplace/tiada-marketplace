@@ -2,7 +2,7 @@
 /** The four delivery steps used on Track and in My account. */
 const STEPS = [['new', 'Paid'], ['packed', 'Packed'], ['route', 'On the way'], ['done', 'Delivered']] as const;
 export const STATUS_LABEL: Record<string, string> = { new: 'Paid · being packed', packed: 'Packed', route: 'On the way', done: 'Delivered', issue: 'Needs attention', refunded: 'Refunded', cancelled: 'Cancelled' };
-export const STATUS_COLOR: Record<string, [string, string]> = { new: ['#F6E9CF', '#6B4A12'], packed: ['#E6EEE8', '#0B3A23'], route: ['#E6EEE8', '#0B3A23'], done: ['#0B3A23', '#FFFFFF'], issue: ['#FBEFEB', '#7A2A1B'], refunded: ['#EFEDE6', '#4D5A52'], cancelled: ['#EFEDE6', '#4D5A52'] };
+export const STATUS_COLOR: Record<string, [string, string]> = { new: ['#F6E9CF', '#6B4A12'], packed: ['#E6EEE8', '#0B3A23'], route: ['#E6EEE8', '#0B3A23'], done: ['#0B3A23', '#FFFFFF'], issue: ['#FBEFEB', '#7A2A1B'], refunded: ['#EFEDE6', '#3C4741'], cancelled: ['#EFEDE6', '#3C4741'] };
 
 export function StatusPill({ s }: { s: string }) {
   const [bg, fg] = STATUS_COLOR[s] || STATUS_COLOR.new;
@@ -14,7 +14,7 @@ export default function OrderSteps({ status }: { status: string }) {
   return (
     <ol aria-label="Order progress" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
       {STEPS.map(([k, l], i) => (
-        <li key={k} aria-current={i === at ? 'step' : undefined} style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, fontWeight: i === at ? 600 : 500, color: i <= at ? '#0B3A23' : '#8B958E' }}>
+        <li key={k} aria-current={i === at ? 'step' : undefined} style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, fontWeight: i === at ? 600 : 500, color: i <= at ? '#0B3A23' : '#66736B' }}>
           <span style={{ height: 4, borderRadius: 4, background: i <= at ? '#0B3A23' : '#E6E2D8' }} />{l}
         </li>
       ))}

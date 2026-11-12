@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { db, must } from './db';
 import { notifyOrder, ownerNewOrder, Order } from './notify';
 import { countVoucherUse } from './vouchers';
@@ -8,8 +9,11 @@ export async function markPaid(orderId: string, amountKobo: number, paidAt?: str
   if (!o) return { ok: false, reason: 'not found' };
   if (o.status !== 'pending' && o.status !== 'expired') return { ok: true, already: true };
   if (amountKobo < o.total * 100) return { ok: false, reason: 'amount too low' };
-  const upd = must(await db().from('orders').update({ status: 'new', paid_at: paidAt || new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', orderId).in('status', ['pending', 'expired']).select('*')) as Order[];
+  const set = { status: 'new', paid_at: paidAt || new Date().toISOString(), updated_at: new Date().toISOString(), drop_code: newDropCode() };
+  let res = await db().from('orders').update(set).eq('id', orderId).in('status', ['pending', 'expired']).select('*');
+  // drop_code comes with 2026-11-riders.sql; until it's run, mark it paid without one
+  if (res.error && /drop_code/.test(res.error.message)) { const { drop_code, ...rest } = set; void drop_code; res = await db().from('orders').update(rest).eq('id', orderId).in('status', ['pending', 'expired']).select('*'); }
+  const upd = must(res) as Order[];
   if (!upd.length) return { ok: true, already: true };
   const paid = upd[0];
   await countVoucherUse(paid.voucher).catch(e => console.error('voucher count', e));
@@ -17,6 +21,9 @@ export async function markPaid(orderId: string, amountKobo: number, paidAt?: str
   await ownerNewOrder(paid).catch(e => console.error('owner order email', e));
   return { ok: true };
 }
+
+/** A 4-digit code the customer gives the rider at the door, so a delivery can't be faked. */
+export function newDropCode() { return String(randomInt(0, 10000)).padStart(4, '0'); }
 
 /** What a customer is allowed to see about an order. */
 export function publicOrder(o: Order) {

@@ -8,10 +8,10 @@ import { Dialog } from '../Overlays';
 import OrderSteps, { StatusPill } from '../OrderSteps';
 import { ProductImage } from '../ProductCard';
 import { naira, api, lineKey, CartLine, waLink } from '@/lib/shop-client';
-import { H1, btnSolid, btnOut, field, labelStyle } from '../ui';
+import { H1, btnSolid, btnOut, field, labelStyle, Spin } from '../ui';
 
 type OItem = { pid: string; name: string; size: string; qty: number; price: number; swaps?: { from: string; to: string }[] };
-type Order = { id: string; status: string; total: number; delivery_fee: number; discount: number; created_at: string; address: string; area_label: string | null; speed_label: string | null; items: OItem[]; rider: { partner?: string; tracking?: string; driver?: string; phone?: string } | null; issue: { reason?: string; note?: string; eta?: string } | null; refunds?: { amount: number }[] | null };
+type Order = { drop_code?: string | null; id: string; status: string; total: number; delivery_fee: number; discount: number; created_at: string; address: string; area_label: string | null; speed_label: string | null; items: OItem[]; rider: { partner?: string; tracking?: string; driver?: string; phone?: string } | null; issue: { reason?: string; note?: string; eta?: string } | null; refunds?: { amount: number }[] | null };
 type Tab = 'overview' | 'orders' | 'addresses' | 'profile' | 'privacy';
 const date = (s: string) => new Date(s).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -73,33 +73,33 @@ function SignIn({ next }: { next: string }) {
   return (
     <div className="fade" style={{ maxWidth: 1000, margin: '0 auto', padding: '48px clamp(16px, 3vw, 28px) 0', display: 'flex', flexWrap: 'wrap', gap: 40, alignItems: 'center' }}>
       <div style={{ flex: '1 1 380px', maxWidth: 460, display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#66736B' }}>{step === 'details' ? 'Almost done' : 'My account'}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#4E5A53' }}>{step === 'details' ? 'Almost done' : 'My account'}</span>
         <H1>{step === 'email' ? 'Sign in or create an account' : step === 'code' ? 'Check your email' : 'Tell us who you are'}</H1>
         {step === 'email' && (
           <form onSubmit={e => { e.preventDefault(); send(); }} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#4D5A52' }}>No password to remember. We’ll email you a 6-digit code. New here? The same code creates your account, and you stay signed in on this device.</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#3C4741' }}>No password to remember. We’ll email you a 6-digit code. New here? The same code creates your account, and you stay signed in on this device.</p>
             <label style={labelStyle}>Email<input type="email" autoComplete="email" value={email} onChange={e => { setEmail(e.target.value); setErr(''); }} autoFocus style={{ ...field, borderColor: err ? '#B8402B' : '#DCD6CA' }} /></label>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13.5, lineHeight: 1.5, color: '#4D5A52' }}><input type="checkbox" checked={promo} onChange={e => setPromo(e.target.checked)} style={{ width: 18, height: 18, marginTop: 1, accentColor: '#0B3A23' }} />Send me new stock and combo deals now and then</label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13.5, lineHeight: 1.5, color: '#3C4741' }}><input type="checkbox" checked={promo} onChange={e => setPromo(e.target.checked)} style={{ width: 18, height: 18, marginTop: 1, accentColor: '#0B3A23' }} />Send me new stock and combo deals now and then</label>
             {err && <p role="alert" className="shake" style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-            <button type="submit" disabled={busy} className="ub btn-solid press" style={{ ...btnSolid, opacity: busy ? 0.7 : 1 }}>{busy ? 'Sending code…' : 'Email me a code'}</button>
-            <p style={{ margin: 0, fontSize: 13, color: '#66736B' }}>Just want to check an order? <Link href="/track" className="lnk" style={{ color: '#0B3A23' }}>Track it without signing in</Link>.</p>
+            <button type="submit" disabled={busy} className="ub btn-solid press" style={{ ...btnSolid, opacity: busy ? 0.7 : 1 }}>{busy ? <><Spin />Sending code…</> : 'Email me a code'}</button>
+            <p style={{ margin: 0, fontSize: 13, color: '#4E5A53' }}>Just want to check an order? <Link href="/track" className="lnk" style={{ color: '#0B3A23' }}>Track it without signing in</Link>.</p>
           </form>
         )}
         {step === 'code' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#4D5A52' }}>We sent a 6-digit code to <strong style={{ color: '#1F2A23' }}>{email}</strong>. It works for 10 minutes. Check spam if you can’t see it.</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#3C4741' }}>We sent a 6-digit code to <strong style={{ color: '#1F2A23' }}>{email}</strong>. It works for 10 minutes. Check spam if you can’t see it.</p>
             <div role="group" aria-label="6-digit code" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
               {digits.map((dg, i) => <input key={i} ref={el => { boxes.current[i] = el; }} value={dg} inputMode="numeric" autoComplete={i === 0 ? 'one-time-code' : 'off'} aria-label={`Digit ${i + 1}`} maxLength={6}
                 onChange={e => type(i, e.target.value)} onKeyDown={e => { if (e.key === 'Backspace' && !dg && i > 0) boxes.current[i - 1]?.focus(); }}
                 style={{ ...field, height: 58, padding: 0, textAlign: 'center', fontSize: 24, fontWeight: 600, borderColor: err ? '#B8402B' : '#DCD6CA' }} />)}
             </div>
             {err && <p role="alert" className="shake" style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-            {busy && <p role="status" style={{ margin: 0, fontSize: 13.5, color: '#66736B' }}>Checking…</p>}
+            {busy && <p role="status" style={{ margin: 0, fontSize: 14, color: '#3C4741', display: 'flex', alignItems: 'center', gap: 10 }}><Spin dark />Checking your code…</p>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px', fontSize: 13.5 }}>
-              {wait > 0 ? <span style={{ color: '#66736B' }}>Send a new code in {wait}s</span> : <button type="button" className="ub lnk" onClick={send} style={{ color: '#0B3A23', fontSize: 13.5 }}>Send a new code</button>}
-              <button type="button" className="ub lnk" onClick={() => { setStep('email'); setErr(''); }} style={{ color: '#66736B', fontSize: 13.5 }}>Use a different email</button>
+              {wait > 0 ? <span style={{ color: '#4E5A53' }}>Send a new code in {wait}s</span> : <button type="button" className="ub lnk" onClick={send} style={{ color: '#0B3A23', fontSize: 13.5 }}>Send a new code</button>}
+              <button type="button" className="ub lnk" onClick={() => { setStep('email'); setErr(''); }} style={{ color: '#4E5A53', fontSize: 13.5 }}>Use a different email</button>
             </div>
-            <details style={{ borderTop: '1px solid #ECE8DF', paddingTop: 14, fontSize: 14, color: '#4D5A52', lineHeight: 1.7 }}>
+            <details style={{ borderTop: '1px solid #ECE8DF', paddingTop: 14, fontSize: 14, color: '#3C4741', lineHeight: 1.7 }}>
               <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#1F2A23' }}>Didn’t get the code?</summary>
               <p style={{ margin: '8px 0 0' }}>It can take a minute. Check your spam or promotions folder for an email from Tiada. Make sure <strong>{email}</strong> is spelled right, or send a new code.</p>
               <p style={{ margin: '8px 0 0' }}>Can’t get into that email any more? <a href="https://wa.me/2348075110000?text=Hi%20Tiada%2C%20I%20can%E2%80%99t%20get%20into%20my%20account." target="_blank" rel="noopener" style={{ color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4 }}>Message us on WhatsApp</a> and we’ll move your account to a new email.</p>
@@ -108,21 +108,21 @@ function SignIn({ next }: { next: string }) {
         )}
         {step === 'details' && (
           <form onSubmit={e => { e.preventDefault(); saveDetails(); }} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#4D5A52' }}>We’ll use these at checkout so you don’t type them again, and the rider uses your number to find you.</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#3C4741' }}>We’ll use these at checkout so you don’t type them again, and the rider uses your number to find you.</p>
             <label style={labelStyle}>Full name<input value={d.name} onChange={e => setD({ ...d, name: e.target.value })} autoComplete="name" autoFocus style={field} /></label>
             <label style={labelStyle}>Phone number<input value={d.phone} onChange={e => setD({ ...d, phone: e.target.value })} type="tel" inputMode="tel" autoComplete="tel" placeholder="0803 000 0000" style={field} /></label>
             {err && <p role="alert" className="shake" style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-            <button type="submit" disabled={busy} className="ub btn-solid press" style={btnSolid}>{busy ? 'Saving…' : 'Save and continue'}</button>
-            <button type="button" className="ub lnk" onClick={finish} style={{ alignSelf: 'center', fontSize: 13.5, color: '#66736B' }}>Skip for now</button>
+            <button type="submit" disabled={busy} className="ub btn-solid press" style={btnSolid}>{busy ? <><Spin />Saving…</> : 'Save and continue'}</button>
+            <button type="button" className="ub lnk" onClick={finish} style={{ alignSelf: 'center', fontSize: 13.5, color: '#4E5A53' }}>Skip for now</button>
           </form>
         )}
       </div>
       <aside className="hide-xs" style={{ flex: '1 1 300px', maxWidth: 380, alignSelf: 'stretch', borderLeft: '1px solid #ECE8DF', paddingLeft: 40, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
         <h2 style={{ margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>New to Tiada?</h2>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>Use the same form. Your account is made the moment you enter the code, and you stay signed in on this device.</p>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>With an account, checkout fills in your details, every order is kept in one place, and you can buy a past order again in one tap.</p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#3C4741' }}>Use the same form. Your account is made the moment you enter the code, and you stay signed in on this device.</p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#3C4741' }}>With an account, checkout fills in your details, every order is kept in one place, and you can buy a past order again in one tap.</p>
         <h2 style={{ margin: '14px 0 0', fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase' }}>Forgot your password?</h2>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#4D5A52' }}>There isn’t one to forget. Every time you sign in, we email you a fresh code, so nobody can guess or steal a password.</p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: '#3C4741' }}>There isn’t one to forget. Every time you sign in, we email you a fresh code, so nobody can guess or steal a password.</p>
       </aside>
     </div>
   );
@@ -130,7 +130,7 @@ function SignIn({ next }: { next: string }) {
 
 const NAV: [Tab, string][] = [['overview', 'Overview'], ['orders', 'Orders'], ['addresses', 'Addresses'], ['profile', 'Personal details'], ['privacy', 'Emails & privacy']];
 const STATUS_WORD: Record<string, string> = { new: 'Being packed', packed: 'Packed', route: 'On the way', done: 'Delivered', issue: 'Delayed', refunded: 'Refunded', cancelled: 'Cancelled' };
-const label: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#66736B' };
+const label: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#4E5A53' };
 const h2: React.CSSProperties = { margin: 0, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1F2A23' };
 const textLink: React.CSSProperties = { fontSize: 13.5, fontWeight: 500, color: '#1F2A23', textDecoration: 'underline', textUnderlineOffset: 4, textDecorationColor: '#B9B3A5' };
 
@@ -173,9 +173,9 @@ function Profile() {
 
   const Row = ({ o }: { o: Order }) => (
     <button type="button" className="ub drop-row acct-row" onClick={() => view(o.id)} style={{ width: '100%', display: 'grid', gridTemplateColumns: '110px 100px minmax(0, 1fr) 110px 90px', alignItems: 'center', gap: 16, padding: '18px 0', borderBottom: '1px solid #ECE8DF', textAlign: 'left', fontSize: 14 }}>
-      <span style={{ color: '#66736B' }}>{date(o.created_at)}</span>
+      <span style={{ color: '#4E5A53' }}>{date(o.created_at)}</span>
       <span style={{ fontWeight: 600 }}>{o.id}</span>
-      <span style={{ color: '#4D5A52', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.items.map(i => `${i.qty} × ${i.name}`).join(', ')}</span>
+      <span style={{ color: '#3C4741', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.items.map(i => `${i.qty} × ${i.name}`).join(', ')}</span>
       <span style={{ color: o.status === 'issue' ? '#9E3522' : '#1F2A23' }}>{STATUS_WORD[o.status] || o.status}</span>
       <span style={{ textAlign: 'right', fontWeight: 600 }}>{naira(o.total)}</span>
     </button>
@@ -184,23 +184,24 @@ function Profile() {
     <article style={{ borderTop: '1px solid #1F2A23', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '6px 18px' }}>
         <h3 style={{ margin: 0, fontSize: 22, fontWeight: 500 }}>Order {o.id}</h3>
-        <span style={{ fontSize: 13.5, color: '#66736B' }}>Placed {date(o.created_at)} · {STATUS_WORD[o.status]}</span>
+        <span style={{ fontSize: 13.5, color: '#4E5A53' }}>Placed {date(o.created_at)} · {STATUS_WORD[o.status]}</span>
         <button type="button" className="ub" onClick={() => setOpen(null)} style={{ marginLeft: 'auto', ...textLink }}>Back to all orders</button>
       </div>
       <OrderSteps status={o.status} />
+      {o.drop_code && ['new', 'packed', 'route'].includes(o.status) && <p style={{ margin: 0, padding: '12px 16px', borderRadius: 6, background: '#FBF2DE', color: '#5C430F', fontSize: 14, lineHeight: 1.6 }}><strong style={{ color: '#3D2C08', letterSpacing: '0.06em' }}>Delivery code: {o.drop_code}.</strong> Give it to our rider at the door, once you have your order.</p>}
       {o.status === 'issue' && o.issue && <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#7A2A1B' }}>{o.issue.reason || 'We hit a problem with this order.'} {o.issue.note}{o.issue.eta ? ` New date: ${o.issue.eta}.` : ''}</p>}
-      {(o.rider?.tracking || o.rider?.driver) && <p style={{ margin: 0, fontSize: 14, color: '#4D5A52' }}>{o.rider.driver ? <>Your rider is {o.rider.driver}{o.rider.phone ? <> · <a href={'tel:' + o.rider.phone} style={{ color: '#1F2A23' }}>{o.rider.phone}</a></> : null}</> : <>Sent with {o.rider.partner}, tracking number {o.rider.tracking}</>}</p>}
+      {(o.rider?.tracking || o.rider?.driver) && <p style={{ margin: 0, fontSize: 14, color: '#3C4741' }}>{o.rider.driver ? <>Your rider is {o.rider.driver}{o.rider.phone ? <> · <a href={'tel:' + o.rider.phone} style={{ color: '#1F2A23' }}>{o.rider.phone}</a></> : null}</> : <>Sent with {o.rider.partner}, tracking number {o.rider.tracking}</>}</p>}
       <div>
         {o.items.map((it, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderBottom: '1px solid #ECE8DF' }}>
             <span style={{ position: 'relative', width: 64, height: 64, flex: 'none', background: '#F7F4EC', overflow: 'hidden' }}>{byId[it.pid] ? <ProductImage p={byId[it.pid]} size={10} /> : null}</span>
-            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, fontSize: 14 }}><span style={{ fontWeight: 500 }}>{it.name}</span><span style={{ color: '#66736B', fontSize: 13 }}>{it.size !== 'Package' ? `${it.size} · ` : ''}Qty {it.qty}{it.swaps?.length ? ` · Swapped ${it.swaps.map(w => `${w.from} for ${w.to}`).join(', ')}` : ''}</span></span>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, fontSize: 14 }}><span style={{ fontWeight: 500 }}>{it.name}</span><span style={{ color: '#4E5A53', fontSize: 13 }}>{it.size !== 'Package' ? `${it.size} · ` : ''}Qty {it.qty}{it.swaps?.length ? ` · Swapped ${it.swaps.map(w => `${w.from} for ${w.to}`).join(', ')}` : ''}</span></span>
             <span style={{ fontSize: 14 }}>{naira(it.price * it.qty)}</span>
           </div>
         ))}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, padding: '14px 0', fontSize: 14 }}>
-          <span style={{ color: '#66736B' }}>Delivery · {o.speed_label}</span><span style={{ textAlign: 'right' }}>{naira(o.delivery_fee)}</span>
-          {o.discount > 0 && <><span style={{ color: '#66736B' }}>Discount</span><span style={{ textAlign: 'right' }}>−{naira(o.discount)}</span></>}
+          <span style={{ color: '#4E5A53' }}>Delivery · {o.speed_label}</span><span style={{ textAlign: 'right' }}>{naira(o.delivery_fee)}</span>
+          {o.discount > 0 && <><span style={{ color: '#4E5A53' }}>Discount</span><span style={{ textAlign: 'right' }}>−{naira(o.discount)}</span></>}
           <span style={{ fontWeight: 600 }}>Total</span><span style={{ textAlign: 'right', fontWeight: 600 }}>{naira(o.total)}</span>
         </div>
       </div>
@@ -218,7 +219,7 @@ function Profile() {
         <div>
           <div style={label}>My account</div>
           <h1 style={{ margin: '10px 0 0', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 38px)', letterSpacing: '-0.015em' }}>{user.name || user.email}</h1>
-          <p style={{ margin: '6px 0 0', fontSize: 14, color: '#66736B' }}>{user.name ? user.email : ''}{user.name && since ? ' · ' : ''}{since ? `Customer since ${since}` : ''}</p>
+          <p style={{ margin: '6px 0 0', fontSize: 14, color: '#4E5A53' }}>{user.name ? user.email : ''}{user.name && since ? ' · ' : ''}{since ? `Customer since ${since}` : ''}</p>
         </div>
         <button type="button" className="ub" onClick={() => setAsk('out')} style={textLink}>Sign out</button>
       </header>
@@ -226,7 +227,7 @@ function Profile() {
       <div className="acct-wrap" style={{ display: 'flex', gap: 56, marginTop: 32, alignItems: 'flex-start' }}>
         <nav aria-label="Account sections" className="acct-nav noscroll" style={{ flex: '0 0 200px', display: 'flex', flexDirection: 'column', position: 'sticky', top: 150 }}>
           {NAV.map(([k, l]) => { const on = tab === k; return (
-            <button key={k} type="button" className="ub acct-link" aria-current={on ? 'page' : undefined} onClick={() => { setOpen(null); setTab(k); }} style={{ padding: '11px 0 11px 16px', borderLeft: `2px solid ${on ? '#0B3A23' : '#ECE8DF'}`, fontSize: 14.5, fontWeight: on ? 600 : 400, color: on ? '#0B3A23' : '#4D5A52', whiteSpace: 'nowrap', textAlign: 'left' }}>{l}</button>); })}
+            <button key={k} type="button" className="ub acct-link" aria-current={on ? 'page' : undefined} onClick={() => { setOpen(null); setTab(k); }} style={{ padding: '11px 0 11px 16px', borderLeft: `2px solid ${on ? '#0B3A23' : '#ECE8DF'}`, fontSize: 14.5, fontWeight: on ? 600 : 400, color: on ? '#0B3A23' : '#3C4741', whiteSpace: 'nowrap', textAlign: 'left' }}>{l}</button>); })}
         </nav>
 
         <div key={tab + (open || '')} className="fade" style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 44 }}>
@@ -234,14 +235,14 @@ function Profile() {
             {current && (
               <section aria-labelledby="cur-h">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}><h2 id="cur-h" style={h2}>Current order</h2><button type="button" className="ub" onClick={() => view(current.id)} style={textLink}>View order</button></div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '4px 16px', marginBottom: 16 }}><span style={{ fontSize: 20, fontWeight: 500 }}>{current.id}</span><span style={{ fontSize: 14, color: current.status === 'issue' ? '#9E3522' : '#4D5A52' }}>{STATUS_WORD[current.status]}{current.status === 'route' && current.rider?.driver ? ` with ${current.rider.driver}` : ''}</span></div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '4px 16px', marginBottom: 16 }}><span style={{ fontSize: 20, fontWeight: 500 }}>{current.id}</span><span style={{ fontSize: 14, color: current.status === 'issue' ? '#9E3522' : '#3C4741' }}>{STATUS_WORD[current.status]}{current.status === 'route' && current.rider?.driver ? ` with ${current.rider.driver}` : ''}</span></div>
                 <OrderSteps status={current.status} />
               </section>
             )}
             <section aria-labelledby="rec-h">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingBottom: 12, borderBottom: '1px solid #1F2A23' }}><h2 id="rec-h" style={h2}>Recent orders</h2>{orders && orders.length > 3 && <button type="button" className="ub" onClick={() => setTab('orders')} style={textLink}>View all</button>}</div>
               {!orders ? <div className="skel" style={{ height: 120, marginTop: 12 }} /> : !orders.length
-                ? <p style={{ margin: '18px 0 0', fontSize: 14.5, color: '#4D5A52' }}>You haven’t ordered yet. <Link href="/aisle/all" style={textLink}>Start shopping</Link></p>
+                ? <p style={{ margin: '18px 0 0', fontSize: 14.5, color: '#3C4741' }}>You haven’t ordered yet. <Link href="/aisle/all" style={textLink}>Start shopping</Link></p>
                 : orders.slice(0, 3).map(o => <Row key={o.id} o={o} />)}
             </section>
             {buyAgain.length > 0 && (
@@ -255,8 +256,8 @@ function Profile() {
             <section aria-labelledby="det-h">
               <h2 id="det-h" style={{ ...h2, paddingBottom: 12, borderBottom: '1px solid #1F2A23' }}>Your details</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 28, paddingTop: 20, fontSize: 14.5, lineHeight: 1.65 }}>
-                <div><div style={label}>Contact</div><div style={{ marginTop: 8 }}>{user.name || <span style={{ color: '#66736B' }}>No name yet</span>}<br />{user.phone ? user.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3') : <span style={{ color: '#66736B' }}>No phone yet</span>}<br />{user.email}</div><button type="button" className="ub" onClick={() => setTab('profile')} style={{ ...textLink, marginTop: 10 }}>Edit</button></div>
-                <div><div style={label}>Default address</div><div style={{ marginTop: 8 }}>{def ? <>{def.street}<br />{def.spot?.label || ''}</> : <span style={{ color: '#66736B' }}>No address saved yet</span>}</div><button type="button" className="ub" onClick={() => setTab('addresses')} style={{ ...textLink, marginTop: 10 }}>{def ? 'Manage' : 'Add an address'}</button></div>
+                <div><div style={label}>Contact</div><div style={{ marginTop: 8 }}>{user.name || <span style={{ color: '#4E5A53' }}>No name yet</span>}<br />{user.phone ? user.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3') : <span style={{ color: '#4E5A53' }}>No phone yet</span>}<br />{user.email}</div><button type="button" className="ub" onClick={() => setTab('profile')} style={{ ...textLink, marginTop: 10 }}>Edit</button></div>
+                <div><div style={label}>Default address</div><div style={{ marginTop: 8 }}>{def ? <>{def.street}<br />{def.spot?.label || ''}</> : <span style={{ color: '#4E5A53' }}>No address saved yet</span>}</div><button type="button" className="ub" onClick={() => setTab('addresses')} style={{ ...textLink, marginTop: 10 }}>{def ? 'Manage' : 'Add an address'}</button></div>
                 <div><div style={label}>Emails</div><div style={{ marginTop: 8 }}>Order updates: on<br />Deals and new stock: {user.promo_ok ? 'on' : 'off'}</div><button type="button" className="ub" onClick={() => setTab('privacy')} style={{ ...textLink, marginTop: 10 }}>Change</button></div>
               </div>
             </section>
@@ -266,7 +267,7 @@ function Profile() {
             <section>
               <div className="acct-head adesk-only" style={{ display: 'grid', gridTemplateColumns: '110px 100px minmax(0, 1fr) 110px 90px', gap: 16, paddingBottom: 12, borderBottom: '1px solid #1F2A23', ...label, color: '#1F2A23' }}><span>Date</span><span>Order</span><span>Items</span><span>Status</span><span style={{ textAlign: 'right' }}>Total</span></div>
               {!orders ? <div className="skel" style={{ height: 160, marginTop: 12 }} /> : !orders.length
-                ? <p style={{ margin: '18px 0 0', fontSize: 14.5, color: '#4D5A52' }}>You haven’t ordered yet. <Link href="/aisle/all" style={textLink}>Start shopping</Link></p>
+                ? <p style={{ margin: '18px 0 0', fontSize: 14.5, color: '#3C4741' }}>You haven’t ordered yet. <Link href="/aisle/all" style={textLink}>Start shopping</Link></p>
                 : orders.map(o => <Row key={o.id} o={o} />)}
             </section>
           ))}
@@ -286,11 +287,13 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
   const [adding, setAdding] = useState(false);
   const [a, setA] = useState<{ label: string; street: string; landmark: string; place: PlaceRef | null; bad: string }>({ label: 'Home', street: '', landmark: '', place: null, bad: '' });
   const [err, setErr] = useState('');
+  const [saving, setSaving] = useState(false);
   const save = async () => {
     setErr('');
     if (!a.place) return setErr(a.bad || 'Type the address and pick it from the suggestions.');
+    setSaving(true);
     try { await api('/api/me/addresses', { json: { label: a.label, street: a.street, landmark: a.landmark || null, place: a.place } }); await reload(); setAdding(false); setA({ label: 'Home', street: '', landmark: '', place: null, bad: '' }); notify('ok', 'Address saved.'); }
-    catch (e) { setErr((e as Error).message); }
+    catch (e) { setErr((e as Error).message); } finally { setSaving(false); }
   };
   const remove = async (id: string) => { try { await api('/api/me/addresses?id=' + id, { method: 'DELETE' }); await reload(); notify('info', 'Address removed.'); } catch (e) { notify('err', 'Couldn’t remove that address.', (e as Error).message); } };
   const makeDefault = async (id: string) => { try { await api('/api/me/addresses', { method: 'PATCH', json: { id } }); await reload(); notify('ok', 'Default address updated.'); } catch (e) { notify('err', 'Couldn’t update that.', (e as Error).message); } };
@@ -300,11 +303,11 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
         <div key={x.id} style={{ border: `1px solid ${i === 0 ? '#1F2A23' : '#E4DFD3'}`, borderRadius: 2, padding: 18, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 }}>
           <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><strong style={{ fontWeight: 600 }}>{x.label}</strong>{i === 0 && <span style={{ fontSize: 11.5, fontWeight: 600, color: '#0B3A23' }}>Default</span>}</span>
           <span style={{ lineHeight: 1.55 }}>{x.street}</span>
-          {x.landmark && <span style={{ fontSize: 13, color: '#66736B' }}>Near {x.landmark}</span>}
-          <span style={{ fontSize: 13, color: x.spot ? '#66736B' : '#9E3522' }}>{x.spot ? x.spot.label : 'Add this address again so we can work out delivery.'}</span>
+          {x.landmark && <span style={{ fontSize: 13, color: '#4E5A53' }}>Near {x.landmark}</span>}
+          <span style={{ fontSize: 13, color: x.spot ? '#4E5A53' : '#9E3522' }}>{x.spot ? x.spot.label : 'Add this address again so we can work out delivery.'}</span>
           <span style={{ display: 'flex', gap: 16, marginTop: 6 }}>
             {i > 0 && <button type="button" className="ub lnk" onClick={() => makeDefault(x.id)} style={{ fontSize: 13, color: '#0B3A23' }}>Make default</button>}
-            <button type="button" className="ub lnk" onClick={() => remove(x.id)} style={{ fontSize: 13, color: '#66736B' }}>Remove</button>
+            <button type="button" className="ub lnk" onClick={() => remove(x.id)} style={{ fontSize: 13, color: '#4E5A53' }}>Remove</button>
           </span>
         </div>
       ))}
@@ -314,7 +317,7 @@ function Addresses({ list, reload }: { list: Address[]; reload: () => Promise<vo
           <div style={{ ...labelStyle, gridColumn: '1 / -1' }}>Address<AddressSearch onPick={(p, text) => setA(x => ({ ...x, street: text, place: p?.ok ? p.place : null, bad: p && !p.ok ? p.reason : '' }))} /></div>
           <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>House number, flat or landmark (optional)<input value={a.landmark} onChange={e => setA({ ...a, landmark: e.target.value })} maxLength={120} placeholder="e.g. No. 14, Flat 3, opposite the filling station" style={field} /></label>
           {err && <p role="alert" style={{ gridColumn: '1 / -1', margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 14, alignItems: 'center' }}><button type="submit" className="ub btn-solid press" style={{ ...btnSolid, height: 46 }}>Save address</button><button type="button" className="ub lnk" onClick={() => setAdding(false)} style={{ fontSize: 14 }}>Cancel</button></div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 14, alignItems: 'center' }}><button type="submit" disabled={saving} className="ub btn-solid press" style={{ ...btnSolid, height: 46, opacity: saving ? 0.7 : 1 }}>{saving ? <><Spin />Saving…</> : 'Save address'}</button><button type="button" className="ub lnk" onClick={() => setAdding(false)} style={{ fontSize: 14 }}>Cancel</button></div>
         </form>
       )}
     </div>
@@ -337,9 +340,9 @@ function Details() {
     <form onSubmit={e => { e.preventDefault(); save(); }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
       <label style={labelStyle}>Full name<input value={name} onChange={e => setName(e.target.value)} autoComplete="name" style={field} /></label>
       <label style={labelStyle}>Phone number<input value={phone} onChange={e => setPhone(e.target.value)} type="tel" inputMode="tel" autoComplete="tel" placeholder="0803 000 0000" style={field} /></label>
-      <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Email<input value={user?.email || ''} readOnly style={{ ...field, background: '#F7F5F0', color: '#66736B' }} /><span style={{ fontWeight: 400, fontSize: 12.5, color: '#66736B' }}>This is how you sign in. To change it, message us on WhatsApp.</span></label>
+      <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Email<input value={user?.email || ''} readOnly style={{ ...field, background: '#F7F5F0', color: '#4E5A53' }} /><span style={{ fontWeight: 400, fontSize: 12.5, color: '#4E5A53' }}>This is how you sign in. To change it, message us on WhatsApp.</span></label>
       {err && <p role="alert" style={{ gridColumn: '1 / -1', margin: 0, fontSize: 13.5, fontWeight: 600, color: '#9E3522' }}>{err}</p>}
-      <div style={{ gridColumn: '1 / -1' }}><button type="submit" disabled={busy || !changed} className="ub btn-solid press" style={{ ...btnSolid, height: 46, opacity: busy || !changed ? 0.5 : 1 }}>{busy ? 'Saving…' : 'Save changes'}</button></div>
+      <div style={{ gridColumn: '1 / -1' }}><button type="submit" disabled={busy || !changed} className="ub btn-solid press" style={{ ...btnSolid, height: 46, opacity: busy || !changed ? 0.5 : 1 }}>{busy ? <><Spin />Saving…</> : 'Save changes'}</button></div>
     </form>
   );
 }
@@ -350,7 +353,7 @@ function Privacy({ onDelete, onSignOut }: { onDelete: () => void; onSignOut: () 
     try { const r = await api<{ user: NonNullable<typeof user> }>('/api/me', { method: 'PATCH', json: { promo_ok: v } }); setUser(r.user); notify('ok', v ? 'You’ll get our deals emails.' : 'No more deals emails.', v ? '' : 'You’ll still get emails about your orders.'); }
     catch (e) { notify('err', 'Couldn’t change that.', (e as Error).message); }
   };
-  const row = (t: string, s: string, right: React.ReactNode) => <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid #ECE8DF' }}><span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 14.5, fontWeight: 600 }}>{t}</span><span style={{ fontSize: 13, color: '#66736B', lineHeight: 1.5 }}>{s}</span></span>{right}</div>;
+  const row = (t: string, s: string, right: React.ReactNode) => <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid #ECE8DF' }}><span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}><span style={{ fontSize: 14.5, fontWeight: 600 }}>{t}</span><span style={{ fontSize: 13, color: '#4E5A53', lineHeight: 1.5 }}>{s}</span></span>{right}</div>;
   return (
     <div>
       {row('Deals emails', 'New stock and combo deals, a few times a month at most.', <button type="button" role="switch" aria-checked={!!user?.promo_ok} aria-label="Deals emails" className="ub" onClick={() => promo(!user?.promo_ok)} style={{ width: 44, height: 26, borderRadius: 999, background: user?.promo_ok ? '#0B3A23' : '#C9CFC9', position: 'relative', flex: 'none' }}><span style={{ position: 'absolute', top: 3, left: 3, width: 20, height: 20, borderRadius: '50%', background: '#FFFFFF', transition: 'transform .2s', transform: `translateX(${user?.promo_ok ? 18 : 0}px)` }} /></button>)}

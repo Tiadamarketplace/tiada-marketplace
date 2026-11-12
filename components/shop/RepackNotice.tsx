@@ -27,7 +27,7 @@ export default function RepackNotice() {
         <div style={{ flex: 1, padding: 'clamp(24px, 4vw, 36px)', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#8A5F1C' }}>Before you shop</span>
           <h2 id="rp-h" style={{ margin: 0, fontWeight: 500, fontSize: 'clamp(24px, 3vw, 30px)', lineHeight: 1.2, letterSpacing: '-0.01em', color: '#1F2A23' }}>We repack, so you can buy just what you need.</h2>
-          <div id="rp-b" style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15, lineHeight: 1.7, color: '#4D5A52' }}>
+          <div id="rp-b" style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 15, lineHeight: 1.7, color: '#3C4741' }}>
             <p style={{ margin: 0 }}>Tiada buys cereals, milk and foodstuffs in their large original cartons and bags from trusted distributors. At our hub we measure them into smaller, sealed, food-grade bags, so you can buy 250g, 500g, 1kg or a paint instead of a whole carton, and pay less for it.</p>
             <p style={{ margin: 0 }}>So most items reach you in a <strong style={{ color: '#1F2A23', fontWeight: 600 }}>clear Tiada bag with our label</strong>, not in the brand’s own box or tin. The brand pictures on this site show you what’s inside. It is the same product, just repacked by us. Anything sold sealed in its original pack says so in its size, like “400g tin”.</p>
           </div>
