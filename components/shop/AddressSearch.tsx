@@ -5,7 +5,7 @@ import { field } from './ui';
 
 export type PlaceRef = { id: string; lat?: number | null; lng?: number | null; s?: string | null };
 type Sug = { id: string; main: string; secondary: string; lat?: number; lng?: number };
-export type Pick = { text: string; place: PlaceRef; ok: true; label: string; state: string; city: string; fee: number; days: string } | { text: string; place: PlaceRef; ok: false; label?: string; reason: string };
+export type Pick = { text: string; place: PlaceRef; ok: true; label: string; state: string; city: string; fee: number; days: string; lat?: number; lng?: number } | { text: string; place: PlaceRef; ok: false; label?: string; reason: string };
 
 const newSession = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
 
@@ -32,8 +32,8 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
   const choose = async (place: PlaceRef, label: string) => {
     skip.current = true; setText(label); setOpen(false); setList([]); setChecking(true);
     try {
-      const r = await api<{ ok: boolean; label?: string; state?: string; city?: string; fee?: number; days?: string; reason?: string }>('/api/places', { json: { ...place, s: session.current } });
-      const p: Pick = r.ok ? { text: label, place: { ...place, s: session.current }, ok: true, label: r.label || '', state: r.state || '', city: r.city || '', fee: r.fee || 0, days: r.days || '' } : { text: label, place, ok: false, label: r.label, reason: r.reason || 'We don’t deliver there yet.' };
+      const r = await api<{ ok: boolean; label?: string; state?: string; city?: string; fee?: number; days?: string; reason?: string; lat?: number; lng?: number }>('/api/places', { json: { ...place, s: session.current } });
+      const p: Pick = r.ok ? { text: label, place: { ...place, s: session.current }, ok: true, label: r.label || '', state: r.state || '', city: r.city || '', lat: r.lat, lng: r.lng, fee: r.fee || 0, days: r.days || '' } : { text: label, place, ok: false, label: r.label, reason: r.reason || 'We don’t deliver there yet.' };
       setPick(p); onPick(p, label);
     } catch (e) {
       const p: Pick = { text: label, place, ok: false, reason: (e as Error).message || 'We couldn’t check that address. Please try again.' };
@@ -101,7 +101,16 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
       )}
       {checking && <p role="status" style={{ margin: 0, fontSize: 13.5, color: '#4E5A53' }}>Checking delivery to this address…</p>}
       {!checking && pick && (pick.ok
-        ? <p role="status" className="fade" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver here{pick.label ? <> · <strong style={{ fontWeight: 600 }}>{pick.label}</strong></> : null}{showFee ? <> · delivery {naira(pick.fee)}, usually {pick.days}</> : null}</p>
+        ? <>
+          <p role="status" className="fade" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver here{pick.label ? <> · <strong style={{ fontWeight: 600 }}>{pick.label}</strong></> : null}{showFee ? <> · delivery {naira(pick.fee)}, usually {pick.days}</> : null}</p>
+          {pick.lat != null && pick.lng != null && (
+            <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <iframe title="Your address on Google Maps" src={`https://maps.google.com/maps?q=${pick.lat},${pick.lng}&z=16&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+                style={{ width: '100%', height: 190, border: '1px solid #E4DFD3', borderRadius: 10, display: 'block', background: '#F1EEE6' }} />
+              <span style={{ fontSize: 12.5, color: '#4E5A53' }}>Pin in the wrong place? Type your address again and pick another suggestion, and add a landmark below to help the rider.</span>
+            </div>
+          )}
+        </>
         : <p role="alert" className="shake" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, fontWeight: 600, color: '#B3261E' }}>{pick.reason}</p>)}
     </div>
   );

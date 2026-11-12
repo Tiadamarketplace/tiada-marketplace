@@ -43,10 +43,16 @@ export function ShopProvider({ data, children }: { data: Storefront; children: R
   const nid = useRef(0), timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({}), addedT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setCart(read<CartLine[]>('tiada_cart_v2', [])); setRecent(read<string[]>('tiada_recent', [])); setReady(true); }, []);
-  useEffect(() => { if (ready) write('tiada_cart_v2', cart); }, [cart, ready]);
-  // pages load normally now, so save the cart once more as the browser leaves the page
   const cartRef = useRef(cart); cartRef.current = cart;
-  useEffect(() => { if (!ready) return; const save = () => write('tiada_cart_v2', cartRef.current); window.addEventListener('pagehide', save); return () => window.removeEventListener('pagehide', save); }, [ready]);
+  const saved = useRef('');
+  useEffect(() => { if (ready) { write('tiada_cart_v2', cart); saved.current = JSON.stringify(cart); } }, [cart, ready]);
+  // pages load normally now: as the browser leaves, save once more, but only a change this page hasn't saved yet
+  // (so closing an old tab never wipes a cart changed in another tab)
+  useEffect(() => {
+    if (!ready) return;
+    const save = () => { const now = JSON.stringify(cartRef.current); if (now !== saved.current) { write('tiada_cart_v2', cartRef.current); saved.current = now; } };
+    window.addEventListener('pagehide', save); return () => window.removeEventListener('pagehide', save);
+  }, [ready]);
 
   const dismiss = useCallback((id: number) => { clearTimeout(timers.current[id]); setNotes(n => n.filter(x => x.id !== id)); }, []);
   const notify = useCallback<Ctx['notify']>((kind, title, text, action) => {

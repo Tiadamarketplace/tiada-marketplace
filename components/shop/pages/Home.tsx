@@ -6,6 +6,7 @@ import Row from '../Row';
 import Slider from '../Slider';
 import { AISLES } from '@/lib/shop-client';
 import { IBox, ICard, ITruck } from '../Icons';
+import Perks from '../Perks';
 
 const WHY = [
   { i: <IBox size={30} color="#0B3A23" stroke={1.4} />, t: 'Sized for your home', s: '250g, 500g, 1kg or a paint bucket' },
@@ -22,13 +23,7 @@ export default function Home() {
   return (
     <>
       <section aria-label="Why Tiada" style={{ borderBottom: '1px solid #ECE8DF' }}>
-        <div className="noscroll" style={{ maxWidth: 1240, margin: '0 auto', padding: '16px clamp(16px, 3vw, 28px)', display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(250px, 1fr)', gap: 20, overflowX: 'auto', scrollSnapType: 'x mandatory' }}>
-          {WHY.map(w => (
-            <div key={w.t} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, scrollSnapAlign: 'start' }}>
-              {w.i}<span style={{ display: 'flex', flexDirection: 'column' }}><strong style={{ fontSize: 14, fontWeight: 600 }}>{w.t}</strong><span style={{ fontSize: 13, color: '#4E5A53' }}>{w.s}</span></span>
-            </div>
-          ))}
-        </div>
+        <Perks items={WHY} />
       </section>
 
       <section aria-label="Welcome" style={{ position: 'relative', overflow: 'hidden', background: '#0B3A23' }}>

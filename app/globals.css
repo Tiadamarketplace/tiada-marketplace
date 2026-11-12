@@ -135,3 +135,13 @@ body{overflow-x:hidden}
 .bx>.bx-c{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#3C4741}
 .bx.tall{height:auto;min-height:88px}.bx.tall>textarea{display:block;width:100%;min-height:88px;border:0;background:transparent;padding:26px 14px 10px;font-size:16px;outline:none;resize:vertical;border-radius:10px}
 .bx.tall>.bx-l{top:22px}.bx.tall>textarea:focus~.bx-l,.bx.tall>textarea:not(:placeholder-shown)~.bx-l{top:13px;font-size:12px}
+/* reasons strip: side by side on computers, one at a time on phones */
+.perks{max-width:1240px;margin:0 auto;padding:14px clamp(16px,3vw,28px);display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.perk{display:flex;align-items:center;justify-content:center;gap:14px}
+@media (max-width:820px){
+  .perks{display:block;position:relative;height:64px;overflow:hidden;padding:0}
+  .perk{position:absolute;inset:0;padding:0 16px;opacity:0;transform:translateY(100%);transition:transform .55s cubic-bezier(.2,.7,.2,1),opacity .55s ease}
+  .perk.on{opacity:1;transform:none}
+  .perk.out{transform:translateY(-100%)}
+}
+@media (max-width:820px) and (prefers-reduced-motion:reduce){.perk{transition:opacity .3s ease;transform:none!important}}
