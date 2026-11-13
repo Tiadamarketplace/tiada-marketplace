@@ -1,5 +1,5 @@
 /* Tiada Marketplace shop styles. Colours: green #0B3A23, gold #D49B41, cream #FBF9F4. */
-:root{--green:#0B3A23;--gold:#D49B41;--cream:#FBF9F4;--ink:#1F2A23;--muted:#4E5A53;--line:#ECE8DF;--font-sans:var(--font-montserrat),Montserrat,system-ui,sans-serif;--font-serif:var(--font-playfair),'Playfair Display',Georgia,serif}
+:root{--green:#0B3A23;--gold:#D49B41;--cream:#FBF9F4;--ink:#1F2A23;--muted:#4E5A53;--line:#ECE8DF;--font-sans:var(--font-naira),var(--font-montserrat),Montserrat,system-ui,sans-serif;--font-serif:var(--font-playfair),var(--font-naira),'Playfair Display',Georgia,serif}
 html,body{font-family:var(--font-sans);color:var(--ink);font-size:15px}
 input,select,textarea,button{font-family:inherit}
 .serif{font-family:var(--font-serif);font-style:italic;font-weight:500}

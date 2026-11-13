@@ -4,6 +4,8 @@ import './globals.css';
 
 // Fonts are bundled with the site (no call to Google at build or page load).
 const sans = localFont({ src: './fonts/montserrat-latin-wght-normal.woff2', weight: '100 900', variable: '--font-montserrat', display: 'swap' });
+// Montserrat's naira sign (₦): the main font file doesn't have it, so phones were drawing a bigger one from another font
+const naira = localFont({ src: './fonts/montserrat-naira.woff2', weight: '100 900', variable: '--font-naira', display: 'swap', adjustFontFallback: false, preload: true });
 const serif = localFont({ src: [{ path: './fonts/playfair-display-latin-500-italic.woff2', weight: '500', style: 'italic' }, { path: './fonts/playfair-display-latin-600-italic.woff2', weight: '600', style: 'italic' }], variable: '--font-playfair', display: 'swap' });
 
 const site = (process.env.SITE_URL || 'https://tiadamarketplace.com').replace(/\/$/, '');
@@ -22,7 +24,7 @@ export const viewport: Viewport = { themeColor: '#0B3A23', width: 'device-width'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html lang="en" className={`${naira.variable} ${sans.variable} ${serif.variable}`}>
       <body>{children}</body>
     </html>
   );
