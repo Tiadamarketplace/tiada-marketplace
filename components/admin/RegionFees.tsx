@@ -21,7 +21,7 @@ export default function RegionFees({ c, region, extra }: { c: Ctx; region: Regio
   const raw = spot.trim() ? parseSpot(spot, BOUNDS[region]) : null;
   const n = (v: string) => Number(v.replace(/\D/g, '')) || 0;
   const from = raw || cfg.hub || CENTRE[region];
-  const rows = useMemo(() => SAMPLES[region].map(([name, lat, lng]) => { const km = Math.round(roadKm(from, { lat, lng })); return { name, km, fee: km > cfg.range ? null : feeFor(cfg, km) }; }), [from, cfg, region]);
+  const rows = useMemo(() => SAMPLES[region].map(([name, lat, lng]) => { const km = Math.round(roadKm(from, { lat, lng })); return { name, km, fee: feeFor(cfg, km) }; }), [from, cfg, region]);
 
   const save = async () => {
     if (spot.trim() && !raw) return toast('err', 'We couldn’t read that pin.', `Paste the numbers from Google Maps for a spot in ${region}, like ${region === 'Lagos' ? '6.6156, 3.3209' : '7.9671, 3.6012'}.`);
@@ -49,7 +49,6 @@ export default function RegionFees({ c, region, extra }: { c: Ctx; region: Regio
         {num('start', 'Starting fee (₦)')}
         {num('perKm', 'Plus, for every km (₦)')}
         {num('max', 'Never more than (₦)', 'Far addresses pay this at most.')}
-        {num('range', 'Furthest we deliver (km by road)', 'Past this, customers see “we don’t reach this area yet”.')}
         <label style={lab}>Usually arrives<input value={cfg.days} onChange={e => setCfg(x => ({ ...x, days: e.target.value.slice(0, 40) }))} disabled={!owner} placeholder="next day" style={input} /><span style={{ fontWeight: 400, fontSize: 12, color: '#66736B' }}>Shown as “usually {cfg.days || '…'}”.</span></label>
       </div>
       {!cfg.hub && !raw && <p style={{ margin: '12px 0 0', padding: '10px 12px', borderRadius: 8, background: '#FBF2DE', color: '#5C430F', fontSize: 13 }}>For now, distances are measured from the middle of {region === 'Lagos' ? 'Ikeja' : 'Iseyin town'}. Paste your exact pin above for exact fees.</p>}

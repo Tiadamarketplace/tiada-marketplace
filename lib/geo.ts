@@ -4,7 +4,7 @@
  */
 export type Suggestion = { id: string; main: string; secondary: string; lat?: number; lng?: number };
 /** A place the customer picked: where it is, which state, and a short name for receipts. */
-export type Spot = { lat: number; lng: number; state: string; city: string; label: string; address: string; place?: string };
+export type Spot = { lat: number; lng: number; state: string; city: string; label: string; address: string; place?: string; /** typed by hand: the pin is only roughly right */ approx?: boolean };
 
 const GKEY = () => process.env.GOOGLE_MAPS_KEY || '';
 const UA = 'TiadaMarketplace/1.0 (tiadamarketplace.com)';
@@ -108,4 +108,4 @@ async function osmReverse(lat: number, lng: number, id: string): Promise<Spot | 
   return { lat, lng, state, city, label: [area, city, state].filter((x, i, a) => x && a.indexOf(x) === i).join(', '), address: [l.main, l.secondary].filter(Boolean).join(', '), place: id };
 }
 
-export const mapLink = (s: { lat: number; lng: number }) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+export const mapLink = (s: { lat: number; lng: number; approx?: boolean; address?: string }) => `https://www.google.com/maps/search/?api=1&query=${s.approx && s.address ? encodeURIComponent(s.address) : `${s.lat},${s.lng}`}`;

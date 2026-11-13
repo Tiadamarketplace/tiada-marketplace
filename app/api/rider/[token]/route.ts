@@ -8,7 +8,7 @@ import { esc, naira } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 type O = Order & { paid?: number | null; drop_code?: string | null; updated_at: string; confirm?: Record<string, unknown> | null };
-const mapLink = (s: { lat: number; lng: number }) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+const mapLink = (s: { lat: number; lng: number; approx?: boolean; address?: string }) => `https://www.google.com/maps/search/?api=1&query=${s.approx && s.address ? encodeURIComponent(s.address) : `${s.lat},${s.lng}`}`;
 const today = () => new Date(Date.now() + 3600_000).toISOString().slice(0, 10); // Lagos time (UTC+1)
 
 /** The rider's page: their drops on the way, and what they delivered today. Only what a rider needs. */

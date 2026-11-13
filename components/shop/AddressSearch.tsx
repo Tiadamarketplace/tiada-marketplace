@@ -35,7 +35,7 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
   const [typing, setTyping] = useState(false);
 
   const choose = async (place: PlaceRef, label: string) => {
-    setArea(place.id.startsWith('o:area:')); skip.current = true; setText(label); setOpen(false); setTyping(false); setList([]); setChecking(true);
+    setArea(place.id.startsWith('o:area:') && !/\d/.test(label)); skip.current = true; setText(label); setOpen(false); setTyping(false); setList([]); setChecking(true);
     try {
       const r = await api<{ ok: boolean; label?: string; state?: string; city?: string; fee?: number; days?: string; reason?: string; lat?: number; lng?: number }>('/api/places', { json: { ...place, s: session.current } });
       const p: Pick = r.ok ? { text: label, place: { ...place, s: session.current }, ok: true, label: r.label || '', state: r.state || '', city: r.city || '', lat: r.lat, lng: r.lng, fee: r.fee || 0, days: r.days || '' } : { text: label, place, ok: false, label: r.label, reason: r.reason || 'We don’t deliver there yet.' };
@@ -81,9 +81,11 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
     if (!open || !shown.length) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setHi(i => Math.min(shown.length - 1, i + 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setHi(i => Math.max(0, i - 1)); }
-    else if (e.key === 'Enter' && hi >= 0) { e.preventDefault(); const s = shown[hi]; choose({ id: s.id, lat: s.lat, lng: s.lng }, lbl(s)); }
+    else if (e.key === 'Enter' && hi >= 0) { e.preventDefault(); const s = shown[hi]; choose({ id: s.id, lat: s.lat, lng: s.lng }, pickLabel(s)); }
     else if (e.key === 'Escape') setOpen(false);
   };
+  // picking an area they already typed keeps their whole address (street and all)
+  const pickLabel = (s: Sug) => (s.local && text.trim().length > s.main.length + 3 && text.toLowerCase().includes(s.main.toLowerCase()) ? text.trim() : lbl(s));
   const google = shown.some(s => s.id.startsWith('g:'));
   const bad = invalid || (pick && !pick.ok);
 
@@ -96,12 +98,12 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
           onFocus={() => shown.length && setOpen(true)} onKeyDown={key} aria-invalid={!!bad}
           style={boxLabel ? { paddingRight: 44 } : { ...field, paddingRight: 40, borderColor: bad ? '#B8402B' : pick?.ok ? '#2E7D4F' : '#DCD6CA' }} />
         {boxLabel && <span className="bx-l" aria-hidden="true">{boxLabel}</span>}
-        {((busy && !shown.length) || checking) && <span aria-hidden="true" style={{ position: 'absolute', right: 14, top: boxLabel ? 19 : 16, width: 18, height: 18, borderRadius: '50%', border: '2px solid #E6E0D2', borderTopColor: '#0B3A23', animation: 'spin .8s linear infinite' }} />}
+        
       </div>
       {open && shown.length > 0 && (
         <div id={listId} role="listbox" className="drop-in" style={{ position: 'absolute', left: 0, right: 0, top: boxLabel ? 62 : 54, zIndex: 40, background: '#FFFFFF', borderRadius: 6, border: '1px solid #ECE8DF', boxShadow: '0 20px 50px rgba(17,32,23,.16)', padding: 6, maxHeight: 340, overflowY: 'auto' }}>
           {shown.map((s, i) => (
-            <button key={s.id + i} type="button" role="option" aria-selected={hi === i} className="ub drop-row" onMouseDown={e => e.preventDefault()} onClick={() => choose({ id: s.id, lat: s.lat, lng: s.lng }, lbl(s))}
+            <button key={s.id + i} type="button" role="option" aria-selected={hi === i} className="ub drop-row" onMouseDown={e => e.preventDefault()} onClick={() => choose({ id: s.id, lat: s.lat, lng: s.lng }, pickLabel(s))}
               style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 10px', borderRadius: 4, background: hi === i ? '#F6F2E9' : 'transparent' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5F1C" strokeWidth="2" style={{ flex: 'none', marginTop: 2 }} aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.5" /></svg>
               <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 14, fontWeight: 500, color: '#1F2A23' }}>{s.main}</span>{s.secondary && <span style={{ fontSize: 12.5, color: '#4E5A53' }}>{s.secondary}</span>}</span>
@@ -110,10 +112,6 @@ export default function AddressSearch({ id, initial, onPick, invalid, showFee = 
           <div style={{ padding: '6px 10px 2px', fontSize: 11, color: '#66736B', textAlign: 'right' }}>{google ? 'Powered by Google' : '© OpenStreetMap'}</div>
         </div>
       )}
-      {open && !busy && text.trim().length >= 3 && shown.length === 0 && !pick && (
-        <p style={{ margin: 0, fontSize: 13, color: '#4E5A53' }}>No match yet. Try your street and area, like “Allen Avenue, Ikeja”.</p>
-      )}
-      {checking && <p role="status" style={{ margin: 0, fontSize: 13.5, color: '#4E5A53' }}>Checking delivery to this address…</p>}
       {!checking && pick && (pick.ok
         ? <>
           <p role="status" className="fade" style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver here{pick.label ? <> · <strong style={{ fontWeight: 600 }}>{pick.label}</strong></> : null}{showFee ? <> · delivery {naira(pick.fee)}, usually {pick.days}</> : null}</p>

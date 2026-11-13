@@ -54,20 +54,23 @@ export default function Checkout() {
 
   const items = priced.map(l => ({ pid: l.pid, size: l.size, qty: l.qty, swaps: l.swaps }));
   const itemsKey = JSON.stringify(items);
+  // they can type their address themselves: anywhere in Lagos or Oyo is fine, no need to pick a suggestion
+  const typedText = !f.place && f.address.trim().length >= 5 ? [f.address.trim(), f.city.trim()].filter(Boolean).join(', ') : '';
+  const typed = typedText ? { text: typedText, state: f.state } : null;
   useEffect(() => {
     if (!items.length) return;
     let on = true;
     const t = setTimeout(() => {
-      api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: codeApplied || null, email: f.email || null } })
+      api<Quote>('/api/quote', { json: { items, place: f.place, typed, speed: f.speed, voucher: codeApplied || null, email: f.email || null } })
         .then(r => on && setQ(r))
         .catch((e: Error & { status?: number }) => {
           if (!on) return;
           if (codeApplied && /code|“/.test(e.message)) { setCodeErr(e.message); setCodeApplied(''); return; }
           if (e.status === 409) setChanged(e.message);
         });
-    }, 250);
+    }, typed ? 500 : 250);
     return () => { on = false; clearTimeout(t); };
-  }, [itemsKey, f.place?.id, f.place?.lat, f.speed, codeApplied, f.email]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [itemsKey, f.place?.id, f.place?.lat, f.speed, codeApplied, f.email, typedText, f.state]); // eslint-disable-line react-hooks/exhaustive-deps
   // guests: once a full email is typed, keep a copy of the cart for one reminder email if they don't finish
   const { cart } = useShop();
   useEffect(() => {
@@ -77,10 +80,11 @@ export default function Checkout() {
   }, [f.email, itemsKey, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sub = priced.reduce((a, l) => a + l.line, 0);
-  const good = spot?.ok ? spot : null;
+  const typedOk = !!typed && q?.fee != null;
+  const good = spot?.ok ? spot : typedOk && q ? { ok: true as const, fee: (q.fee || 0) - (f.speed === 'same' ? data.fees.same : 0), days: q.days || '', label: q.area || f.state, state: f.state, city: f.city, text: f.address, place: { id: '' } } : null;
   // the server's quote is the real figure; until it arrives, show the address's base fee
   const estFee = good ? good.fee + (f.speed === 'same' ? data.fees.same : 0) : null;
-  const fee = q && f.place ? q.fee : estFee;
+  const fee = q && (f.place || typedOk) ? q.fee : estFee;
   const total = q ? q.total : sub + (estFee || 0);
   const arrive = q?.days || (good ? (f.speed === 'same' ? 'today or next morning where we can' : good.days) : '');
   // the picked address decides the state; the city fills itself in (they can change it)
@@ -94,7 +98,7 @@ export default function Checkout() {
     const c = code.trim().toUpperCase(); setCodeErr('');
     if (!c) return setCodeErr('Type your code first.');
     if (codeBusy) return; setCodeBusy(true);
-    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: c, email: f.email || null } }); setQ(r); setCodeApplied(c); notify('ok', `${c} applied.`, `You save ${naira(r.discount)}.`); }
+    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, typed, speed: f.speed, voucher: c, email: f.email || null } }); setQ(r); setCodeApplied(c); notify('ok', `${c} applied.`, `You save ${naira(r.discount)}.`); }
     catch (e) { setCodeErr((e as Error).message); } finally { setCodeBusy(false); }
   };
 
@@ -104,7 +108,7 @@ export default function Checkout() {
       ['name', f.name.trim().length >= 2, 'Add your full name.'],
       ['phone', /^0[789][01]\d{8}$/.test(f.phone.replace(/[\s-]/g, '').replace(/^\+?234/, '0')), 'Use an 11-digit Nigerian phone number, like 0803 000 0000.'],
       ['email', /^\S+@\S+\.\S+$/.test(f.email.trim()), 'Enter a full email address so we can send your receipt.'],
-      ['address', !!good && !!f.place, spot && !spot.ok ? spot.reason : 'Type your address and pick it from the suggestions, so we can work out delivery.'],
+      ['address', !!f.place || typedOk, spot && !spot.ok ? spot.reason : q?.reason && typed ? q.reason : 'Type your delivery address: house number, street and area.'],
     ];
     const bad = need.find(n => !n[1]);
     if (bad) { setErr({ field: bad[0], text: bad[2] }); document.getElementById('co-' + bad[0])?.focus(); return; }
@@ -113,7 +117,7 @@ export default function Checkout() {
     try { const { name, phone, email, address, landmark, city, state, place, speed } = f; localStorage.setItem(SAVE_KEY, JSON.stringify({ name, phone, email, address, landmark, city, state, place: place ? { id: place.id, lat: place.lat, lng: place.lng } : null, speed })); } catch { /* */ }
     // one last check of prices, stock and the delivery fee before the payment step
     setContBusy(true); const t0 = Date.now();
-    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, speed: f.speed, voucher: codeApplied || null, email: f.email || null } }); setQ(r); }
+    try { const r = await api<Quote>('/api/quote', { json: { items, place: f.place, typed, speed: f.speed, voucher: codeApplied || null, email: f.email || null } }); setQ(r); }
     catch (e) { setContBusy(false); setErr({ text: (e as Error).message }); return; }
     const rest = 500 - (Date.now() - t0); if (rest > 0) await new Promise(res => setTimeout(res, rest));
     setContBusy(false);
@@ -124,7 +128,7 @@ export default function Checkout() {
     setPhase('opening');
     let r: { order: { id: string; total: number }; ref: string; access_code: string; authorization_url: string };
     try {
-      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: fullAddress(), landmark: f.landmark.trim() || null, place: f.place, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
+      r = await api('/api/checkout', { json: { items, email: f.email.trim(), name: f.name.trim(), phone: f.phone, address: fullAddress(), landmark: f.landmark.trim() || null, place: f.place, typed, speed: f.speed, voucher: codeApplied || null, note: f.note.trim() || null, save_address: !!user && f.save } });
     } catch (e) {
       const m = (e as Error).message; const st = (e as { status?: number }).status;
       if (st === 409) { setPhase('idle'); setChanged(m); return; }
@@ -176,7 +180,7 @@ export default function Checkout() {
 
               <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <h2 style={{ margin: 0, fontWeight: 500, fontSize: 22 }}>Delivery</h2>
-                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#3C4741' }}>We deliver in {whereWeDeliver(data.zones)}. Choose your state, start typing your address and pick it from the list. The delivery fee depends on the distance.</p>
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#3C4741' }}>We deliver anywhere in {whereWeDeliver(data.zones)}. Choose your state and type your address. Suggestions help, but you don’t have to pick one. The delivery fee depends on the distance.</p>
                 {addresses.some(a => a.spot?.place) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {addresses.filter(a => a.spot?.place).map(a => <button key={a.id} type="button" className="ub chip" onClick={() => { set('landmark', a.landmark || ''); setStart({ text: a.street, place: { id: a.spot!.place, lat: a.spot!.lat, lng: a.spot!.lng } }); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: '1px solid #DCD6CA', fontSize: 12.5 }}>{a.label}: {a.street.slice(0, 28)}</button>)}
@@ -186,6 +190,7 @@ export default function Checkout() {
                   {data.zones.map(z => <option key={z.id} value={z.state || z.label}>{z.state || z.label}</option>)}
                 </BoxSelect>
                 <AddressSearch key={`${start?.text || 'new'}-${addrKey}`} id="co-address" boxLabel="Address" state={f.state} initial={start} onPick={onPick} invalid={err?.field === 'address'} />
+                {typedOk && q && <p role="status" className="fade" style={{ margin: '-6px 0 0', fontSize: 14, lineHeight: 1.55, color: '#1E6B43' }}>✓ We deliver anywhere in {f.state === 'Lagos' ? 'Lagos' : f.state + ' State'}{q.area && q.area !== f.state ? <> · <strong style={{ fontWeight: 600 }}>{q.area}</strong></> : null} · delivery {naira(q.fee || 0)}, usually {q.days}</p>}
                 <Box label="Apartment, house number or landmark (optional)" type="text" value={f.landmark} onChange={e => set('landmark', e.target.value)} maxLength={120} />
                 <Box label="City or town" type="text" autoComplete="address-level2" value={f.city} onChange={e => set('city', e.target.value)} maxLength={60} />
                 {good && (

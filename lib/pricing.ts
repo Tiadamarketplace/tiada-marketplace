@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { resolve, Spot } from './geo';
-import { quoteSpot, regions } from './regions';
+import { quoteSpot, regions, typedSpot } from './regions';
 import { getProducts, getSetting, DEFAULT_FEES, Fees, SWAP_CEREAL, SWAP_FOOD } from './catalog';
 import { HttpError } from './http';
 import { applyVoucher } from './vouchers';
@@ -16,11 +16,13 @@ export type CartItemT = z.infer<typeof CartItem>;
 /** The address the customer picked from the suggestions. The server looks it up again itself. */
 export const Place = z.object({ id: z.string().max(300), lat: z.number().min(-90).max(90).optional().nullable(), lng: z.number().min(-180).max(180).optional().nullable(), s: z.string().max(80).optional().nullable() });
 export type PlaceT = z.infer<typeof Place>;
+/** An address typed by hand (no suggestion picked), with the state they chose. */
+export const Typed = z.object({ text: z.string().trim().min(5).max(300), state: z.string().trim().max(30) });
 
 export type PricedLine = { pid: string; name: string; size: string; qty: number; price: number; was: number | null; kg: number; swaps: { from: string; to: string }[]; img: string | null };
 
 /** Work out the order from scratch on the server. Prices from the browser are never trusted. */
-export async function priceCart(items: CartItemT[], opts: { place?: PlaceT | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
+export async function priceCart(items: CartItemT[], opts: { place?: PlaceT | null; typed?: z.infer<typeof Typed> | null; speed: string; voucher?: string | null; email?: string | null; quote?: boolean }) {
   if (!items.length) throw new HttpError(400, 'Your basket is empty.');
   const [products, regs, fees] = await Promise.all([getProducts(), regions(), getSetting<Fees>('fees', DEFAULT_FEES)]);
   const lines: PricedLine[] = [];
@@ -48,11 +50,11 @@ export async function priceCart(items: CartItemT[], opts: { place?: PlaceT | nul
   const discount = v?.discount || 0;
   if (!opts.quote && subtotal < fees.min) throw new HttpError(400, `The minimum order for delivery is ₦${fees.min.toLocaleString()}. Add ₦${(fees.min - subtotal).toLocaleString()} more.`);
 
-  const spot: Spot | null = opts.place ? await resolve({ id: opts.place.id, lat: opts.place.lat, lng: opts.place.lng, session: opts.place.s }) : null;
+  const spot: Spot | null = opts.place ? await resolve({ id: opts.place.id, lat: opts.place.lat, lng: opts.place.lng, session: opts.place.s }) : opts.typed ? await typedSpot(opts.typed.text, opts.typed.state) : null;
   const sq = spot ? quoteSpot(spot, regs) : null;
   const none = { lines, subtotal, discount, voucher: v?.code || null, fee: null, total: subtotal - discount, kg, zoneId: null, spot: null, areaLabel: null, speedLabel: null, days: null, min: fees.min };
   if (!spot || !sq || !sq.ok) {
-    const reason = !opts.place ? 'Type your address and pick it from the suggestions.' : !spot ? 'We couldn’t find that address on the map. Try typing it a little differently, then pick it from the list.' : (sq as { reason: string }).reason;
+    const reason = !opts.place && !opts.typed ? 'Type your delivery address.' : !spot && opts.typed ? 'Right now we deliver in Lagos and Oyo State. Choose one of them.' : !spot ? 'We couldn’t find that place. Type your address yourself instead.' : (sq as { reason: string }).reason;
     if (opts.quote) return { ...none, reason };
     throw new HttpError(400, reason);
   }

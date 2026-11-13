@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { handle, ok, limit, clientIp, HttpError } from '@/lib/http';
 import { db, must } from '@/lib/db';
-import { CartItem, Place, priceCart } from '@/lib/pricing';
+import { CartItem, Place, Typed, priceCart } from '@/lib/pricing';
 import { initialize } from '@/lib/paystack';
 import { currentCustomer } from '@/lib/customer';
 import { env } from '@/lib/env';
@@ -15,7 +15,8 @@ const Body = z.object({
   phone: z.string().trim().transform(s => s.replace(/[\s-]/g, '').replace(/^\+?234/, '0')).pipe(z.string().regex(/^0[789][01]\d{8}$/, 'Use an 11-digit Nigerian phone number, like 0803 000 0000.')),
   address: z.string().trim().min(6, 'Add a house number and street.').max(240),
   landmark: z.string().trim().max(120).optional().nullable(),
-  place: Place,
+  place: Place.optional().nullable(),
+  typed: Typed.optional().nullable(),
   speed: z.enum(['same', 'next', 'eco']),
   voucher: z.string().trim().max(20).optional().nullable(),
   note: z.string().trim().max(300).optional().nullable(),
@@ -25,7 +26,7 @@ const Body = z.object({
 export const POST = handle(async (req: Request) => {
   limit('checkout:' + clientIp(req), 12, 10 * 60000);
   const b = Body.parse(await req.json());
-  const priced = await priceCart(b.items, { place: b.place, speed: b.speed, voucher: b.voucher, email: b.email });
+  const priced = await priceCart(b.items, { place: b.place, typed: b.place ? null : (b.typed || { text: b.address, state: '' }), speed: b.speed, voucher: b.voucher, email: b.email });
   const cust = await currentCustomer();
   const ref = 'TDA_' + crypto.randomBytes(9).toString('hex');
   const row = {

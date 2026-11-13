@@ -67,7 +67,7 @@ const PARTS: Part[] = [
     steps: [
       ['Paste your pins', 'In Google Maps, press and hold on your Lagos hub, copy the numbers that appear, and paste them under Lagos. Do the same for your Iseyin branch under Oyo. Customers never see your pins.'],
       ['Set the fee', 'Starting fee + a little for every km, never more than the maximum. The “What customers pay” list shows the fee for well-known places as you type.'],
-      ['How far you go', '“Furthest we deliver” stops orders from too far away: those customers see a red note saying you don’t reach their area yet.'],
+      ['Whole state', 'You deliver anywhere in Lagos, and anywhere in Oyo State while Oyo is switched on. Customers can pick a suggestion or type their address themselves; the fee is worked out from the area they typed.'],
       ['Usually arrives', 'The words customers see, like “next day” or “1–3 days”.'],
       ['Oyo on or off', 'The switch turns Oyo deliveries on or off. When off, Oyo customers see that you don’t deliver there yet.'],
       ['Extra charges', 'Smallest order, Priority delivery, heavy orders over 5 kg, and a van for orders over 20 kg.'],

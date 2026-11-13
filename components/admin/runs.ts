@@ -7,4 +7,4 @@ export function runOf(o: Pick<Order, 'speed' | 'zone_id'>, z?: { state: string |
   if (z?.state) return 'Courier';
   return z?.day || 'Lagos';
 }
-export const mapLink = (s: { lat: number; lng: number }) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+export const mapLink = (s: { lat: number; lng: number; approx?: boolean; address?: string }) => `https://www.google.com/maps/search/?api=1&query=${s.approx && s.address ? encodeURIComponent(s.address) : `${s.lat},${s.lng}`}`;
