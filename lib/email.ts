@@ -61,16 +61,26 @@ export type Mail = { kicker: string; title: string; intro: string; blocks?: Bloc
 /** Build a full email from a heading and blocks. */
 export function render(m: Mail) {
   const site = env.siteUrl;
+  const yr = new Date().getFullYear();
+  const pill = (href: string, label: string, solid = false) => `<a href="${href}" style="display:inline-block;margin:4px;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;${solid ? 'background:#D49B41;color:#0B3A23' : 'border:1px solid rgba(233,185,105,.55);color:#F6E9CF'}">${label}</a>`;
+  const link = (href: string, label: string) => `<a href="${href}" style="color:#E9B969;text-decoration:none;font-weight:600">${label}</a>`;
+  // three reasons to shop with us, above the footer (customer emails only)
+  const perks = m.owner ? '' : `<tr><td class="px" style="background:#FBF9F4;padding:22px 26px;border-top:1px solid #EFEBE3"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+${[['Sized for your home', '250g, 500g, 1kg or a paint'], ['Pay securely', 'Card, transfer or USSD'], ['Delivered to you', 'Anywhere in Lagos and Oyo']].map(([t, d], i) => `<td class="stack" width="33%" style="vertical-align:top;text-align:center;padding:0 6px;${i ? 'border-left:1px solid #ECE6D9' : ''}"><div style="font-size:13px;font-weight:700;color:#0B3A23">${t}</div><div style="font-size:12px;color:#66736B;margin-top:2px">${d}</div></td>`).join('')}
+</tr></table></td></tr>`;
   const foot = m.owner
-    ? `<div style="font-family:${SERIF};font-style:italic;font-size:17px;color:#F6E9CF">Tiada admin desk</div>
-       <div style="margin-top:6px">Only you and your staff get these emails.</div>
-       <div style="margin-top:10px;font-weight:600"><a href="${site}/admin" style="color:#E9B969;text-decoration:none">Open the desk</a> &nbsp;·&nbsp; <a href="${site}/admin#settings" style="color:#E9B969;text-decoration:none">Choose which emails you get</a></div>`
-    : `<div style="font-family:${SERIF};font-style:italic;font-size:17px;color:#F6E9CF">Your trusted plug</div>
-       <div style="margin-top:6px">Questions? Reply to this email or WhatsApp <a href="https://wa.me/2348075110000" style="color:#E9B969">0807 511 0000</a></div>
-       <div>27, Finance Road, Maplewood Estate, Agege, Lagos</div>
-       <div style="margin-top:10px;font-weight:600"><a href="${site}" style="color:#E9B969;text-decoration:none">Shop</a> &nbsp;·&nbsp; <a href="${site}/track" style="color:#E9B969;text-decoration:none">Track an order</a> &nbsp;·&nbsp; <a href="https://www.tiktok.com/@tiadamarketplace" style="color:#E9B969;text-decoration:none">TikTok</a></div>`;
+    ? `<div style="font-family:${SERIF};font-style:italic;font-size:19px;color:#F6E9CF">Tiada admin desk</div>
+       <div style="margin-top:4px">Only you and your staff get these emails.</div>
+       <div style="margin-top:14px">${pill(site + '/admin', 'Open the desk', true)}${pill(site + '/admin#settings', 'Choose which emails you get')}</div>`
+    : `<div style="font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#E9B969">Tiada Marketplace</div>
+       <div style="margin-top:8px;font-family:${SERIF};font-style:italic;font-size:21px;line-height:1.35;color:#F6E9CF">Your trusted plug for foodstuffs and cereals.</div>
+       <div style="margin-top:6px">Questions about your order? Just reply to this email, or chat with us.</div>
+       <div style="margin-top:14px">${pill('https://wa.me/2348075110000', 'WhatsApp 0807 511 0000', true)}${pill(site + '/track', 'Track an order')}</div>
+       <div style="margin:18px auto 0;max-width:420px;border-top:1px solid rgba(236,241,237,.16)"></div>
+       <div style="margin-top:14px">${link(site, 'Shop')} &nbsp;·&nbsp; ${link(site + '/aisle/deals', 'Deals')} &nbsp;·&nbsp; ${link(site + '/help', 'Help')} &nbsp;·&nbsp; ${link('https://www.tiktok.com/@tiadamarketplace', 'TikTok')}</div>
+       <div style="margin-top:10px;font-size:12px">27, Finance Road, Maplewood Estate, Agege, Lagos &nbsp;·&nbsp; Iseyin, Oyo State</div>`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${esc(m.title)}</title>
-<style>@media (max-width:620px){.px{padding-left:20px!important;padding-right:20px!important}.stack{display:block!important;width:100%!important;padding:0 0 10px!important}h1{font-size:28px!important}}</style></head>
+<style>@media (max-width:620px){.px{padding-left:20px!important;padding-right:20px!important}.stack{display:block!important;width:100%!important;padding:0 0 10px!important;border-left:0!important}h1{font-size:28px!important}}</style></head>
 <body style="margin:0;padding:0;background:#F3F0E9;font-family:${SANS};color:#1F2A23">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(m.preheader || m.intro)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3F0E9"><tr><td align="center" style="padding:24px 10px 36px">
@@ -81,9 +91,11 @@ ${row(`<div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-tran
   <p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:#4D5A52">${esc(m.intro)}</p>`, '34px 36px 6px', m.center ? 'text-align:center' : '')}
 ${(m.blocks || []).map(block).join('\n')}
 <tr><td style="height:34px"></td></tr>
-<tr><td class="px" style="background:#0B3A23;color:rgba(236,241,237,0.82);padding:26px 36px;text-align:center;font-size:12.5px;line-height:1.8">${foot}
-  ${m.why || m.unsubUrl ? `<div style="margin-top:12px;font-size:11.5px;opacity:.7">${esc(m.why || '')}${m.unsubUrl ? ` <a href="${esc(m.unsubUrl)}" style="color:rgba(236,241,237,0.9)">Unsubscribe</a>` : ''}</div>` : ''}
-</td></tr></table></td></tr></table></body></html>`;
+${perks}
+<tr><td class="px" style="background:#0B3A23;color:rgba(236,241,237,0.82);padding:30px 36px 26px;text-align:center;font-size:13px;line-height:1.7">${foot}
+</td></tr>
+<tr><td class="px" style="background:#072A19;color:rgba(236,241,237,0.6);padding:14px 36px;text-align:center;font-size:11.5px;line-height:1.6">${m.why ? esc(m.why) + ' ' : ''}${m.unsubUrl ? `<a href="${esc(m.unsubUrl)}" style="color:rgba(236,241,237,0.85);text-decoration:underline">Unsubscribe</a> &nbsp;·&nbsp; ` : ''}© ${yr} Tiada Marketplace</td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 /** Plain-text twin for mail apps that don't show HTML (and for spam filters). */
