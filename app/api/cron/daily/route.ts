@@ -1,5 +1,6 @@
 import { db, must } from '@/lib/db';
 import { sweepCarts, closeIdleChats } from '@/lib/carts';
+import { photoFor } from '@/lib/photos';
 import { ownerDaily, ownerLowStock, notPaid, Order } from '@/lib/notify';
 
 export const dynamic = 'force-dynamic';
@@ -31,14 +32,14 @@ export async function GET(req: Request) {
   try { out.carts = await sweepCarts(); await closeIdleChats(); } catch (e) { out.cartError = (e as Error).message; }
 
   // 2. low stock
-  const low: { name: string; meta: string; waiting: number }[] = [];
+  const low: { name: string; meta: string; waiting: number; img: string | null }[] = [];
   try {
-    const prods = must(await db().from('products').select('id,name,status,sizes,hidden').eq('hidden', false)) as { id: string; name: string; status: string; sizes: { label: string; na?: boolean; price: number | null; stock?: number | null }[] }[];
+    const prods = must(await db().from('products').select('id,name,cat,img,status,sizes,hidden').eq('hidden', false)) as { id: string; name: string; cat: string; img: string | null; status: string; sizes: { label: string; na?: boolean; price: number | null; stock?: number | null }[] }[];
     const alerts = must(await db().from('stock_alerts').select('product_id,size').is('notified_at', null)) as { product_id: string; size: string }[];
     for (const p of prods) for (const s of p.sizes) {
       if (s.na || s.price == null || s.stock == null || s.stock > 3) continue;
       const waiting = alerts.filter(a => a.product_id === p.id && a.size === s.label).length;
-      low.push({ name: p.name, meta: `${s.label === 'Package' ? '' : s.label + ' · '}${s.stock <= 0 ? 'sold out' : s.stock + ' left'}`, waiting });
+      low.push({ name: p.name, meta: `${s.label === 'Package' ? '' : s.label + ' · '}${s.stock <= 0 ? 'sold out' : s.stock + ' left'}`, waiting, img: photoFor(p.id, p.img, p.cat) });
     }
     if (low.length) await ownerLowStock(low.sort((a, b) => b.waiting - a.waiting).slice(0, 25));
     out.low = low.length;

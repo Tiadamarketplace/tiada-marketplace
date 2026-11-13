@@ -19,7 +19,7 @@ const first = (n: string) => (n || '').trim().split(/\s+/)[0] || 'there';
 const site = () => env.siteUrl;
 
 const itemsBlock = (o: Order, title = 'Your order'): Block => ({ kind: 'items', title, rows: o.items.map(i => ({
-  name: i.name, meta: `${i.size !== 'Package' ? i.size + ' · ' : ''}Qty ${i.qty}`, price: naira(i.price * i.qty), img: i.img || null,
+  name: i.name, meta: `${i.size !== 'Package' ? i.size + ' · ' : ''}Qty ${i.qty}`, price: naira(i.price * i.qty), img: i.img || (i.pid ? photoFor(i.pid, null) : null),
   swap: i.swaps?.length ? i.swaps.map(w => `${w.from} → ${w.to}`).join(', ') : undefined })) });
 const totalsBlock = (o: Order, label = 'Total paid'): Block => ({ kind: 'totals', totalLabel: label, total: naira(o.total), rows: [
   ['Subtotal', naira(o.subtotal)], ['Delivery' + (o.speed_label ? ` · ${o.speed_label}` : ''), naira(o.delivery_fee)],
@@ -223,10 +223,10 @@ export async function ownerDaily(s: { date: string; total: number; orders: numbe
       { kind: 'button', label: 'Open today', url: desk() }],
   });
 }
-export async function ownerLowStock(rows: { name: string; meta: string; waiting: number }[]) {
+export async function ownerLowStock(rows: { name: string; meta: string; waiting: number; img?: string | null }[]) {
   return toOwner('low', `${rows.length} product${rows.length === 1 ? ' is' : 's are'} running low`, {
     kicker: 'Morning stock check', title: 'Time to restock.', intro: 'These are low or sold out this morning.',
-    blocks: [{ kind: 'items', title: 'Low or sold out', rows: rows.map(r => ({ name: r.name, meta: r.meta, price: r.waiting ? `${r.waiting} waiting` : '' })) }, { kind: 'button', label: 'Update stock', url: desk('#products') }],
+    blocks: [{ kind: 'items', title: 'Low or sold out', rows: rows.map(r => ({ name: r.name, meta: r.meta, price: r.waiting ? `${r.waiting} waiting` : '', img: r.img || null })) }, { kind: 'button', label: 'Update stock', url: desk('#products') }],
   });
 }
 
