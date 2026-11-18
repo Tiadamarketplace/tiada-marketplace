@@ -105,8 +105,8 @@ const PARTS: Part[] = [
       ['Opening hours', 'Shown on the website so customers know when you reply.'],
       ['Alerts', 'Where your new-order emails and the 7pm daily summary go.'],
       ['Policies', 'Your returns, delivery and privacy wording on the Help page.'],
-      ['New phone?', 'Open Team & security and press Change authenticator QR code. Type your password, scan the new QR code with your authenticator app, and type the code it shows. Lost your phone and can’t sign in? Use Forgot your password on the sign-in page and tick “I lost my authenticator too”: you’ll need the SETUP_TOKEN from Vercel.'],
-      ['Team', 'Add people with their own sign-in. Staff can handle orders and products; Support can answer chat and reviews; only the Owner can refund, change settings, send emails to everyone and manage the team. Switch someone off to stop them signing in. Every action is logged with who did it.'],
+      ['Signing in', 'Type your email and password, then we email you a 6-digit code. Type it in to open the desk. The code works for 10 minutes; if it doesn’t arrive, check spam or press Send a new code. Never share the code: Tiada will never ask you for it.'],
+      ['Team', 'Add people with their own sign-in: they get a temporary password and an emailed code each time they sign in. Staff can handle orders and products; Support can answer chat and reviews; only the Owner can refund, change settings, send emails to everyone and manage the team. Switch someone off to stop them signing in. Every action is logged with who did it.'],
     ],
   },
   {

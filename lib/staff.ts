@@ -82,3 +82,33 @@ export const ROLE_LABEL: Record<Role, string> = { owner: 'Owner', staff: 'Staff'
 export async function staffList() {
   return must(await db().from('staff').select('id,email,name,role,active,created_at').order('created_at')) as (Staff & { created_at: string })[];
 }
+
+/**
+ * Sign-in codes sent by email (instead of an authenticator app). The code itself is never stored:
+ * the ticket holds a hash of it, and it works for 10 minutes.
+ */
+export const newEmailCode = () => String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+const codeHash = (sid: string, code: string) => crypto.createHmac('sha256', env.sessionSecret).update(sid + ':' + code).digest('hex');
+export const makeCodeTicket = (sid: string, code: string, kind = 'mail', extra: Record<string, string> = {}) =>
+  new SignJWT({ ...extra, sid, k: kind, h: codeHash(sid, code) }).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('10m').sign(key());
+/** The ticket's details if the code matches, null if the ticket is bad or expired, false if the code is wrong. */
+export async function checkCodeTicket(t: string, code: string, kind = 'mail'): Promise<Record<string, string> | null | false> {
+  let p: Record<string, string>;
+  try { p = (await jwtVerify(t, key())).payload as Record<string, string>; } catch { return null; }
+  if (p.k !== kind || !p.sid) return null;
+  const want = Buffer.from(p.h || ''), got = Buffer.from(codeHash(p.sid, code));
+  return want.length === got.length && crypto.timingSafeEqual(want, got) ? p : false;
+}
+export async function ticketInfo(t: string, kind = 'mail'): Promise<Record<string, string> | null> {
+  try { const p = (await jwtVerify(t, key())).payload as Record<string, string>; return p.k === kind ? p : null; } catch { return null; }
+}
+export const maskEmail = (e: string) => e.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '•'.repeat(Math.min(6, Math.max(2, b.length))) + c);
+/** Email the 6-digit code. */
+export async function sendSignInCode(to: string, name: string, code: string, why = 'sign in to') {
+  const { sendMail } = await import('./email');
+  return sendMail(to, `${code} is your Tiada admin code`, {
+    owner: true, kicker: 'Admin desk', title: 'Your sign-in code', preheader: `${code} · works for 10 minutes`,
+    intro: `Hi ${name.split(' ')[0]}, use this code to ${why} the Tiada admin desk. It works for 10 minutes.`,
+    blocks: [{ kind: 'code', label: 'Your code', code }, { kind: 'note', strong: 'Didn’t try to sign in?', text: 'Someone has your password. Change it in Team & security, and don’t share this code with anyone. Tiada will never ask you for it.', tone: 'gold' }],
+  });
+}

@@ -231,7 +231,7 @@ function Inner() {
                 {acct && (
                   <div className="menu-in" role="menu" style={{ position: 'absolute', right: 0, top: 50, width: 240, background: '#FFFFFF', border: '1px solid #ECE8DF', borderRadius: 14, boxShadow: '0 24px 60px rgba(17,32,23,0.16)', padding: 6, zIndex: 5 }}>
                     <div style={{ padding: '10px 12px 8px', display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}><span style={{ fontSize: 13.5, fontWeight: 600 }}>{d.me.name}</span><span style={{ fontSize: 12, color: '#66736B', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.me.email} · {d.me.role}</span></div>
-                    <button type="button" role="menuitem" className="ub tdrow" onClick={() => { setAcct(false); go('team'); }} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, textAlign: 'left', fontSize: 13.5 }}>Password and authenticator</button>
+                    <button type="button" role="menuitem" className="ub tdrow" onClick={() => { setAcct(false); go('team'); }} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, textAlign: 'left', fontSize: 13.5 }}>Password and team</button>
                     <button type="button" role="menuitem" className="ub tdrow" onClick={() => { setAcct(false); signOut(); }} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, textAlign: 'left', fontSize: 13.5, fontWeight: 600, color: '#B3261E' }}>Log out</button>
                   </div>
                 )}
@@ -267,41 +267,48 @@ function Inner() {
 }
 
 function Login({ onIn }: { onIn: () => void }) {
-  type Step = 'pw' | 'code' | 'forgot' | 'setup' | 'setupCode' | 'reset' | 'resetCode';
+  type Step = 'pw' | 'code' | 'forgot' | 'setup' | 'setupCode' | 'reset';
   const [step, setStep] = useState<Step>('pw');
-  const [f, setF] = useState({ email: '', pw: '', code: '', name: '', key: '', lost: false });
-  const [ticket, setTicket] = useState(''); const [qr, setQr] = useState<{ qr: string; secret: string } | null>(null);
+  const [f, setF] = useState({ email: '', pw: '', code: '', name: '', key: '' });
+  const [ticket, setTicket] = useState(''); const [to, setTo] = useState('');
   const [err, setErr] = useState(''); const [note, setNote] = useState(''); const [busy, setBusy] = useState(false);
   const [resetToken, setResetToken] = useState('');
+  const [wait, setWait] = useState(0); // seconds before "Send a new code" works
   useEffect(() => {
     const h = location.hash.slice(1);
     if (h.startsWith('reset=')) { setResetToken(h.slice(6)); setStep('reset'); return; }
     call<{ needed: boolean }>('/api/admin/setup').then(r => { if (r.needed) setStep('setup'); }).catch(() => null);
   }, []);
-  const set = (k: keyof typeof f, v: string | boolean) => setF(x => ({ ...x, [k]: v }));
+  useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(w => w - 1), 1000); return () => clearTimeout(t); }, [wait]);
+  const set = (k: keyof typeof f, v: string) => setF(x => ({ ...x, [k]: v }));
   const run = async (fn: () => Promise<void>) => { setErr(''); setBusy(true); try { await fn(); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); } };
-  const code = f.code.replace(/\s/g, '');
+  const code = f.code.replace(/\D/g, '');
+  const gotCode = (r: { ticket: string; to: string }, next: Step) => { setTicket(r.ticket); setTo(r.to); setStep(next); set('code', ''); setNote(''); setWait(45); };
   const submit = () => run(async () => {
-    if (step === 'pw') { const r = await call<{ ticket: string }>('/api/admin/login', { step: 'pw', email: f.email, password: f.pw }); setTicket(r.ticket); setStep('code'); }
+    if (step === 'pw') gotCode(await call<{ ticket: string; to: string }>('/api/admin/login', { step: 'pw', email: f.email, password: f.pw }), 'code');
     else if (step === 'code') { await call('/api/admin/login', { step: 'code', ticket, code }); onIn(); }
     else if (step === 'forgot') { await call('/api/admin/reset', { action: 'request', email: f.email }); setNote('If that email belongs to a staff account, a reset link is on its way. It works for 30 minutes.'); }
-    else if (step === 'setup') { const r = await call<{ ticket: string; qr: string; secret: string }>('/api/admin/setup', { action: 'start', token: f.key, name: f.name, email: f.email, password: f.pw }); setTicket(r.ticket); setQr(r); setStep('setupCode'); set('code', ''); }
+    else if (step === 'setup') gotCode(await call<{ ticket: string; to: string }>('/api/admin/setup', { action: 'start', token: f.key, name: f.name, email: f.email, password: f.pw }), 'setupCode');
     else if (step === 'setupCode') { await call('/api/admin/setup', { action: 'finish', ticket, code }); onIn(); }
     else if (step === 'reset') {
-      const r = await call<{ done?: boolean; ticket?: string; qr?: string; secret?: string }>('/api/admin/reset', { action: 'finish', token: resetToken, password: f.pw, ...(f.lost ? { setupKey: f.key } : { code }) });
-      if (r.ticket) { setTicket(r.ticket); setQr({ qr: r.qr!, secret: r.secret! }); setStep('resetCode'); set('code', ''); }
-      else { history.replaceState(null, '', '/admin'); setNote('Password changed. Sign in with your new password.'); setStep('pw'); set('pw', ''); set('code', ''); }
-    } else if (step === 'resetCode') { await call('/api/admin/reset', { action: 'confirm', ticket, code }); history.replaceState(null, '', '/admin'); setNote('All set. Sign in with your new password and the new code.'); setStep('pw'); setQr(null); set('pw', ''); set('code', ''); }
+      await call('/api/admin/reset', { action: 'finish', token: resetToken, password: f.pw });
+      history.replaceState(null, '', '/admin'); setNote('Password changed. Sign in with your new password; we’ll email you a code.'); setStep('pw'); set('pw', '');
+    }
+  });
+  const resend = () => run(async () => {
+    if (step === 'code') { gotCode(await call<{ ticket: string; to: string }>('/api/admin/login', { step: 'resend', ticket }), 'code'); setNote('New code sent. Use the newest email.'); }
+    else { gotCode(await call<{ ticket: string; to: string }>('/api/admin/setup', { action: 'start', token: f.key, name: f.name, email: f.email, password: f.pw }), 'setupCode'); setNote('New code sent. Use the newest email.'); }
   });
   const T: Record<Step, [string, string, string]> = {
-    pw: ['Admin desk', 'Sign in to run the shop.', 'Continue'], code: ['One more step', 'Enter the 6-digit code from your authenticator app.', 'Verify and open desk'],
+    pw: ['Admin desk', 'Sign in to run the shop.', 'Continue'],
+    code: ['Check your email', `We sent a 6-digit code to ${to}. It works for 10 minutes.`, 'Verify and open desk'],
     forgot: ['Reset your password', 'We’ll email you a link that works for 30 minutes.', 'Email me a reset link'],
     setup: ['Set up the owner account', 'First time here. Use the SETUP_TOKEN from Vercel to create your account.', 'Continue'],
-    setupCode: ['Link your authenticator', 'Scan this with Google Authenticator or Microsoft Authenticator, then enter the code it shows.', 'Finish setup'],
-    reset: ['Choose a new password', f.lost ? 'Lost your phone too? Owners can use the SETUP_TOKEN from Vercel.' : 'You’ll also need the code from your authenticator app.', 'Save new password'],
-    resetCode: ['Link your new authenticator', 'Scan this, then enter the code it shows.', 'Finish'],
+    setupCode: ['Check your email', `We sent a 6-digit code to ${to} to make sure it’s yours.`, 'Finish setup'],
+    reset: ['Choose a new password', 'At least 10 characters. You’ll sign in with it straight after.', 'Save new password'],
   };
-  const codeBox = <label style={lab}>6-digit code<input inputMode="numeric" autoComplete="one-time-code" placeholder="000 000" value={f.code} onChange={e => set('code', e.target.value)} autoFocus style={{ ...input, height: 56, fontSize: 24, letterSpacing: '0.3em', textAlign: 'center' }} /></label>;
+  const codeBox = <label style={lab}>6-digit code<input inputMode="numeric" autoComplete="one-time-code" placeholder="000000" maxLength={7} value={f.code} onChange={e => set('code', e.target.value)} autoFocus style={{ ...input, height: 56, fontSize: 24, letterSpacing: '0.3em', textAlign: 'center' }} /></label>;
+  const isCode = step === 'code' || step === 'setupCode';
   return (
     <div className="adm fade" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#0B3A23' }}>
       <form onSubmit={e => { e.preventDefault(); submit(); }} style={{ width: 'min(420px, 100%)', background: '#FFFFFF', borderRadius: 14, padding: 34, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -310,13 +317,13 @@ function Login({ onIn }: { onIn: () => void }) {
         {step === 'setup' && <label style={lab}>Your name<input value={f.name} onChange={e => set('name', e.target.value)} autoComplete="name" style={{ ...input, height: 48 }} /></label>}
         {(step === 'pw' || step === 'forgot' || step === 'setup') && <label style={lab}>Email<input type="email" autoComplete="username" value={f.email} onChange={e => set('email', e.target.value)} autoFocus={step !== 'setup'} style={{ ...input, height: 48 }} /></label>}
         {(step === 'pw' || step === 'setup' || step === 'reset') && <label style={lab}>{step === 'pw' ? 'Password' : 'New password (10+ characters)'}<input type="password" autoComplete={step === 'pw' ? 'current-password' : 'new-password'} value={f.pw} onChange={e => set('pw', e.target.value)} style={{ ...input, height: 48 }} /></label>}
-        {(step === 'setup' || (step === 'reset' && f.lost)) && <label style={lab}>Setup key (SETUP_TOKEN in Vercel)<input type="password" value={f.key} onChange={e => set('key', e.target.value)} autoComplete="off" style={{ ...input, height: 48 }} /></label>}
-        {(step === 'setupCode' || step === 'resetCode') && qr && <div style={{ textAlign: 'center' }}><img src={qr.qr} alt="QR code for your authenticator app" width={200} height={200} style={{ borderRadius: 8 }} /><p style={{ margin: '6px 0 0', fontSize: 12, color: '#66736B', wordBreak: 'break-all' }}>Can’t scan? Type this key: <strong>{qr.secret}</strong></p></div>}
-        {(step === 'code' || step === 'setupCode' || step === 'resetCode' || (step === 'reset' && !f.lost)) && codeBox}
-        {step === 'reset' && <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}><input type="checkbox" checked={f.lost} onChange={e => set('lost', e.target.checked)} />I lost my authenticator too (owner only)</label>}
+        {step === 'setup' && <label style={lab}>Setup key (SETUP_TOKEN in Vercel)<input type="password" value={f.key} onChange={e => set('key', e.target.value)} autoComplete="off" style={{ ...input, height: 48 }} /></label>}
+        {isCode && codeBox}
         {err && <p role="alert" style={{ margin: 0, padding: '10px 12px', borderRadius: 8, background: '#FBEFEB', color: '#7A2A1B', fontSize: 13.5 }}>{err}</p>}
         {note && <p role="status" style={{ margin: 0, padding: '10px 12px', borderRadius: 8, background: '#E6EEE8', color: '#0B3A23', fontSize: 13.5 }}>{note}</p>}
-        <Btn type="submit" disabled={busy} style={{ height: 50, fontSize: 15 }}>{busy ? 'One moment…' : T[step][2]}</Btn>
+        <Btn type="submit" disabled={busy || (isCode && code.length !== 6)} style={{ height: 50, fontSize: 15 }}>{busy ? 'One moment…' : T[step][2]}</Btn>
+        {isCode && <p style={{ margin: 0, textAlign: 'center', fontSize: 13, color: '#66736B', lineHeight: 1.6 }}>No email? Check spam or Promotions.{' '}
+          {wait > 0 ? <span>You can ask for a new code in {wait}s.</span> : <button type="button" className="ub lnk" disabled={busy} onClick={resend} style={{ fontSize: 13 }}>Send a new code</button>}</p>}
         {(step === 'pw' || step === 'forgot' || step === 'code') && <button type="button" className="ub lnk" onClick={() => { setErr(''); setNote(''); setStep(step === 'pw' ? 'forgot' : 'pw'); }} style={{ alignSelf: 'center', fontSize: 13, minHeight: 32 }}>{step === 'pw' ? 'Forgot your password?' : 'Back to sign in'}</button>}
       </form>
     </div>
